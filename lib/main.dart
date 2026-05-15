@@ -4,6 +4,8 @@ import 'providers/app_state.dart';
 import 'screens/onboarding_screen.dart';
 import 'theme.dart';
 
+import 'screens/splash_screen.dart';
+
 void main() {
   runApp(
     MultiProvider(
@@ -22,7 +24,7 @@ class MyApp extends StatelessWidget {
       title: 'Macha - Reloop',
       debugShowCheckedModeBanner: false,
       theme: AppTheme.lightTheme,
-      home: const OnboardingScreen(),
+      home: const SplashScreen(),
     );
   }
 }

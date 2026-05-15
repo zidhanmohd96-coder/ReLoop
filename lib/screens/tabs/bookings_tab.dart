@@ -3,7 +3,7 @@ part of '../home_screen.dart';
 extension BookingsTabExtension on _HomeScreenState {
   Widget _buildBookingsTab(BuildContext context) {
     return DefaultTabController(
-      length: 2,
+      length: 3,
       child: SafeArea(
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
@@ -52,6 +52,7 @@ extension BookingsTabExtension on _HomeScreenState {
                 tabs: const [
                   Tab(text: 'Upcoming'),
                   Tab(text: 'Completed'),
+                  Tab(text: 'Cancelled'),
                 ],
               ),
             ),
@@ -88,6 +89,23 @@ extension BookingsTabExtension on _HomeScreenState {
                         '₹320',
                         '+230 POINTS',
                         LucideIcons.checkCircle,
+                        context,
+                      ),
+                    ],
+                  ),
+                  // Cancelled Tab
+                  ListView(
+                    padding: const EdgeInsets.all(24),
+                    children: [
+                      _buildBookingCard(
+                        'Plastic bottles',
+                        'Cancelled',
+                        Colors.red.shade400,
+                        'Cancelled on Mon, 08 May',
+                        'Home',
+                        '₹0',
+                        '0 POINTS',
+                        LucideIcons.xCircle,
                         context,
                       ),
                     ],

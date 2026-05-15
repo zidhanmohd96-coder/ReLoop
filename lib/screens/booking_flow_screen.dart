@@ -18,7 +18,7 @@ class BookingFlowScreen extends StatefulWidget {
 class _BookingFlowScreenState extends State<BookingFlowScreen> {
   int _currentStep = 0;
   final int _totalSteps = 5;
-  List<String> _selectedScrapTypes = [];
+  final List<String> _selectedScrapTypes = [];
   String? _selectedQuantity;
 
   String? _selectedSchedule;
