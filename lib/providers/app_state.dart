@@ -16,9 +16,26 @@ class AppState extends ChangeNotifier {
       latitude: 10.0159,
       longitude: 76.3419,
       isDefault: true,
+      label: 'Home',
     ),
   ];
   final List<Booking> _bookings = [];
+
+  // ── Dark Mode ──
+  ThemeMode _themeMode = ThemeMode.light;
+  ThemeMode get themeMode => _themeMode;
+  bool get isDarkMode => _themeMode == ThemeMode.dark;
+
+  void toggleTheme() {
+    _themeMode =
+        _themeMode == ThemeMode.light ? ThemeMode.dark : ThemeMode.light;
+    notifyListeners();
+  }
+
+  void setThemeMode(ThemeMode mode) {
+    _themeMode = mode;
+    notifyListeners();
+  }
 
   List<Address> get addresses => _addresses;
   List<Booking> get bookings => _bookings;

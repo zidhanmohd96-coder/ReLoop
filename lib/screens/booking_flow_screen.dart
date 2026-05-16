@@ -21,11 +21,27 @@ class _BookingFlowScreenState extends State<BookingFlowScreen> {
   final List<String> _selectedScrapTypes = [];
   String? _selectedQuantity;
 
-  String? _selectedSchedule;
+  DateTime? _selectedDate;
+  DateTime _calendarMonth = DateTime.now();
 
   final _contactNameController = TextEditingController(text: 'zimu');
   final _contactNumberController = TextEditingController();
   final _instructionsController = TextEditingController();
+
+  // Pricing per kg for each scrap type
+  static const Map<String, double> _scrapPrices = {
+    'Newspaper': 17,
+    'Cardboard': 10,
+    'Office Paper': 14,
+    'Books': 16,
+  };
+
+  // Estimated weight ranges per quantity
+  static const Map<String, List<double>> _quantityRanges = {
+    'Small (<5kg)': [2, 5],
+    'Medium (5-20kg)': [5, 20],
+    'Large (20kg+)': [20, 50],
+  };
 
   final List<Map<String, dynamic>> _scrapTypes = [
     {'title': 'Newspaper', 'icon': LucideIcons.bookOpen},
@@ -40,12 +56,12 @@ class _BookingFlowScreenState extends State<BookingFlowScreen> {
     'Large (20kg+)',
   ];
 
-  final List<String> _schedules = [
-    'Tomorrow',
-    'Wed, 14 May',
-    'Thu, 15 May',
-    'Fri, 16 May',
-  ];
+  // Service availability by day-of-week (0=Mon..6=Sun). Sunday unavailable.
+  bool _isDateAvailable(DateTime d) {
+    if (d.isBefore(DateTime.now().subtract(const Duration(days: 1)))) return false;
+    if (d.weekday == DateTime.sunday) return false;
+    return true;
+  }
 
   @override
   void dispose() {
@@ -98,10 +114,10 @@ class _BookingFlowScreenState extends State<BookingFlowScreen> {
       ).showSnackBar(const SnackBar(content: Text('Please select a quantity')));
       return;
     }
-    if (_currentStep == 2 && _selectedSchedule == null) {
+    if (_currentStep == 2 && _selectedDate == null) {
       ScaffoldMessenger.of(
         context,
-      ).showSnackBar(const SnackBar(content: Text('Please select a schedule')));
+      ).showSnackBar(const SnackBar(content: Text('Please select a pickup date')));
       return;
     }
 
@@ -143,10 +159,10 @@ class _BookingFlowScreenState extends State<BookingFlowScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
     return Scaffold(
-      extendBodyBehindAppBar: true,
       appBar: AppBar(
-        backgroundColor: Colors.transparent,
+        backgroundColor: isDark ? const Color(0xFF0F172A) : const Color(0xFFF0FDF4),
         elevation: 0,
         centerTitle: true,
         title: Column(
@@ -154,7 +170,7 @@ class _BookingFlowScreenState extends State<BookingFlowScreen> {
             Text(
               'STEP ${_currentStep + 1} OF $_totalSteps',
               style: TextStyle(
-                color: Colors.grey.shade500,
+                color: isDark ? Colors.grey.shade400 : Colors.grey.shade500,
                 fontSize: 10,
                 fontWeight: FontWeight.bold,
                 letterSpacing: 1,
@@ -162,8 +178,8 @@ class _BookingFlowScreenState extends State<BookingFlowScreen> {
             ),
             Text(
               _getStepTitle(),
-              style: const TextStyle(
-                color: AppTheme.forestGreen,
+              style: TextStyle(
+                color: isDark ? Colors.white : AppTheme.forestGreen,
                 fontSize: 16,
                 fontWeight: FontWeight.bold,
               ),
@@ -174,13 +190,13 @@ class _BookingFlowScreenState extends State<BookingFlowScreen> {
           padding: const EdgeInsets.all(8.0),
           child: Container(
             decoration: BoxDecoration(
-              color: Colors.white,
+              color: isDark ? const Color(0xFF1E293B) : Colors.white,
               shape: BoxShape.circle,
             ),
             child: IconButton(
-              icon: const Icon(
+              icon: Icon(
                 LucideIcons.chevronLeft,
-                color: AppTheme.forestGreen,
+                color: isDark ? Colors.white : AppTheme.forestGreen,
                 size: 20,
               ),
               onPressed: _prevStep,
@@ -189,12 +205,8 @@ class _BookingFlowScreenState extends State<BookingFlowScreen> {
         ),
       ),
       body: Container(
-        decoration: const BoxDecoration(
-          gradient: LinearGradient(
-            colors: [Color(0xFFF0F7F4), Color(0xFFE4F0E8)],
-            begin: Alignment.topCenter,
-            end: Alignment.bottomCenter,
-          ),
+        decoration: BoxDecoration(
+          gradient: isDark ? AppTheme.darkBgGradient : AppTheme.lightBgGradient,
         ),
         child: SafeArea(
           child: Stack(
@@ -411,16 +423,18 @@ class _BookingFlowScreenState extends State<BookingFlowScreen> {
   }
 
   Widget _buildQuantityStep() {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Text(
           'Estimate\nQuantity',
-          style: Theme.of(
-            context,
-          ).textTheme.displayMedium?.copyWith(fontSize: 48, height: 1.1),
+          style: Theme.of(context).textTheme.displayMedium?.copyWith(
+            fontSize: 48, height: 1.1,
+            color: isDark ? Colors.white : null,
+          ),
         ),
-        const SizedBox(height: 48),
+        const SizedBox(height: 32),
         ..._quantities.map((q) {
           final isSelected = _selectedQuantity == q;
           return Padding(
@@ -431,12 +445,10 @@ class _BookingFlowScreenState extends State<BookingFlowScreen> {
                 padding: const EdgeInsets.all(24),
                 decoration: BoxDecoration(
                   color: isSelected
-                      ? AppTheme.leafGreen.withOpacity(0.1)
-                      : Colors.white,
+                      ? (isDark ? AppTheme.leafGreen.withOpacity(0.2) : AppTheme.leafGreen.withOpacity(0.1))
+                      : (isDark ? const Color(0xFF1E293B) : Colors.white),
                   border: Border.all(
-                    color: isSelected
-                        ? AppTheme.forestGreen
-                        : Colors.transparent,
+                    color: isSelected ? AppTheme.mintGreen : Colors.transparent,
                     width: 2,
                   ),
                   borderRadius: BorderRadius.circular(32),
@@ -446,38 +458,20 @@ class _BookingFlowScreenState extends State<BookingFlowScreen> {
                     Container(
                       padding: const EdgeInsets.all(8),
                       decoration: BoxDecoration(
-                        color: Colors.grey.shade100,
+                        color: isDark ? Colors.white.withOpacity(0.08) : Colors.grey.shade100,
                         shape: BoxShape.circle,
                       ),
-                      child: const Icon(
-                        LucideIcons.scale,
-                        color: AppTheme.forestGreen,
-                        size: 20,
-                      ),
+                      child: Icon(LucideIcons.scale, color: isDark ? AppTheme.mintGreen : AppTheme.forestGreen, size: 20),
                     ),
                     const SizedBox(width: 16),
                     Expanded(
-                      child: Text(
-                        q,
-                        style: TextStyle(
-                          fontWeight: FontWeight.w600,
-                          color: AppTheme.forestGreen,
-                          fontSize: 18,
-                        ),
-                      ),
+                      child: Text(q, style: TextStyle(fontWeight: FontWeight.w600, color: isDark ? Colors.white : AppTheme.forestGreen, fontSize: 18)),
                     ),
                     if (isSelected)
                       Container(
                         padding: const EdgeInsets.all(2),
-                        decoration: const BoxDecoration(
-                          color: AppTheme.forestGreen,
-                          shape: BoxShape.circle,
-                        ),
-                        child: const Icon(
-                          LucideIcons.check,
-                          color: Colors.white,
-                          size: 16,
-                        ),
+                        decoration: BoxDecoration(color: AppTheme.mintGreen, shape: BoxShape.circle),
+                        child: const Icon(LucideIcons.check, color: Colors.white, size: 16),
                       ),
                   ],
                 ),
@@ -485,82 +479,272 @@ class _BookingFlowScreenState extends State<BookingFlowScreen> {
             ),
           );
         }),
+        // ── Estimated Earnings Card ──
+        if (_selectedQuantity != null && _selectedScrapTypes.isNotEmpty) ...[
+          const SizedBox(height: 8),
+          _buildEstimatedEarnings(isDark),
+        ],
       ],
     );
   }
 
+  Widget _buildEstimatedEarnings(bool isDark) {
+    final range = _quantityRanges[_selectedQuantity]!;
+    final avgKg = (range[0] + range[1]) / 2;
+    final perTypeKg = avgKg / _selectedScrapTypes.length;
+
+    double totalMin = 0, totalMax = 0;
+    for (final t in _selectedScrapTypes) {
+      final price = _scrapPrices[t] ?? 12;
+      totalMin += range[0] / _selectedScrapTypes.length * price;
+      totalMax += range[1] / _selectedScrapTypes.length * price;
+    }
+
+    return Container(
+      padding: const EdgeInsets.all(20),
+      decoration: BoxDecoration(
+        gradient: LinearGradient(
+          colors: isDark
+            ? [const Color(0xFF1E293B), const Color(0xFF0F172A)]
+            : [const Color(0xFFF0FDF4), const Color(0xFFD1FAE5)],
+          begin: Alignment.topLeft, end: Alignment.bottomRight,
+        ),
+        borderRadius: BorderRadius.circular(24),
+        border: Border.all(color: AppTheme.mintGreen.withOpacity(0.3)),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              Icon(LucideIcons.indianRupee, color: AppTheme.accentAmber, size: 20),
+              const SizedBox(width: 8),
+              Text('ESTIMATED EARNINGS', style: TextStyle(
+                fontSize: 11, fontWeight: FontWeight.bold, letterSpacing: 1,
+                color: isDark ? AppTheme.mintGreen : AppTheme.forestGreen,
+              )),
+            ],
+          ),
+          const SizedBox(height: 16),
+          ..._selectedScrapTypes.map((t) {
+            final price = _scrapPrices[t] ?? 12;
+            final minE = (range[0] / _selectedScrapTypes.length * price).round();
+            final maxE = (range[1] / _selectedScrapTypes.length * price).round();
+            return Padding(
+              padding: const EdgeInsets.only(bottom: 8),
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  Text(t, style: TextStyle(color: isDark ? Colors.white70 : AppTheme.forestGreen, fontWeight: FontWeight.w500)),
+                  Text('₹$minE – ₹$maxE', style: TextStyle(color: isDark ? AppTheme.paleGreen : AppTheme.lightGreen, fontWeight: FontWeight.bold)),
+                ],
+              ),
+            );
+          }),
+          const Divider(height: 24),
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              Text('Total Range', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16, color: isDark ? Colors.white : AppTheme.forestGreen)),
+              Text('₹${totalMin.round()} – ₹${totalMax.round()}', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 18, color: AppTheme.accentAmber)),
+            ],
+          ),
+          const SizedBox(height: 8),
+          Text('+ Bonus EcoPoints on every pickup!', style: TextStyle(fontSize: 12, color: isDark ? Colors.grey.shade500 : Colors.grey.shade600, fontStyle: FontStyle.italic)),
+        ],
+      ),
+    );
+  }
+
   Widget _buildScheduleStep() {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    final now = DateTime.now();
+    final firstOfMonth = DateTime(_calendarMonth.year, _calendarMonth.month, 1);
+    final daysInMonth = DateTime(_calendarMonth.year, _calendarMonth.month + 1, 0).day;
+    final startWeekday = firstOfMonth.weekday; // 1=Mon
+    const dayLabels = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'];
+    final months = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Text(
-          'Pick a\nSchedules',
-          style: Theme.of(
-            context,
-          ).textTheme.displayMedium?.copyWith(fontSize: 48, height: 1.1),
-        ),
-        const SizedBox(height: 48),
-        GridView.builder(
-          shrinkWrap: true,
-          physics: const NeverScrollableScrollPhysics(),
-          gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-            crossAxisCount: 2,
-            crossAxisSpacing: 16,
-            mainAxisSpacing: 16,
-            childAspectRatio: 1.1,
+          'Pick a\nDate',
+          style: Theme.of(context).textTheme.displayMedium?.copyWith(
+            fontSize: 48, height: 1.1,
+            color: isDark ? Colors.white : null,
           ),
-          itemCount: _schedules.length,
-          itemBuilder: (context, index) {
-            final schedule = _schedules[index];
-            final isSelected = _selectedSchedule == schedule;
-            return GestureDetector(
-              onTap: () => setState(() => _selectedSchedule = schedule),
-              child: Container(
-                decoration: BoxDecoration(
-                  color: isSelected
-                      ? AppTheme.leafGreen.withOpacity(0.1)
-                      : Colors.white,
-                  border: Border.all(
-                    color: isSelected
-                        ? AppTheme.forestGreen
-                        : Colors.transparent,
-                    width: 2,
+        ),
+        const SizedBox(height: 24),
+        // Calendar card
+        Container(
+          padding: const EdgeInsets.all(20),
+          decoration: BoxDecoration(
+            color: isDark ? const Color(0xFF1E293B) : Colors.white,
+            borderRadius: BorderRadius.circular(28),
+            boxShadow: [
+              BoxShadow(
+                color: Colors.black.withOpacity(isDark ? 0.3 : 0.06),
+                blurRadius: 16, offset: const Offset(0, 6),
+              ),
+            ],
+          ),
+          child: Column(
+            children: [
+              // Month nav
+              Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  IconButton(
+                    icon: Icon(LucideIcons.chevronLeft, color: isDark ? Colors.white70 : AppTheme.forestGreen, size: 20),
+                    onPressed: () {
+                      setState(() {
+                        _calendarMonth = DateTime(_calendarMonth.year, _calendarMonth.month - 1);
+                      });
+                    },
                   ),
-                  borderRadius: BorderRadius.circular(32),
-                ),
-                child: Column(
-                  mainAxisAlignment: MainAxisAlignment.center,
+                  Text(
+                    '${months[_calendarMonth.month - 1]} ${_calendarMonth.year}',
+                    style: TextStyle(
+                      fontSize: 18, fontWeight: FontWeight.bold,
+                      color: isDark ? Colors.white : AppTheme.forestGreen,
+                    ),
+                  ),
+                  IconButton(
+                    icon: Icon(LucideIcons.chevronRight, color: isDark ? Colors.white70 : AppTheme.forestGreen, size: 20),
+                    onPressed: () {
+                      setState(() {
+                        _calendarMonth = DateTime(_calendarMonth.year, _calendarMonth.month + 1);
+                      });
+                    },
+                  ),
+                ],
+              ),
+              const SizedBox(height: 12),
+              // Day headers
+              Row(
+                children: dayLabels.map((d) => Expanded(
+                  child: Center(
+                    child: Text(d, style: TextStyle(
+                      fontSize: 11, fontWeight: FontWeight.bold,
+                      color: d == 'Sun'
+                        ? (isDark ? Colors.red.shade300 : Colors.red.shade400)
+                        : (isDark ? Colors.grey.shade500 : Colors.grey.shade500),
+                      letterSpacing: 0.5,
+                    )),
+                  ),
+                )).toList(),
+              ),
+              const SizedBox(height: 8),
+              // Day grid
+              ...List.generate(6, (week) {
+                return Padding(
+                  padding: const EdgeInsets.only(bottom: 4),
+                  child: Row(
+                    children: List.generate(7, (col) {
+                      final dayNum = week * 7 + col + 1 - (startWeekday - 1);
+                      if (dayNum < 1 || dayNum > daysInMonth) {
+                        return const Expanded(child: SizedBox(height: 42));
+                      }
+                      final date = DateTime(_calendarMonth.year, _calendarMonth.month, dayNum);
+                      final isAvailable = _isDateAvailable(date);
+                      final isSelected = _selectedDate != null &&
+                        _selectedDate!.year == date.year &&
+                        _selectedDate!.month == date.month &&
+                        _selectedDate!.day == date.day;
+                      final isToday = date.year == now.year && date.month == now.month && date.day == now.day;
+                      
+                      return Expanded(
+                        child: GestureDetector(
+                          onTap: isAvailable ? () => setState(() => _selectedDate = date) : null,
+                          child: Container(
+                            height: 42,
+                            margin: const EdgeInsets.all(2),
+                            decoration: BoxDecoration(
+                              color: isSelected
+                                ? AppTheme.leafGreen
+                                : isToday
+                                  ? (isDark ? AppTheme.mintGreen.withOpacity(0.15) : AppTheme.mintGreen.withOpacity(0.12))
+                                  : Colors.transparent,
+                              borderRadius: BorderRadius.circular(12),
+                              border: isToday && !isSelected
+                                ? Border.all(color: AppTheme.mintGreen, width: 1.5)
+                                : null,
+                            ),
+                            child: Center(
+                              child: Text(
+                                '$dayNum',
+                                style: TextStyle(
+                                  fontSize: 14,
+                                  fontWeight: isSelected || isToday ? FontWeight.bold : FontWeight.w500,
+                                  color: isSelected
+                                    ? Colors.white
+                                    : !isAvailable
+                                      ? (isDark ? Colors.grey.shade700 : Colors.grey.shade300)
+                                      : (isDark ? Colors.white : AppTheme.forestGreen),
+                                ),
+                              ),
+                            ),
+                          ),
+                        ),
+                      );
+                    }),
+                  ),
+                );
+              }),
+              const SizedBox(height: 12),
+              // Legend
+              Row(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  Container(width: 10, height: 10, decoration: BoxDecoration(color: AppTheme.leafGreen, borderRadius: BorderRadius.circular(3))),
+                  const SizedBox(width: 6),
+                  Text('Selected', style: TextStyle(fontSize: 11, color: isDark ? Colors.grey.shade400 : Colors.grey.shade600)),
+                  const SizedBox(width: 16),
+                  Container(width: 10, height: 10, decoration: BoxDecoration(border: Border.all(color: AppTheme.mintGreen, width: 1.5), borderRadius: BorderRadius.circular(3))),
+                  const SizedBox(width: 6),
+                  Text('Today', style: TextStyle(fontSize: 11, color: isDark ? Colors.grey.shade400 : Colors.grey.shade600)),
+                  const SizedBox(width: 16),
+                  Container(width: 10, height: 10, decoration: BoxDecoration(color: isDark ? Colors.grey.shade700 : Colors.grey.shade300, borderRadius: BorderRadius.circular(3))),
+                  const SizedBox(width: 6),
+                  Text('Unavailable', style: TextStyle(fontSize: 11, color: isDark ? Colors.grey.shade400 : Colors.grey.shade600)),
+                ],
+              ),
+            ],
+          ),
+        ),
+        if (_selectedDate != null) ...[
+          const SizedBox(height: 16),
+          Container(
+            padding: const EdgeInsets.all(16),
+            decoration: BoxDecoration(
+              gradient: const LinearGradient(colors: [Color(0xFF0D9488), Color(0xFF10B981)]),
+              borderRadius: BorderRadius.circular(20),
+            ),
+            child: Row(
+              children: [
+                const Icon(LucideIcons.calendarCheck, color: Colors.white, size: 22),
+                const SizedBox(width: 12),
+                Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    const Icon(
-                      LucideIcons.calendar,
-                      size: 32,
-                      color: AppTheme.forestGreen,
-                    ),
-                    const SizedBox(height: 12),
+                    const Text('Pickup Date', style: TextStyle(color: Colors.white70, fontSize: 11, fontWeight: FontWeight.bold)),
                     Text(
-                      schedule,
-                      style: TextStyle(
-                        fontWeight: FontWeight.w600,
-                        color: AppTheme.forestGreen,
-                        fontSize: 16,
-                      ),
-                    ),
-                    const SizedBox(height: 4),
-                    const Text(
-                      'AVAILABLE',
-                      style: TextStyle(
-                        color: AppTheme.lightGreen,
-                        fontSize: 10,
-                        fontWeight: FontWeight.bold,
-                        letterSpacing: 1,
-                      ),
+                      '${_selectedDate!.day} ${months[_selectedDate!.month - 1]} ${_selectedDate!.year}',
+                      style: const TextStyle(color: Colors.white, fontSize: 16, fontWeight: FontWeight.bold),
                     ),
                   ],
                 ),
-              ),
-            );
-          },
-        ),
+                const Spacer(),
+                Container(
+                  padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                  decoration: BoxDecoration(color: Colors.white.withOpacity(0.2), borderRadius: BorderRadius.circular(12)),
+                  child: const Text('10AM - 1PM', style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 12)),
+                ),
+              ],
+            ),
+          ),
+        ],
       ],
     );
   }

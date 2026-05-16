@@ -9,15 +9,12 @@ class OnboardingScreen extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
     return Scaffold(
       body: Container(
         width: double.infinity,
-        decoration: const BoxDecoration(
-          gradient: LinearGradient(
-            colors: [Color(0xFFF0F7F4), Color(0xFFE4F0E8)],
-            begin: Alignment.topCenter,
-            end: Alignment.bottomCenter,
-          ),
+        decoration: BoxDecoration(
+          gradient: isDark ? AppTheme.darkBgGradient : AppTheme.lightBgGradient,
         ),
         child: SafeArea(
           child: Padding(
@@ -30,12 +27,19 @@ class OnboardingScreen extends StatelessWidget {
                   width: 100,
                   height: 100,
                   decoration: BoxDecoration(
-                    color: AppTheme.forestGreen,
+                    color: isDark ? AppTheme.mintGreen : AppTheme.forestGreen,
                     borderRadius: BorderRadius.circular(32),
+                    boxShadow: [
+                      BoxShadow(
+                        color: (isDark ? AppTheme.mintGreen : AppTheme.forestGreen).withOpacity(0.3),
+                        blurRadius: 20,
+                        spreadRadius: 5,
+                      ),
+                    ],
                   ),
-                  child: const Icon(
+                  child: Icon(
                     LucideIcons.truck,
-                    color: Colors.white,
+                    color: isDark ? const Color(0xFF0F172A) : Colors.white,
                     size: 48,
                   ),
                 ).animate()
@@ -49,6 +53,7 @@ class OnboardingScreen extends StatelessWidget {
                     fontSize: 48,
                     fontWeight: FontWeight.w800,
                     letterSpacing: -1.5,
+                    color: isDark ? Colors.white : null,
                   ),
                 ).animate()
                  .fadeIn(delay: 400.ms, duration: 800.ms)
@@ -57,7 +62,7 @@ class OnboardingScreen extends StatelessWidget {
                 Text(
                   'PREMIUM RECYCLING',
                   style: Theme.of(context).textTheme.titleSmall?.copyWith(
-                    color: AppTheme.lightGreen,
+                    color: isDark ? AppTheme.mintGreen : AppTheme.lightGreen,
                     letterSpacing: 2,
                     fontWeight: FontWeight.bold,
                   ),
@@ -69,7 +74,7 @@ class OnboardingScreen extends StatelessWidget {
                   'A real tech-enabled logistics company for a cleaner future. Paper and cardboard recycling, reimagined.',
                   textAlign: TextAlign.center,
                   style: TextStyle(
-                    color: AppTheme.forestGreen.withOpacity(0.7),
+                    color: isDark ? Colors.grey.shade400 : AppTheme.forestGreen.withOpacity(0.7),
                     fontSize: 16,
                     height: 1.5,
                   ),
@@ -92,15 +97,16 @@ class OnboardingScreen extends StatelessWidget {
                       );
                     },
                     style: ElevatedButton.styleFrom(
-                      backgroundColor: AppTheme.forestGreen,
+                      backgroundColor: isDark ? AppTheme.mintGreen : AppTheme.forestGreen,
+                      foregroundColor: isDark ? const Color(0xFF0F172A) : Colors.white,
                       padding: const EdgeInsets.symmetric(vertical: 20),
                       shape: RoundedRectangleBorder(
                         borderRadius: BorderRadius.circular(32),
                       ),
                     ),
-                    child: const Text(
+                    child: Text(
                       'Join the Loop',
-                      style: TextStyle(fontSize: 18, color: Colors.white),
+                      style: TextStyle(fontSize: 18, color: isDark ? const Color(0xFF0F172A) : Colors.white, fontWeight: FontWeight.bold),
                     ),
                   ),
                 ).animate()
@@ -113,14 +119,14 @@ class OnboardingScreen extends StatelessWidget {
                     Container(
                       width: 40,
                       height: 1,
-                      color: Colors.grey.shade300,
+                      color: isDark ? Colors.grey.shade800 : Colors.grey.shade300,
                     ),
-                    const Padding(
-                      padding: EdgeInsets.symmetric(horizontal: 16),
+                    Padding(
+                      padding: const EdgeInsets.symmetric(horizontal: 16),
                       child: Text(
                         'VERIFIED SUSTAINABILITY',
                         style: TextStyle(
-                          color: Colors.grey,
+                          color: isDark ? Colors.grey.shade600 : Colors.grey,
                           fontSize: 12,
                           letterSpacing: 1,
                         ),
@@ -129,7 +135,7 @@ class OnboardingScreen extends StatelessWidget {
                     Container(
                       width: 40,
                       height: 1,
-                      color: Colors.grey.shade300,
+                      color: isDark ? Colors.grey.shade800 : Colors.grey.shade300,
                     ),
                   ],
                 ).animate()
@@ -143,5 +149,3 @@ class OnboardingScreen extends StatelessWidget {
     );
   }
 }
-
-

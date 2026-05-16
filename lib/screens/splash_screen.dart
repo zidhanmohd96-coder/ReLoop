@@ -36,15 +36,12 @@ class _SplashScreenState extends State<SplashScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
     return Scaffold(
       body: Container(
         width: double.infinity,
-        decoration: const BoxDecoration(
-          gradient: LinearGradient(
-            colors: [Color(0xFFF0F7F4), Color(0xFFE4F0E8)],
-            begin: Alignment.topCenter,
-            end: Alignment.bottomCenter,
-          ),
+        decoration: BoxDecoration(
+          gradient: isDark ? AppTheme.darkBgGradient : AppTheme.lightBgGradient,
         ),
         child: Stack(
           children: [
@@ -56,7 +53,7 @@ class _SplashScreenState extends State<SplashScreen> {
                 width: 300,
                 height: 300,
                 decoration: BoxDecoration(
-                  color: AppTheme.leafGreen.withOpacity(0.05),
+                  color: (isDark ? AppTheme.mintGreen : AppTheme.leafGreen).withOpacity(0.05),
                   shape: BoxShape.circle,
                 ),
               ).animate(onPlay: (c) => c.repeat(reverse: true))
@@ -69,7 +66,7 @@ class _SplashScreenState extends State<SplashScreen> {
                 width: 200,
                 height: 200,
                 decoration: BoxDecoration(
-                  color: AppTheme.forestGreen.withOpacity(0.05),
+                  color: (isDark ? AppTheme.mintGreen : AppTheme.forestGreen).withOpacity(0.05),
                   shape: BoxShape.circle,
                 ),
               ).animate(onPlay: (c) => c.repeat(reverse: true))
@@ -84,12 +81,12 @@ class _SplashScreenState extends State<SplashScreen> {
                     width: 120,
                     height: 120,
                     decoration: AppTheme.getClayDecoration(
-                      color: AppTheme.forestGreen,
+                      color: isDark ? AppTheme.mintGreen : AppTheme.forestGreen,
                       borderRadius: 40,
                     ),
-                    child: const Icon(
+                    child: Icon(
                       LucideIcons.truck,
-                      color: Colors.white,
+                      color: isDark ? const Color(0xFF0F172A) : Colors.white,
                       size: 60,
                     ),
                   ).animate()
@@ -97,12 +94,12 @@ class _SplashScreenState extends State<SplashScreen> {
                    .scale(curve: Curves.easeOutBack, duration: 800.ms)
                    .shimmer(delay: 1.seconds, duration: 2.seconds),
                   const SizedBox(height: 32),
-                  const Text(
+                  Text(
                     'ReLoop',
                     style: TextStyle(
                       fontSize: 40,
                       fontWeight: FontWeight.w900,
-                      color: AppTheme.forestGreen,
+                      color: isDark ? Colors.white : AppTheme.forestGreen,
                       letterSpacing: -1,
                     ),
                   ).animate()
@@ -114,7 +111,7 @@ class _SplashScreenState extends State<SplashScreen> {
                     style: TextStyle(
                       fontSize: 12,
                       fontWeight: FontWeight.bold,
-                      color: AppTheme.lightGreen,
+                      color: isDark ? AppTheme.mintGreen : AppTheme.lightGreen,
                       letterSpacing: 4,
                     ),
                   ).animate()
@@ -131,9 +128,9 @@ class _SplashScreenState extends State<SplashScreen> {
               child: Center(
                 child: Column(
                   children: [
-                    const CircularProgressIndicator(
+                    CircularProgressIndicator(
                       strokeWidth: 2,
-                      valueColor: AlwaysStoppedAnimation<Color>(AppTheme.forestGreen),
+                      valueColor: AlwaysStoppedAnimation<Color>(isDark ? AppTheme.mintGreen : AppTheme.forestGreen),
                     ).animate().fadeIn(delay: 1.seconds),
                     const SizedBox(height: 16),
                     Text(
@@ -141,7 +138,7 @@ class _SplashScreenState extends State<SplashScreen> {
                       style: TextStyle(
                         fontSize: 10,
                         fontWeight: FontWeight.bold,
-                        color: Colors.grey.shade400,
+                        color: isDark ? Colors.grey.shade600 : Colors.grey.shade400,
                         letterSpacing: 2,
                       ),
                     ).animate().fadeIn(delay: 1.2.seconds),

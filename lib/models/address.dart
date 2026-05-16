@@ -12,6 +12,7 @@ class Address {
   final double latitude;
   final double longitude;
   final bool isDefault;
+  final String label; // e.g. 'Home', 'Office', 'Other'
 
   Address({
     String? id,
@@ -25,6 +26,7 @@ class Address {
     required this.latitude,
     required this.longitude,
     this.isDefault = false,
+    this.label = 'Home',
   }) : id = id ?? const Uuid().v4();
 
   Address copyWith({
@@ -38,6 +40,7 @@ class Address {
     double? latitude,
     double? longitude,
     bool? isDefault,
+    String? label,
   }) {
     return Address(
       id: id,
@@ -51,6 +54,7 @@ class Address {
       latitude: latitude ?? this.latitude,
       longitude: longitude ?? this.longitude,
       isDefault: isDefault ?? this.isDefault,
+      label: label ?? this.label,
     );
   }
 }

@@ -46,15 +46,12 @@ class _LocationPermissionScreenState extends State<LocationPermissionScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
     return Scaffold(
       body: Container(
         width: double.infinity,
-        decoration: const BoxDecoration(
-          gradient: LinearGradient(
-            colors: [Color(0xFFF0F7F4), Color(0xFFE4F0E8)],
-            begin: Alignment.topCenter,
-            end: Alignment.bottomCenter,
-          ),
+        decoration: BoxDecoration(
+          gradient: isDark ? AppTheme.darkBgGradient : AppTheme.lightBgGradient,
         ),
         child: SafeArea(
           child: Column(
@@ -67,7 +64,7 @@ class _LocationPermissionScreenState extends State<LocationPermissionScreen> {
                   child: Container(
                     width: double.infinity,
                     decoration: AppTheme.getClayDecoration(
-                      color: Colors.white,
+                      color: isDark ? const Color(0xFF1E293B) : Colors.white,
                       borderRadius: 32,
                     ),
                     clipBehavior: Clip.antiAlias,
@@ -76,7 +73,7 @@ class _LocationPermissionScreenState extends State<LocationPermissionScreen> {
                         // Dummy Map Background
                         Positioned.fill(
                           child: Opacity(
-                            opacity: 0.5,
+                            opacity: isDark ? 0.3 : 0.5,
                             child: Image.network(
                               'https://images.unsplash.com/photo-1524661135-423995f22d0b?w=800&q=80',
                               fit: BoxFit.cover,
@@ -89,8 +86,8 @@ class _LocationPermissionScreenState extends State<LocationPermissionScreen> {
                             decoration: BoxDecoration(
                               gradient: LinearGradient(
                                 colors: [
-                                  Colors.white.withOpacity(0.1),
-                                  Colors.white.withOpacity(0.8),
+                                  (isDark ? const Color(0xFF1E293B) : Colors.white).withOpacity(0.1),
+                                  (isDark ? const Color(0xFF1E293B) : Colors.white).withOpacity(0.8),
                                 ],
                                 begin: Alignment.topCenter,
                                 end: Alignment.bottomCenter,
@@ -102,10 +99,10 @@ class _LocationPermissionScreenState extends State<LocationPermissionScreen> {
                         if (_locationFetched)
                           Center(
                             child:
-                                const Icon(
+                                Icon(
                                   LucideIcons.mapPin,
                                   size: 48,
-                                  color: AppTheme.forestGreen,
+                                  color: isDark ? AppTheme.mintGreen : AppTheme.forestGreen,
                                 ).animate().scale(
                                   curve: Curves.elasticOut,
                                   duration: 800.ms,
@@ -113,8 +110,8 @@ class _LocationPermissionScreenState extends State<LocationPermissionScreen> {
                           )
                         else if (_isLoading)
                           Center(
-                            child: const CircularProgressIndicator(
-                              color: AppTheme.forestGreen,
+                            child: CircularProgressIndicator(
+                              color: isDark ? AppTheme.mintGreen : AppTheme.forestGreen,
                             ),
                           )
                         else
@@ -142,12 +139,13 @@ class _LocationPermissionScreenState extends State<LocationPermissionScreen> {
                 flex: 5,
                 child: Container(
                   padding: const EdgeInsets.all(32),
-                  decoration: const BoxDecoration(
-                    color: Colors.white,
-                    borderRadius: BorderRadius.only(
+                  decoration: BoxDecoration(
+                    color: isDark ? const Color(0xFF1E293B) : Colors.white,
+                    borderRadius: const BorderRadius.only(
                       topLeft: Radius.circular(48),
                       topRight: Radius.circular(48),
                     ),
+                    border: isDark ? Border.all(color: Colors.white.withOpacity(0.08), width: 1) : null,
                   ),
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
@@ -157,10 +155,10 @@ class _LocationPermissionScreenState extends State<LocationPermissionScreen> {
                         _locationFetched
                             ? 'Location Found!'
                             : 'Enable Location',
-                        style: const TextStyle(
+                        style: TextStyle(
                           fontSize: 32,
                           fontWeight: FontWeight.bold,
-                          color: AppTheme.forestGreen,
+                          color: isDark ? Colors.white : AppTheme.forestGreen,
                         ),
                       ).animate(target: _locationFetched ? 1 : 0).fadeIn(),
                       const SizedBox(height: 16),
@@ -170,7 +168,7 @@ class _LocationPermissionScreenState extends State<LocationPermissionScreen> {
                             : 'To provide you with accurate scrap prices and connect you with nearby pickup staff, we need your location.',
                         style: TextStyle(
                           fontSize: 16,
-                          color: Colors.grey.shade600,
+                          color: isDark ? Colors.grey.shade400 : Colors.grey.shade600,
                           height: 1.5,
                         ),
                       ),
@@ -181,7 +179,7 @@ class _LocationPermissionScreenState extends State<LocationPermissionScreen> {
                         Container(
                               padding: const EdgeInsets.all(24),
                               decoration: AppTheme.getClayDecoration(
-                                color: AppTheme.softBeige,
+                                color: isDark ? const Color(0xFF0F172A) : AppTheme.softBeige,
                                 borderRadius: 24,
                               ),
                               child: Row(
@@ -189,14 +187,14 @@ class _LocationPermissionScreenState extends State<LocationPermissionScreen> {
                                   Container(
                                     padding: const EdgeInsets.all(12),
                                     decoration: BoxDecoration(
-                                      color: AppTheme.leafGreen.withOpacity(
+                                      color: (isDark ? AppTheme.mintGreen : AppTheme.leafGreen).withOpacity(
                                         0.1,
                                       ),
                                       shape: BoxShape.circle,
                                     ),
-                                    child: const Icon(
+                                    child: Icon(
                                       LucideIcons.navigation,
-                                      color: AppTheme.forestGreen,
+                                      color: isDark ? AppTheme.mintGreen : AppTheme.forestGreen,
                                     ),
                                   ),
                                   const SizedBox(width: 16),
@@ -205,19 +203,19 @@ class _LocationPermissionScreenState extends State<LocationPermissionScreen> {
                                       crossAxisAlignment:
                                           CrossAxisAlignment.start,
                                       children: [
-                                        const Text(
+                                        Text(
                                           'Current Address',
                                           style: TextStyle(
-                                            color: Colors.grey,
+                                            color: isDark ? Colors.grey.shade500 : Colors.grey,
                                             fontSize: 12,
                                             fontWeight: FontWeight.bold,
                                           ),
                                         ),
                                         const SizedBox(height: 4),
-                                        const Text(
+                                        Text(
                                           '123 Green Valley Road, Eco Park, City Center',
                                           style: TextStyle(
-                                            color: AppTheme.forestGreen,
+                                            color: isDark ? Colors.white : AppTheme.forestGreen,
                                             fontSize: 14,
                                             fontWeight: FontWeight.w600,
                                           ),
@@ -243,11 +241,11 @@ class _LocationPermissionScreenState extends State<LocationPermissionScreen> {
                             icon: const Icon(LucideIcons.mapPin, size: 20),
                             label: const Text(
                               'Use Current Location',
-                              style: TextStyle(fontSize: 16),
+                              style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
                             ),
                             style: ElevatedButton.styleFrom(
-                              backgroundColor: AppTheme.forestGreen,
-                              foregroundColor: Colors.white,
+                              backgroundColor: isDark ? AppTheme.mintGreen : AppTheme.forestGreen,
+                              foregroundColor: isDark ? const Color(0xFF0F172A) : Colors.white,
                               padding: const EdgeInsets.symmetric(vertical: 20),
                               shape: RoundedRectangleBorder(
                                 borderRadius: BorderRadius.circular(32),
@@ -261,8 +259,8 @@ class _LocationPermissionScreenState extends State<LocationPermissionScreen> {
                           child: ElevatedButton(
                             onPressed: _continueToHome,
                             style: ElevatedButton.styleFrom(
-                              backgroundColor: AppTheme.forestGreen,
-                              foregroundColor: Colors.white,
+                              backgroundColor: isDark ? AppTheme.mintGreen : AppTheme.forestGreen,
+                              foregroundColor: isDark ? const Color(0xFF0F172A) : Colors.white,
                               padding: const EdgeInsets.symmetric(vertical: 20),
                               shape: RoundedRectangleBorder(
                                 borderRadius: BorderRadius.circular(32),
@@ -270,7 +268,7 @@ class _LocationPermissionScreenState extends State<LocationPermissionScreen> {
                             ),
                             child: const Text(
                               'Continue to App',
-                              style: TextStyle(fontSize: 16),
+                              style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
                             ),
                           ),
                         ).animate().fadeIn(delay: 400.ms),
@@ -284,7 +282,7 @@ class _LocationPermissionScreenState extends State<LocationPermissionScreen> {
                               onPressed: _continueToHome,
                               child: Text(
                                 'Skip for now',
-                                style: TextStyle(color: Colors.grey.shade500),
+                                style: TextStyle(color: isDark ? Colors.grey.shade600 : Colors.grey.shade500, fontWeight: FontWeight.bold),
                               ),
                             ),
                           ),

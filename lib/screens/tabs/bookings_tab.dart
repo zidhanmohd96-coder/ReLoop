@@ -2,6 +2,7 @@ part of '../home_screen.dart';
 
 extension BookingsTabExtension on _HomeScreenState {
   Widget _buildBookingsTab(BuildContext context) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
     return DefaultTabController(
       length: 3,
       child: SafeArea(
@@ -13,18 +14,18 @@ extension BookingsTabExtension on _HomeScreenState {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  const Text(
+                  Text(
                     'Pickups',
                     style: TextStyle(
                       fontSize: 32,
                       fontWeight: FontWeight.bold,
-                      color: AppTheme.forestGreen,
+                      color: isDark ? Colors.white : AppTheme.forestGreen,
                     ),
                   ),
                   Text(
                     'YOUR RECYCLING JOURNEY',
                     style: TextStyle(
-                      color: AppTheme.lightGreen,
+                      color: AppTheme.mintGreen,
                       fontSize: 12,
                       fontWeight: FontWeight.bold,
                       letterSpacing: 1,
@@ -36,16 +37,16 @@ extension BookingsTabExtension on _HomeScreenState {
             Container(
               margin: const EdgeInsets.symmetric(horizontal: 24),
               decoration: BoxDecoration(
-                color: Colors.grey.shade200,
+                color: isDark ? const Color(0xFF1E293B) : Colors.grey.shade200,
                 borderRadius: BorderRadius.circular(32),
               ),
               child: TabBar(
                 indicator: BoxDecoration(
-                  color: AppTheme.forestGreen,
+                  color: isDark ? AppTheme.mintGreen : AppTheme.forestGreen,
                   borderRadius: BorderRadius.circular(32),
                 ),
-                labelColor: Colors.white,
-                unselectedLabelColor: Colors.grey.shade600,
+                labelColor: isDark ? const Color(0xFF0F172A) : Colors.white,
+                unselectedLabelColor: isDark ? Colors.grey.shade400 : Colors.grey.shade600,
                 indicatorSize: TabBarIndicatorSize.tab,
                 dividerColor: Colors.transparent,
                 labelStyle: const TextStyle(fontWeight: FontWeight.bold),
@@ -73,6 +74,7 @@ extension BookingsTabExtension on _HomeScreenState {
                         'Pending',
                         LucideIcons.clock,
                         context,
+                        isDark,
                       ),
                     ],
                   ),
@@ -83,13 +85,14 @@ extension BookingsTabExtension on _HomeScreenState {
                       _buildBookingCard(
                         'newspaper, cardboard, books',
                         'Completed',
-                        AppTheme.forestGreen,
+                        AppTheme.mintGreen,
                         'Completed on Fri, 10 May',
                         'Office',
                         '₹320',
                         '+230 POINTS',
                         LucideIcons.checkCircle,
                         context,
+                        isDark,
                       ),
                     ],
                   ),
@@ -107,6 +110,7 @@ extension BookingsTabExtension on _HomeScreenState {
                         '0 POINTS',
                         LucideIcons.xCircle,
                         context,
+                        isDark,
                       ),
                     ],
                   ),
@@ -129,13 +133,14 @@ extension BookingsTabExtension on _HomeScreenState {
     String points,
     IconData icon,
     BuildContext context,
+    bool isDark,
   ) {
     return GestureDetector(
       onTap: () => _showBookingFullDetails(context),
       child: Container(
         padding: const EdgeInsets.all(24),
         decoration: AppTheme.getClayDecoration(
-          color: Colors.white,
+          color: isDark ? const Color(0xFF1E293B) : Colors.white,
           borderRadius: 32,
         ),
         child: Column(
@@ -149,10 +154,10 @@ extension BookingsTabExtension on _HomeScreenState {
                     Container(
                       padding: const EdgeInsets.all(12),
                       decoration: BoxDecoration(
-                        color: AppTheme.forestGreen,
+                        color: isDark ? AppTheme.mintGreen.withOpacity(0.15) : AppTheme.forestGreen,
                         borderRadius: BorderRadius.circular(16),
                       ),
-                      child: Icon(icon, color: Colors.white, size: 24),
+                      child: Icon(icon, color: isDark ? AppTheme.mintGreen : Colors.white, size: 24),
                     ),
                     const SizedBox(width: 16),
                     Column(
@@ -161,7 +166,7 @@ extension BookingsTabExtension on _HomeScreenState {
                         Text(
                           '#QXAU7C',
                           style: TextStyle(
-                            color: Colors.grey.shade400,
+                            color: isDark ? Colors.grey.shade500 : Colors.grey.shade400,
                             fontSize: 10,
                             fontWeight: FontWeight.bold,
                           ),
@@ -171,10 +176,10 @@ extension BookingsTabExtension on _HomeScreenState {
                           width: 120,
                           child: Text(
                             items,
-                            style: const TextStyle(
+                            style: TextStyle(
                               fontWeight: FontWeight.bold,
                               fontSize: 16,
-                              color: AppTheme.forestGreen,
+                              color: isDark ? Colors.white : AppTheme.forestGreen,
                             ),
                             maxLines: 2,
                             overflow: TextOverflow.ellipsis,
@@ -190,13 +195,14 @@ extension BookingsTabExtension on _HomeScreenState {
                     vertical: 6,
                   ),
                   decoration: BoxDecoration(
-                    color: statusColor,
+                    color: statusColor.withOpacity(isDark ? 0.2 : 1.0),
                     borderRadius: BorderRadius.circular(16),
+                    border: isDark ? Border.all(color: statusColor.withOpacity(0.5)) : null,
                   ),
                   child: Text(
                     status,
-                    style: const TextStyle(
-                      color: Colors.white,
+                    style: TextStyle(
+                      color: isDark ? statusColor : Colors.white,
                       fontSize: 12,
                       fontWeight: FontWeight.bold,
                     ),
@@ -207,61 +213,61 @@ extension BookingsTabExtension on _HomeScreenState {
             const SizedBox(height: 24),
             Row(
               children: [
-                const Icon(
+                Icon(
                   LucideIcons.clock,
                   size: 16,
-                  color: AppTheme.lightGreen,
+                  color: isDark ? AppTheme.mintGreen : AppTheme.lightGreen,
                 ),
                 const SizedBox(width: 8),
                 Text(
                   schedule,
-                  style: TextStyle(color: Colors.grey.shade600, fontSize: 14),
+                  style: TextStyle(color: isDark ? Colors.grey.shade400 : Colors.grey.shade600, fontSize: 14),
                 ),
               ],
             ),
             const SizedBox(height: 8),
             Row(
               children: [
-                const Icon(
+                Icon(
                   LucideIcons.mapPin,
                   size: 16,
-                  color: AppTheme.lightGreen,
+                  color: isDark ? AppTheme.mintGreen : AppTheme.lightGreen,
                 ),
                 const SizedBox(width: 8),
                 Text(
                   location,
-                  style: TextStyle(color: Colors.grey.shade600, fontSize: 14),
+                  style: TextStyle(color: isDark ? Colors.grey.shade400 : Colors.grey.shade600, fontSize: 14),
                 ),
               ],
             ),
             const SizedBox(height: 24),
-            const Divider(height: 1),
+            Divider(height: 1, color: isDark ? Colors.white.withOpacity(0.1) : null),
             const SizedBox(height: 24),
             Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
                 Row(
                   children: [
-                    const Icon(
+                    Icon(
                       LucideIcons.trendingUp,
                       size: 16,
-                      color: AppTheme.lightGreen,
+                      color: isDark ? AppTheme.mintGreen : AppTheme.lightGreen,
                     ),
                     const SizedBox(width: 8),
                     Text(
                       'Earned $earned',
-                      style: const TextStyle(
+                      style: TextStyle(
                         fontWeight: FontWeight.bold,
-                        color: AppTheme.forestGreen,
+                        color: isDark ? Colors.white : AppTheme.forestGreen,
                       ),
                     ),
                   ],
                 ),
                 Text(
                   points,
-                  style: const TextStyle(
+                  style: TextStyle(
                     fontWeight: FontWeight.bold,
-                    color: AppTheme.lightGreen,
+                    color: isDark ? AppTheme.mintGreen : AppTheme.lightGreen,
                   ),
                 ),
               ],
@@ -273,15 +279,16 @@ extension BookingsTabExtension on _HomeScreenState {
   }
 
   void _showBookingFullDetails(BuildContext context) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
     showModalBottomSheet(
       context: context,
       backgroundColor: Colors.transparent,
       isScrollControlled: true,
       builder: (context) => Container(
         padding: const EdgeInsets.all(32),
-        decoration: const BoxDecoration(
-          color: Colors.white,
-          borderRadius: BorderRadius.only(
+        decoration: BoxDecoration(
+          color: isDark ? const Color(0xFF1E293B) : Colors.white,
+          borderRadius: const BorderRadius.only(
             topLeft: Radius.circular(32),
             topRight: Radius.circular(32),
           ),
@@ -293,24 +300,24 @@ extension BookingsTabExtension on _HomeScreenState {
             Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
-                const Text(
+                Text(
                   'Booking Details',
                   style: TextStyle(
                     fontSize: 24,
                     fontWeight: FontWeight.bold,
-                    color: AppTheme.forestGreen,
+                    color: isDark ? Colors.white : AppTheme.forestGreen,
                   ),
                 ),
                 Container(
                   decoration: BoxDecoration(
                     shape: BoxShape.circle,
-                    border: Border.all(color: Colors.grey.shade200),
+                    border: Border.all(color: isDark ? Colors.white.withOpacity(0.1) : Colors.grey.shade200),
                   ),
                   child: IconButton(
-                    icon: const Icon(
+                    icon: Icon(
                       LucideIcons.x,
                       size: 20,
-                      color: AppTheme.forestGreen,
+                      color: isDark ? Colors.white : AppTheme.forestGreen,
                     ),
                     onPressed: () => Navigator.pop(context),
                   ),
@@ -324,44 +331,46 @@ extension BookingsTabExtension on _HomeScreenState {
                 Text(
                   'Booking ID',
                   style: TextStyle(
-                    color: Colors.grey.shade500,
+                    color: isDark ? Colors.grey.shade400 : Colors.grey.shade500,
                     fontWeight: FontWeight.bold,
                   ),
                 ),
-                const Text(
+                Text(
                   '#QXAU7C',
                   style: TextStyle(
                     fontWeight: FontWeight.bold,
-                    color: AppTheme.forestGreen,
+                    color: isDark ? AppTheme.mintGreen : AppTheme.forestGreen,
                   ),
                 ),
               ],
             ),
             const SizedBox(height: 16),
-            const Divider(),
+            Divider(color: isDark ? Colors.white.withOpacity(0.1) : null),
             const SizedBox(height: 16),
             _buildDetailRow(
               LucideIcons.calendar,
               'Date & Time',
               'Fri, 10 May • 11:30 AM',
+              isDark,
             ),
             const SizedBox(height: 16),
             _buildDetailRow(
               LucideIcons.mapPin,
               'Location',
               'Office, 4th Floor, Tech Park',
+              isDark,
             ),
             const SizedBox(height: 16),
-            _buildDetailRow(LucideIcons.user, 'Collected By', 'Rajesh Kumar'),
+            _buildDetailRow(LucideIcons.user, 'Collected By', 'Rajesh Kumar', isDark),
             const SizedBox(height: 16),
-            const Divider(),
+            Divider(color: isDark ? Colors.white.withOpacity(0.1) : null),
             const SizedBox(height: 16),
-            const Text(
+            Text(
               'Scrap Details',
               style: TextStyle(
                 fontWeight: FontWeight.bold,
                 fontSize: 16,
-                color: AppTheme.forestGreen,
+                color: isDark ? Colors.white : AppTheme.forestGreen,
               ),
             ),
             const SizedBox(height: 16),
@@ -369,33 +378,35 @@ extension BookingsTabExtension on _HomeScreenState {
               LucideIcons.fileText,
               'Newspaper',
               '12 kg × ₹15/kg = ₹180',
+              isDark,
             ),
             const SizedBox(height: 8),
             _buildDetailRow(
               LucideIcons.package,
               'Cardboard',
               '14 kg × ₹10/kg = ₹140',
+              isDark,
             ),
             const SizedBox(height: 16),
-            const Divider(),
+            Divider(color: isDark ? Colors.white.withOpacity(0.1) : null),
             const SizedBox(height: 16),
             Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
-                const Text(
+                Text(
                   'Total Earnings',
                   style: TextStyle(
                     fontWeight: FontWeight.bold,
                     fontSize: 18,
-                    color: AppTheme.forestGreen,
+                    color: isDark ? Colors.white : AppTheme.forestGreen,
                   ),
                 ),
-                const Text(
+                Text(
                   '₹320',
                   style: TextStyle(
                     fontWeight: FontWeight.bold,
                     fontSize: 24,
-                    color: AppTheme.forestGreen,
+                    color: isDark ? AppTheme.mintGreen : AppTheme.forestGreen,
                   ),
                 ),
               ],
@@ -404,18 +415,18 @@ extension BookingsTabExtension on _HomeScreenState {
             Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
-                const Text(
+                Text(
                   'Eco Points Added',
                   style: TextStyle(
                     fontWeight: FontWeight.bold,
-                    color: AppTheme.lightGreen,
+                    color: AppTheme.mintGreen,
                   ),
                 ),
                 const Text(
                   '+230',
                   style: TextStyle(
                     fontWeight: FontWeight.bold,
-                    color: AppTheme.lightGreen,
+                    color: AppTheme.mintGreen,
                   ),
                 ),
               ],
@@ -427,11 +438,11 @@ extension BookingsTabExtension on _HomeScreenState {
     );
   }
 
-  Widget _buildDetailRow(IconData icon, String label, String value) {
+  Widget _buildDetailRow(IconData icon, String label, String value, bool isDark) {
     return Row(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Icon(icon, size: 20, color: Colors.grey.shade400),
+        Icon(icon, size: 20, color: isDark ? Colors.grey.shade500 : Colors.grey.shade400),
         const SizedBox(width: 12),
         Expanded(
           child: Column(
@@ -440,7 +451,7 @@ extension BookingsTabExtension on _HomeScreenState {
               Text(
                 label,
                 style: TextStyle(
-                  color: Colors.grey.shade500,
+                  color: isDark ? Colors.grey.shade400 : Colors.grey.shade500,
                   fontSize: 12,
                   fontWeight: FontWeight.bold,
                 ),
@@ -448,8 +459,8 @@ extension BookingsTabExtension on _HomeScreenState {
               const SizedBox(height: 4),
               Text(
                 value,
-                style: const TextStyle(
-                  color: AppTheme.forestGreen,
+                style: TextStyle(
+                  color: isDark ? Colors.white : AppTheme.forestGreen,
                   fontWeight: FontWeight.w600,
                 ),
               ),
