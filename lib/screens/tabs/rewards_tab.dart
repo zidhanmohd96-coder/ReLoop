@@ -3,8 +3,10 @@ part of '../home_screen.dart';
 extension RewardsTabExtension on _HomeScreenState {
   Widget _buildRewardsTab(BuildContext context) {
     final isDark = Theme.of(context).brightness == Brightness.dark;
+    final screenWidth = MediaQuery.of(context).size.width;
+    final hPad = screenWidth < 380 ? 16.0 : 24.0;
     return ListView(
-      padding: const EdgeInsets.fromLTRB(24, 24, 24, 120),
+      padding: EdgeInsets.fromLTRB(hPad, hPad, hPad, 120),
       children: [
         Center(
           child: Text(

@@ -3,8 +3,10 @@ part of '../home_screen.dart';
 extension HomeTabExtension on _HomeScreenState {
   Widget _buildHomeTab(BuildContext context) {
     final isDark = Theme.of(context).brightness == Brightness.dark;
+    final screenWidth = MediaQuery.of(context).size.width;
+    final hPad = screenWidth < 380 ? 16.0 : 24.0;
     return ListView(
-      padding: const EdgeInsets.fromLTRB(24, 24, 24, 120),
+      padding: EdgeInsets.fromLTRB(hPad, hPad, hPad, 120),
       children: [
         Row(
           mainAxisAlignment: MainAxisAlignment.spaceBetween,
@@ -142,12 +144,15 @@ extension HomeTabExtension on _HomeScreenState {
                                                   size: 32,
                                                 ),
                                                 const SizedBox(width: 16),
-                                                Text(
-                                                  offer['modalTitle'],
-                                                  style: const TextStyle(
-                                                    fontSize: 24,
-                                                    fontWeight: FontWeight.bold,
-                                                    color: AppTheme.forestGreen,
+                                                Expanded(
+                                                  child: Text(
+                                                    offer['modalTitle'],
+                                                    style: const TextStyle(
+                                                      fontSize: 24,
+                                                      fontWeight: FontWeight.bold,
+                                                      color: AppTheme.forestGreen,
+                                                    ),
+                                                    overflow: TextOverflow.ellipsis,
                                                   ),
                                                 ),
                                               ],
@@ -995,7 +1000,7 @@ extension HomeTabExtension on _HomeScreenState {
     return GestureDetector(
       onTap: () => _showPricingDetails(context, name, price, icon, details),
       child: Container(
-        width: 110,
+        width: MediaQuery.of(context).size.width * 0.30,
         padding: const EdgeInsets.all(16),
         decoration: AppTheme.getClayDecoration(
           color: Colors.white,
@@ -1405,11 +1410,13 @@ extension HomeTabExtension on _HomeScreenState {
                         color: AppTheme.forestGreen,
                       ),
                       const SizedBox(width: 16),
-                      Text(
-                        'Wed, 14 May • 10:00 AM - 1:00 PM',
-                        style: TextStyle(
-                          fontWeight: FontWeight.w600,
-                          color: AppTheme.forestGreen,
+                      Expanded(
+                        child: Text(
+                          'Wed, 14 May • 10:00 AM - 1:00 PM',
+                          style: TextStyle(
+                            fontWeight: FontWeight.w600,
+                            color: AppTheme.forestGreen,
+                          ),
                         ),
                       ),
                     ],
@@ -1657,8 +1664,8 @@ extension HomeTabExtension on _HomeScreenState {
 
   Widget _buildReviewCard(String name, String review, int rating) {
     return Container(
-      width: 280,
-      padding: const EdgeInsets.all(24),
+      width: MediaQuery.of(context).size.width * 0.72,
+      padding: const EdgeInsets.all(20),
       decoration: AppTheme.getClayDecoration(
         color: Colors.white,
         borderRadius: 24,

@@ -4,8 +4,11 @@ extension ProfileTabExtension on _HomeScreenState {
   Widget _buildProfileTab(BuildContext context) {
     final isDark = Theme.of(context).brightness == Brightness.dark;
     return Consumer<AppState>(
-      builder: (context, appState, _) => ListView(
-      padding: const EdgeInsets.fromLTRB(24, 24, 24, 120),
+      builder: (context, appState, _) {
+      final screenWidth = MediaQuery.of(context).size.width;
+      final hPad = screenWidth < 380 ? 16.0 : 24.0;
+      return ListView(
+      padding: EdgeInsets.fromLTRB(hPad, hPad, hPad, 120),
       children: [
         Center(
           child: Stack(
@@ -121,8 +124,9 @@ extension ProfileTabExtension on _HomeScreenState {
           ]),
         ).animate().fadeIn(delay: 400.ms).slideY(begin: 0.1, end: 0),
       ],
-    ),
     );
+  },
+);
   }
 
   Widget _buildSectionHeader(String title, bool isDark) {
