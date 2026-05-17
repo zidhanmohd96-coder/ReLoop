@@ -4,7 +4,45 @@ extension HomeTabExtension on _HomeScreenState {
   Widget _buildHomeTab(BuildContext context) {
     final isDark = Theme.of(context).brightness == Brightness.dark;
     final screenWidth = MediaQuery.of(context).size.width;
-    final hPad = screenWidth < 380 ? 16.0 : 24.0;
+    final hPad = context.scalePadding(24.0);
+
+    return RefreshIndicator(
+      onRefresh: () async {
+        triggerStateUpdate(() {
+          _isLoadingHome = true;
+        });
+        await Future.delayed(const Duration(milliseconds: 1500));
+        triggerStateUpdate(() {
+          _isLoadingHome = false;
+        });
+      },
+      color: isDark ? AppTheme.mintGreen : AppTheme.forestGreen,
+      backgroundColor: isDark ? const Color(0xFF1E293B) : Colors.white,
+      child: _isLoadingHome
+          ? _buildHomeSkeleton(context, hPad, isDark)
+          : (context.isTablet || context.isLandscape)
+              ? _buildTabletHomeLayout(context, hPad, isDark)
+              : _buildMobileHomeLayout(context, hPad, isDark),
+    );
+  }
+
+  Widget _buildHomeSkeleton(BuildContext context, double hPad, bool isDark) {
+    final bgColor = isDark ? const Color(0xFF1E293B) : Colors.grey.shade200;
+    final shimmerColor = isDark ? Colors.white10 : Colors.white60;
+
+    Widget skeletonBox({required double width, required double height, double borderRadius = 16}) {
+      return Container(
+        width: width,
+        height: height,
+        decoration: BoxDecoration(
+          color: bgColor,
+          borderRadius: BorderRadius.circular(borderRadius),
+        ),
+      )
+      .animate(onPlay: (controller) => controller.repeat())
+      .shimmer(duration: 1500.ms, color: shimmerColor);
+    }
+
     return ListView(
       padding: EdgeInsets.fromLTRB(hPad, hPad, hPad, 120),
       children: [
@@ -13,794 +51,868 @@ extension HomeTabExtension on _HomeScreenState {
           children: [
             Row(
               children: [
-                Container(
-                  padding: const EdgeInsets.all(12),
-                  decoration: AppTheme.getClayDecoration(
-                    color: AppTheme.forestGreen,
-                  ),
-                  child: const Icon(
-                    LucideIcons.treeDeciduous,
-                    color: Colors.white,
-                    size: 24,
-                  ),
-                ),
+                skeletonBox(width: 48, height: 48, borderRadius: 16),
                 const SizedBox(width: 12),
                 Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Text(
-                      'ReLoop',
-                      style: Theme.of(context).textTheme.titleLarge?.copyWith(
-                        fontSize: 24,
-                        fontWeight: FontWeight.bold,
-                        color: isDark ? Colors.white : AppTheme.forestGreen,
-                      ),
-                    ),
-                    Text(
-                      'PREMIUM RECYCLING',
-                      style: TextStyle(
-                        color: isDark
-                            ? AppTheme.mintGreen
-                            : AppTheme.lightGreen,
-                        fontSize: 10,
-                        fontWeight: FontWeight.bold,
-                        letterSpacing: 1,
-                      ),
-                    ),
+                    skeletonBox(width: 100, height: 20),
+                    const SizedBox(height: 6),
+                    skeletonBox(width: 140, height: 12),
                   ],
                 ),
               ],
             ),
-            const CircleAvatar(
-              radius: 20,
-              backgroundImage: NetworkImage(
-                'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=100',
+            skeletonBox(width: 40, height: 40, borderRadius: 20),
+          ],
+        ),
+        const SizedBox(height: 32),
+        skeletonBox(width: 120, height: 16),
+        const SizedBox(height: 16),
+        skeletonBox(width: double.infinity, height: 200, borderRadius: 32),
+        const SizedBox(height: 32),
+        skeletonBox(width: 180, height: 16),
+        const SizedBox(height: 16),
+        skeletonBox(width: double.infinity, height: 80, borderRadius: 24),
+        const SizedBox(height: 32),
+        Row(
+          children: [
+            Expanded(child: skeletonBox(width: double.infinity, height: 120, borderRadius: 24)),
+            const SizedBox(width: 16),
+            Expanded(child: skeletonBox(width: double.infinity, height: 120, borderRadius: 24)),
+          ],
+        ),
+        const SizedBox(height: 32),
+        skeletonBox(width: 100, height: 16),
+        const SizedBox(height: 16),
+        Row(
+          children: [
+            skeletonBox(width: 110, height: 140, borderRadius: 24),
+            const SizedBox(width: 12),
+            skeletonBox(width: 110, height: 140, borderRadius: 24),
+            const SizedBox(width: 12),
+            skeletonBox(width: 110, height: 140, borderRadius: 24),
+          ],
+        ),
+      ],
+    );
+  }
+
+  Widget _buildMobileHomeLayout(BuildContext context, double hPad, bool isDark) {
+    return ListView(
+      padding: EdgeInsets.fromLTRB(hPad, hPad, hPad, 120),
+      children: [
+        _buildWelcomeHeader(context, isDark),
+        const SizedBox(height: 32),
+        _buildOffersSection(context, isDark),
+        const SizedBox(height: 32),
+        _buildScheduledPickupCard(context, isDark),
+        const SizedBox(height: 32),
+        _buildQuickStartSection(context, isDark),
+        const SizedBox(height: 24),
+        _buildLocationBar(context, isDark),
+        const SizedBox(height: 32),
+        _buildPointsAndInfoSection(context, isDark),
+        const SizedBox(height: 32),
+        _buildPricingSection(context, isDark),
+        const SizedBox(height: 32),
+        _buildReviewsSection(context, isDark),
+        const SizedBox(height: 32),
+        _buildReferralBanner(context, isDark),
+      ],
+    );
+  }
+
+  Widget _buildTabletHomeLayout(BuildContext context, double hPad, bool isDark) {
+    return ListView(
+      padding: EdgeInsets.fromLTRB(hPad, hPad, hPad, 120),
+      children: [
+        _buildWelcomeHeader(context, isDark),
+        const SizedBox(height: 32),
+        Row(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Expanded(
+              flex: 5,
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  _buildOffersSection(context, isDark),
+                  const SizedBox(height: 32),
+                  _buildScheduledPickupCard(context, isDark),
+                  const SizedBox(height: 32),
+                  _buildReferralBanner(context, isDark),
+                ],
+              ),
+            ),
+            const SizedBox(width: 32),
+            Expanded(
+              flex: 5,
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  _buildLocationBar(context, isDark),
+                  const SizedBox(height: 24),
+                  _buildQuickStartSection(context, isDark),
+                  const SizedBox(height: 32),
+                  _buildPointsAndInfoSection(context, isDark),
+                  const SizedBox(height: 32),
+                  _buildPricingSection(context, isDark),
+                  const SizedBox(height: 32),
+                  _buildReviewsSection(context, isDark),
+                ],
               ),
             ),
           ],
         ),
-        const SizedBox(height: 32),
+      ],
+    );
+  }
+
+  Widget _buildWelcomeHeader(BuildContext context, bool isDark) {
+    return Row(
+      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+      children: [
+        Row(
+          children: [
+            Container(
+              padding: const EdgeInsets.all(12),
+              decoration: AppTheme.getClayDecoration(
+                color: AppTheme.forestGreen,
+              ),
+              child: const Icon(
+                LucideIcons.treeDeciduous,
+                color: Colors.white,
+                size: 24,
+              ),
+            ),
+            const SizedBox(width: 12),
+            Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  'ReLoop',
+                  style: Theme.of(context).textTheme.titleLarge?.copyWith(
+                    fontSize: context.scaleFont(24),
+                    fontWeight: FontWeight.bold,
+                    color: isDark ? Colors.white : AppTheme.forestGreen,
+                  ),
+                ),
+                Text(
+                  'PREMIUM RECYCLING',
+                  style: TextStyle(
+                    color: isDark ? AppTheme.mintGreen : AppTheme.lightGreen,
+                    fontSize: context.scaleFont(10),
+                    fontWeight: FontWeight.bold,
+                    letterSpacing: 1,
+                  ),
+                ),
+              ],
+            ),
+          ],
+        ),
+        ClipRRect(
+          borderRadius: BorderRadius.circular(20),
+          child: Image.network(
+            'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=100',
+            width: 40,
+            height: 40,
+            fit: BoxFit.cover,
+            errorBuilder: (context, error, stackTrace) => Container(
+              width: 40,
+              height: 40,
+              color: isDark ? AppTheme.mintGreen.withOpacity(0.2) : AppTheme.forestGreen.withOpacity(0.1),
+              child: Icon(
+                LucideIcons.user,
+                size: 20,
+                color: isDark ? AppTheme.mintGreen : AppTheme.forestGreen,
+              ),
+            ),
+          ),
+        ),
+      ],
+    );
+  }
+
+  Widget _buildOffersSection(BuildContext context, bool isDark) {
+    final offerHeight = context.isTablet ? 280.0 : 240.0;
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
         Text(
           'OFFERS & NEWS',
           style: TextStyle(
-            color: isDark ? Colors.grey.shade500 : Colors.grey.shade500,
-            fontSize: 12,
+            color: isDark ? Colors.grey.shade400 : Colors.grey.shade500,
+            fontSize: context.scaleFont(12),
             fontWeight: FontWeight.bold,
             letterSpacing: 1,
           ),
         ),
         const SizedBox(height: 16),
         SizedBox(
-              height: 240,
-              child: PageView.builder(
-                controller: _offersPageController,
-                onPageChanged: (index) {
-                  setState(() {
-                    _currentOfferIndex = index % _offers.length;
-                  });
-                },
-                itemBuilder: (context, i) {
-                  final index = i % _offers.length;
-                  final offer = _offers[index];
-                  return AnimatedContainer(
-                    duration: const Duration(milliseconds: 500),
-                    margin: const EdgeInsets.only(right: 8),
-                    padding: const EdgeInsets.all(24),
-                    decoration: BoxDecoration(
-                      color: offer['color'],
-                      borderRadius: BorderRadius.circular(32),
-                    ),
-                    child: Stack(
+          height: offerHeight,
+          child: PageView.builder(
+            controller: _offersPageController,
+            onPageChanged: (index) {
+              triggerStateUpdate(() {
+                _currentOfferIndex = index % _offers.length;
+              });
+            },
+            itemBuilder: (context, i) {
+              final index = i % _offers.length;
+              final offer = _offers[index];
+              return AnimatedContainer(
+                duration: const Duration(milliseconds: 500),
+                margin: const EdgeInsets.only(right: 8),
+                padding: const EdgeInsets.all(24),
+                decoration: BoxDecoration(
+                  color: offer['color'],
+                  borderRadius: BorderRadius.circular(32),
+                ),
+                child: Stack(
+                  children: [
+                    Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            const Spacer(),
-                            Text(
-                              offer['title'],
-                              style: const TextStyle(
-                                color: Colors.white,
-                                fontSize: 24,
-                                fontWeight: FontWeight.bold,
-                              ),
-                            ),
-                            const SizedBox(height: 8),
-                            Text(
-                              offer['desc'],
-                              style: const TextStyle(
-                                color: Colors.white,
-                                fontSize: 14,
-                              ),
-                            ),
-                            const Spacer(),
-                            ElevatedButton(
-                              onPressed: () {
-                                showModalBottomSheet(
-                                  context: context,
-                                  backgroundColor: Colors.transparent,
-                                  builder: (context) => Container(
-                                    padding: const EdgeInsets.all(32),
-                                    decoration: const BoxDecoration(
-                                      color: Colors.white,
-                                      borderRadius: BorderRadius.only(
-                                        topLeft: Radius.circular(32),
-                                        topRight: Radius.circular(32),
-                                      ),
-                                    ),
-                                    child: Column(
-                                      mainAxisSize: MainAxisSize.min,
-                                      crossAxisAlignment:
-                                          CrossAxisAlignment.start,
+                        const Spacer(),
+                        Text(
+                          offer['title'],
+                          style: TextStyle(
+                            color: Colors.white,
+                            fontSize: context.scaleFont(24),
+                            fontWeight: FontWeight.bold,
+                          ),
+                        ),
+                        const SizedBox(height: 8),
+                        Text(
+                          offer['desc'],
+                          style: TextStyle(
+                            color: Colors.white,
+                            fontSize: context.scaleFont(14),
+                          ),
+                        ),
+                        const Spacer(),
+                        ElevatedButton(
+                          onPressed: () {
+                            showModalBottomSheet(
+                              context: context,
+                              backgroundColor: Colors.transparent,
+                              builder: (context) => Container(
+                                padding: const EdgeInsets.all(32),
+                                decoration: BoxDecoration(
+                                  color: isDark ? const Color(0xFF1E293B) : Colors.white,
+                                  borderRadius: const BorderRadius.only(
+                                    topLeft: Radius.circular(32),
+                                    topRight: Radius.circular(32),
+                                  ),
+                                ),
+                                child: Column(
+                                  mainAxisSize: MainAxisSize.min,
+                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                  children: [
+                                    Row(
+                                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
                                       children: [
                                         Row(
-                                          mainAxisAlignment:
-                                              MainAxisAlignment.spaceBetween,
                                           children: [
-                                            Row(
-                                              children: [
-                                                Icon(
-                                                  offer['icon'],
-                                                  color: offer['iconColor'],
-                                                  size: 32,
-                                                ),
-                                                const SizedBox(width: 16),
-                                                Expanded(
-                                                  child: Text(
-                                                    offer['modalTitle'],
-                                                    style: const TextStyle(
-                                                      fontSize: 24,
-                                                      fontWeight: FontWeight.bold,
-                                                      color: AppTheme.forestGreen,
-                                                    ),
-                                                    overflow: TextOverflow.ellipsis,
-                                                  ),
-                                                ),
-                                              ],
+                                            Icon(
+                                              offer['icon'],
+                                              color: offer['iconColor'],
+                                              size: 32,
                                             ),
-                                            Container(
-                                              decoration: BoxDecoration(
-                                                shape: BoxShape.circle,
-                                                border: Border.all(
-                                                  color: Colors.grey.shade200,
-                                                ),
+                                            const SizedBox(width: 16),
+                                            Text(
+                                              offer['modalTitle'],
+                                              style: TextStyle(
+                                                fontSize: context.scaleFont(24),
+                                                fontWeight: FontWeight.bold,
+                                                color: isDark ? Colors.white : AppTheme.forestGreen,
                                               ),
-                                              child: IconButton(
-                                                icon: const Icon(
-                                                  LucideIcons.x,
-                                                  size: 20,
-                                                  color: AppTheme.forestGreen,
-                                                ),
-                                                onPressed: () =>
-                                                    Navigator.pop(context),
-                                              ),
+                                              overflow: TextOverflow.ellipsis,
                                             ),
                                           ],
                                         ),
-                                        const SizedBox(height: 32),
-                                        Text(
-                                          'DETAILS & REQUIREMENTS',
-                                          style: TextStyle(
-                                            color: Colors.grey.shade500,
-                                            fontSize: 10,
-                                            fontWeight: FontWeight.bold,
-                                            letterSpacing: 1,
-                                          ),
-                                        ),
-                                        const SizedBox(height: 16),
-                                        Text(
-                                          offer['modalDesc'],
-                                          style: const TextStyle(
-                                            fontSize: 16,
-                                            color: AppTheme.forestGreen,
-                                            height: 1.5,
-                                          ),
-                                        ),
-                                        const SizedBox(height: 32),
-                                        SizedBox(
-                                          width: double.infinity,
-                                          child: ElevatedButton(
-                                            onPressed: () {
-                                              Navigator.pop(context);
-                                              Navigator.push(
-                                                context,
-                                                MaterialPageRoute(
-                                                  builder: (context) =>
-                                                      const BookingFlowScreen(),
-                                                ),
-                                              );
-                                            },
-                                            style: ElevatedButton.styleFrom(
-                                              backgroundColor:
-                                                  AppTheme.forestGreen,
-                                              padding:
-                                                  const EdgeInsets.symmetric(
-                                                    vertical: 20,
-                                                  ),
-                                              shape: RoundedRectangleBorder(
-                                                borderRadius:
-                                                    BorderRadius.circular(16),
-                                              ),
-                                            ),
-                                            child: const Text(
-                                              'Schedule Now',
-                                              style: TextStyle(
-                                                fontSize: 16,
-                                                color: Colors.white,
-                                              ),
+                                        Container(
+                                          decoration: BoxDecoration(
+                                            shape: BoxShape.circle,
+                                            border: Border.all(
+                                              color: isDark ? Colors.white.withOpacity(0.1) : Colors.grey.shade200,
                                             ),
                                           ),
+                                          child: IconButton(
+                                            icon: Icon(
+                                              LucideIcons.x,
+                                              size: 20,
+                                              color: isDark ? Colors.white : AppTheme.forestGreen,
+                                            ),
+                                            onPressed: () => Navigator.pop(context),
+                                          ),
                                         ),
-                                        const SizedBox(height: 16),
                                       ],
                                     ),
-                                  ),
-                                );
-                              },
-                              style: ElevatedButton.styleFrom(
-                                backgroundColor: Colors.white.withOpacity(0.2),
-                                foregroundColor: Colors.white,
-                                elevation: 0,
-                                shape: RoundedRectangleBorder(
-                                  borderRadius: BorderRadius.circular(16),
+                                    const SizedBox(height: 32),
+                                    Text(
+                                      'DETAILS & REQUIREMENTS',
+                                      style: TextStyle(
+                                        color: Colors.grey.shade500,
+                                        fontSize: context.scaleFont(10),
+                                        fontWeight: FontWeight.bold,
+                                        letterSpacing: 1,
+                                      ),
+                                    ),
+                                    const SizedBox(height: 16),
+                                    Text(
+                                      offer['modalDesc'],
+                                      style: TextStyle(
+                                        fontSize: context.scaleFont(16),
+                                        color: isDark ? Colors.grey.shade300 : AppTheme.forestGreen,
+                                        height: 1.5,
+                                      ),
+                                    ),
+                                    const SizedBox(height: 32),
+                                    SizedBox(
+                                      width: double.infinity,
+                                      child: ElevatedButton(
+                                        onPressed: () {
+                                          Navigator.pop(context);
+                                          Navigator.push(
+                                            context,
+                                            MaterialPageRoute(
+                                              builder: (context) => const BookingFlowScreen(),
+                                            ),
+                                          );
+                                        },
+                                        style: ElevatedButton.styleFrom(
+                                          backgroundColor: isDark ? AppTheme.mintGreen : AppTheme.forestGreen,
+                                          foregroundColor: isDark ? const Color(0xFF0F172A) : Colors.white,
+                                          padding: const EdgeInsets.symmetric(vertical: 20),
+                                          shape: RoundedRectangleBorder(
+                                            borderRadius: BorderRadius.circular(16),
+                                          ),
+                                        ),
+                                        child: const Text(
+                                          'BOOK PICKUP',
+                                          style: TextStyle(fontWeight: FontWeight.bold),
+                                        ),
+                                      ),
+                                    ),
+                                  ],
                                 ),
                               ),
-                              child: const Text('LEARN MORE'),
+                            );
+                          },
+                          style: ElevatedButton.styleFrom(
+                            backgroundColor: Colors.white,
+                            foregroundColor: offer['color'],
+                            padding: const EdgeInsets.symmetric(
+                              horizontal: 20,
+                              vertical: 12,
                             ),
-                          ],
-                        ),
-                        Positioned(
-                          right: -20,
-                          bottom: -20,
-                          child: Icon(
-                            offer['icon'],
-                            size: 100,
-                            color: Colors.white.withOpacity(0.1),
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(16),
+                            ),
+                          ),
+                          child: const Text(
+                            'CLAIM NOW',
+                            style: TextStyle(
+                              fontSize: 12,
+                              fontWeight: FontWeight.bold,
+                            ),
                           ),
                         ),
                       ],
                     ),
-                  );
-                },
-              ),
-            )
-            .animate()
-            .fadeIn(duration: 500.ms)
-            .slideY(begin: 0.1, end: 0, curve: Curves.easeOutQuad),
-        const SizedBox(height: 24),
+                    Positioned(
+                      top: 0,
+                      right: 0,
+                      child: Icon(
+                        offer['icon'],
+                        color: Colors.white.withOpacity(0.15),
+                        size: 160,
+                      ),
+                    ),
+                  ],
+                ),
+              );
+            },
+          ),
+        ),
+      ],
+    );
+  }
+
+  Widget _buildScheduledPickupCard(BuildContext context, bool isDark) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
         Text(
           'SCHEDULED PICK-UP',
           style: TextStyle(
-            color: Colors.grey.shade500,
-            fontSize: 12,
+            color: isDark ? Colors.grey.shade400 : Colors.grey.shade500,
+            fontSize: context.scaleFont(12),
             fontWeight: FontWeight.bold,
             letterSpacing: 1,
           ),
         ),
         const SizedBox(height: 16),
         GestureDetector(
-              onTap: () => _showPickupDetails(context),
-              child: Container(
-                padding: const EdgeInsets.all(24),
-                decoration: AppTheme.getClayDecoration(
-                  color: isDark ? const Color(0xFF1E293B) : Colors.white,
-                ),
-                child: Column(
+          onTap: () => _showPickupDetails(context),
+          child: Container(
+            padding: const EdgeInsets.all(24),
+            decoration: AppTheme.getClayDecoration(
+              color: isDark ? const Color(0xFF1E293B) : Colors.white,
+            ),
+            child: Column(
+              children: [
+                Row(
                   children: [
-                    Row(
-                      children: [
-                        Container(
-                          padding: const EdgeInsets.all(12),
-                          decoration: BoxDecoration(
-                            color: isDark
-                                ? AppTheme.mintGreen.withOpacity(0.15)
-                                : AppTheme.leafGreen.withOpacity(0.1),
-                            borderRadius: BorderRadius.circular(16),
-                          ),
-                          child: Icon(
-                            LucideIcons.truck,
-                            color: isDark
-                                ? AppTheme.mintGreen
-                                : AppTheme.forestGreen,
-                          ),
-                        ),
-                        const SizedBox(width: 16),
-                        Expanded(
-                          child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              Text(
-                                'Upcoming Pickup',
-                                style: TextStyle(
-                                  fontWeight: FontWeight.bold,
-                                  fontSize: 16,
-                                  color: isDark
-                                      ? Colors.white
-                                      : AppTheme.forestGreen,
-                                ),
-                              ),
-                              Text(
-                                'EST. WEIGHT: 15-20 KG',
-                                style: TextStyle(
-                                  color: isDark
-                                      ? AppTheme.mintGreen
-                                      : AppTheme.lightGreen,
-                                  fontSize: 10,
-                                  fontWeight: FontWeight.bold,
-                                  letterSpacing: 1,
-                                ),
-                              ),
-                            ],
-                          ),
-                        ),
-                        Container(
-                          padding: const EdgeInsets.symmetric(
-                            horizontal: 10,
-                            vertical: 4,
-                          ),
-                          decoration: BoxDecoration(
-                            color: isDark
-                                ? Colors.orange.withOpacity(0.2)
-                                : Colors.orange.shade50,
-                            borderRadius: BorderRadius.circular(8),
-                            border: isDark
-                                ? Border.all(
-                                    color: Colors.orange.withOpacity(0.3),
-                                  )
-                                : null,
-                          ),
-                          child: Text(
-                            'PENDING',
+                    Container(
+                      padding: const EdgeInsets.all(12),
+                      decoration: BoxDecoration(
+                        color: isDark
+                            ? AppTheme.mintGreen.withOpacity(0.15)
+                            : AppTheme.leafGreen.withOpacity(0.1),
+                        borderRadius: BorderRadius.circular(16),
+                      ),
+                      child: Icon(
+                        LucideIcons.truck,
+                        color: isDark ? AppTheme.mintGreen : AppTheme.forestGreen,
+                        size: 24,
+                      ),
+                    ),
+                    const SizedBox(width: 16),
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            'Paper & Cardboard',
                             style: TextStyle(
-                              color: isDark
-                                  ? Colors.orange.shade400
-                                  : Colors.orange.shade700,
-                              fontSize: 10,
+                              fontSize: context.scaleFont(16),
                               fontWeight: FontWeight.bold,
+                              color: isDark ? Colors.white : AppTheme.forestGreen,
                             ),
                           ),
-                        ),
-                      ],
-                    ),
-                    const SizedBox(height: 20),
-                    Row(
-                      children: [
-                        Expanded(
-                          child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              Row(
-                                children: [
-                                  Icon(
-                                    LucideIcons.calendar,
-                                    size: 14,
-                                    color: isDark
-                                        ? Colors.grey.shade500
-                                        : Colors.grey.shade400,
-                                  ),
-                                  const SizedBox(width: 8),
-                                  Text(
-                                    'Wed, 20 May',
-                                    style: TextStyle(
-                                      color: isDark
-                                          ? Colors.grey.shade400
-                                          : Colors.grey.shade600,
-                                      fontSize: 13,
-                                    ),
-                                  ),
-                                ],
-                              ),
-                              const SizedBox(height: 4),
-                              Row(
-                                children: [
-                                  Icon(
-                                    LucideIcons.mapPin,
-                                    size: 14,
-                                    color: isDark
-                                        ? Colors.grey.shade500
-                                        : Colors.grey.shade400,
-                                  ),
-                                  const SizedBox(width: 8),
-                                  Text(
-                                    'Home, Kochi',
-                                    style: TextStyle(
-                                      color: isDark
-                                          ? Colors.grey.shade400
-                                          : Colors.grey.shade600,
-                                      fontSize: 13,
-                                    ),
-                                  ),
-                                ],
-                              ),
-                            ],
+                          const SizedBox(height: 4),
+                          Text(
+                            'Estimated Value: ₹350',
+                            style: TextStyle(
+                              color: isDark ? AppTheme.mintGreen : AppTheme.lightGreen,
+                              fontWeight: FontWeight.w600,
+                              fontSize: context.scaleFont(12),
+                            ),
                           ),
-                        ),
-                        Icon(
-                          LucideIcons.chevronRight,
-                          color: isDark
-                              ? Colors.grey.shade700
-                              : Colors.grey.shade300,
-                        ),
-                      ],
+                        ],
+                      ),
                     ),
-                    const SizedBox(height: 20),
-                    ClipRRect(
-                      borderRadius: BorderRadius.circular(8),
-                      child: LinearProgressIndicator(
-                        value: 0.4,
-                        backgroundColor: isDark
-                            ? Colors.grey.shade800
-                            : Colors.grey.shade100,
-                        valueColor: AlwaysStoppedAnimation<Color>(
-                          isDark ? AppTheme.mintGreen : AppTheme.forestGreen,
+                    Container(
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 12,
+                        vertical: 6,
+                      ),
+                      decoration: BoxDecoration(
+                        color: Colors.orange.shade400.withOpacity(0.15),
+                        borderRadius: BorderRadius.circular(12),
+                      ),
+                      child: Text(
+                        'PENDING',
+                        style: TextStyle(
+                          color: Colors.orange.shade400,
+                          fontSize: 10,
+                          fontWeight: FontWeight.bold,
                         ),
-                        minHeight: 6,
                       ),
                     ),
                   ],
                 ),
-              ),
-            )
-            .animate()
-            .fadeIn(delay: 100.ms, duration: 500.ms)
-            .slideY(begin: 0.1, end: 0, curve: Curves.easeOutQuad),
+                const SizedBox(height: 20),
+                const Divider(height: 1),
+                const SizedBox(height: 20),
+                Row(
+                  children: [
+                    Icon(
+                      LucideIcons.calendar,
+                      size: 16,
+                      color: isDark ? AppTheme.mintGreen : AppTheme.lightGreen,
+                    ),
+                    const SizedBox(width: 8),
+                    Expanded(
+                      child: Text(
+                        'Wed, 14 May • 10:00 AM - 1:00 PM',
+                        style: TextStyle(
+                          color: isDark ? Colors.grey.shade300 : Colors.grey.shade600,
+                          fontSize: 13,
+                        ),
+                        overflow: TextOverflow.ellipsis,
+                      ),
+                    ),
+                    Icon(
+                      LucideIcons.chevronRight,
+                      size: 16,
+                      color: isDark ? Colors.grey.shade500 : Colors.grey.shade400,
+                    ),
+                  ],
+                ),
+              ],
+            ),
+          ),
+        ),
+      ],
+    );
+  }
 
-        const SizedBox(height: 32),
+  Widget _buildQuickStartSection(BuildContext context, bool isDark) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
         Text(
           'QUICK START',
           style: TextStyle(
-            color: Colors.grey.shade500,
-            fontSize: 12,
+            color: isDark ? Colors.grey.shade400 : Colors.grey.shade500,
+            fontSize: context.scaleFont(12),
             fontWeight: FontWeight.bold,
             letterSpacing: 1,
           ),
-        ).animate().fadeIn(delay: 200.ms, duration: 500.ms),
+        ),
         const SizedBox(height: 16),
         if (_isServiceAvailable)
           InkWell(
-                onTap: () {
-                  Navigator.push(
-                    context,
-                    MaterialPageRoute(
-                      builder: (context) => const BookingFlowScreen(),
-                    ),
-                  );
-                },
-                child:
-                    Container(
-                          padding: const EdgeInsets.symmetric(
-                            vertical: 24,
-                            horizontal: 32,
-                          ),
-                          decoration: BoxDecoration(
-                            gradient: const LinearGradient(
-                              colors: [AppTheme.forestGreen, Color(0xFF1E5631)],
-                              begin: Alignment.topLeft,
-                              end: Alignment.bottomRight,
-                            ),
-                            borderRadius: BorderRadius.circular(40),
-                            boxShadow: [
-                              BoxShadow(
-                                color: AppTheme.forestGreen.withOpacity(0.3),
-                                blurRadius: 20,
-                                offset: const Offset(0, 10),
-                              ),
-                            ],
-                          ),
-                          child: Row(
-                            mainAxisAlignment: MainAxisAlignment.center,
-                            children: [
-                              Column(
-                                children: [
-                                  Row(
-                                    children: const [
-                                      Text(
-                                        'Book Pickup',
-                                        style: TextStyle(
-                                          fontSize: 24,
-                                          fontWeight: FontWeight.bold,
-                                          color: Colors.white,
-                                        ),
-                                      ),
-                                      SizedBox(width: 8),
-                                      Icon(
-                                        LucideIcons.arrowRight,
-                                        color: AppTheme.leafGreen,
-                                      ),
-                                    ],
-                                  ),
-                                  const SizedBox(height: 4),
-                                  Text(
-                                    'Schedule in seconds',
-                                    style: TextStyle(
-                                      color: Colors.white.withOpacity(0.8),
-                                      fontSize: 12,
-                                    ),
-                                  ),
-                                ],
-                              ),
-                            ],
-                          ),
-                        )
-                        .animate(
-                          onPlay: (controller) =>
-                              controller.repeat(reverse: true),
-                        )
-                        .shimmer(duration: 2000.ms, color: Colors.white24),
-              )
-              .animate()
-              .fadeIn(delay: 300.ms, duration: 500.ms)
-              .slideY(begin: 0.1, end: 0, curve: Curves.easeOutQuad)
-        else
-          GestureDetector(
-                onTap: () => _showServiceZonesModal(context),
-                child: Container(
-                  padding: const EdgeInsets.all(24),
-                  decoration: AppTheme.getClayDecoration(
-                    color: Colors.white,
-                    borderRadius: 32,
+            onTap: () {
+              Navigator.push(
+                context,
+                MaterialPageRoute(
+                  builder: (context) => const BookingFlowScreen(),
+                ),
+              );
+            },
+            child: Container(
+              padding: const EdgeInsets.symmetric(
+                vertical: 24,
+                horizontal: 32,
+              ),
+              decoration: BoxDecoration(
+                gradient: const LinearGradient(
+                  colors: [AppTheme.forestGreen, Color(0xFF1E5631)],
+                  begin: Alignment.topLeft,
+                  end: Alignment.bottomRight,
+                ),
+                borderRadius: BorderRadius.circular(40),
+                boxShadow: [
+                  BoxShadow(
+                    color: AppTheme.forestGreen.withOpacity(0.3),
+                    blurRadius: 20,
+                    offset: const Offset(0, 10),
                   ),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
+                ],
+              ),
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  Column(
                     children: [
                       Row(
                         children: [
-                          Icon(
-                            LucideIcons.alertTriangle,
-                            color: Colors.orange.shade400,
-                            size: 24,
-                          ),
-                          const SizedBox(width: 12),
                           Text(
-                            'Service Unavailable',
+                            'Book Pickup',
                             style: TextStyle(
+                              fontSize: context.scaleFont(24),
                               fontWeight: FontWeight.bold,
-                              fontSize: 16,
-                              color: Colors.grey.shade800,
+                              color: Colors.white,
                             ),
+                          ),
+                          const SizedBox(width: 8),
+                          const Icon(
+                            LucideIcons.arrowRight,
+                            color: AppTheme.leafGreen,
                           ),
                         ],
                       ),
-                      const SizedBox(height: 12),
+                      const SizedBox(height: 4),
                       Text(
-                        'We are currently expanding. Tap to view our active service zones in Kerala.',
+                        'Schedule in seconds',
                         style: TextStyle(
-                          color: Colors.grey.shade600,
-                          fontSize: 13,
-                          height: 1.4,
+                          color: Colors.white.withOpacity(0.8),
+                          fontSize: context.scaleFont(12),
                         ),
-                      ),
-                      const SizedBox(height: 16),
-                      // Kerala zone chips
-                      Wrap(
-                        spacing: 8,
-                        runSpacing: 8,
-                        children: [
-                          _buildZoneChip('Kochi', true),
-                          _buildZoneChip('Thrissur', true),
-                          _buildZoneChip('Calicut', false),
-                          _buildZoneChip('Trivandrum', false),
-                          _buildZoneChip('Kannur', false),
-                        ],
-                      ),
-                      const SizedBox(height: 12),
-                      Row(
-                        children: [
-                          Container(
-                            width: 8,
-                            height: 8,
-                            decoration: BoxDecoration(
-                              color: AppTheme.leafGreen,
-                              shape: BoxShape.circle,
-                            ),
-                          ),
-                          const SizedBox(width: 6),
-                          Text(
-                            'Active',
-                            style: TextStyle(
-                              fontSize: 11,
-                              color: Colors.grey.shade600,
-                            ),
-                          ),
-                          const SizedBox(width: 16),
-                          Container(
-                            width: 8,
-                            height: 8,
-                            decoration: BoxDecoration(
-                              color: Colors.grey.shade300,
-                              shape: BoxShape.circle,
-                            ),
-                          ),
-                          const SizedBox(width: 6),
-                          Text(
-                            'Coming Soon',
-                            style: TextStyle(
-                              fontSize: 11,
-                              color: Colors.grey.shade600,
-                            ),
-                          ),
-                        ],
                       ),
                     ],
-                  ),
-                ),
-              )
-              .animate()
-              .fadeIn(delay: 300.ms, duration: 500.ms)
-              .slideY(begin: 0.1, end: 0, curve: Curves.easeOutQuad),
-
-        const SizedBox(height: 16),
-        Container(
-              padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
-              decoration: AppTheme.getClayDecoration(
-                color: Colors.white,
-                borderRadius: 24,
-              ),
-              child: Row(
-                children: [
-                  Container(
-                    padding: const EdgeInsets.all(8),
-                    decoration: BoxDecoration(
-                      color: AppTheme.leafGreen.withOpacity(0.1),
-                      shape: BoxShape.circle,
-                    ),
-                    child: const Icon(
-                      LucideIcons.mapPin,
-                      size: 16,
-                      color: AppTheme.forestGreen,
-                    ),
-                  ),
-                  const SizedBox(width: 12),
-                  Expanded(
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text(
-                          'Current Location',
-                          style: TextStyle(
-                            fontSize: 10,
-                            fontWeight: FontWeight.bold,
-                            color: Colors.grey.shade500,
-                          ),
-                        ),
-                        const SizedBox(height: 2),
-                        Text(
-                          '123 Green Valley Road, Eco Park, City Center',
-                          style: TextStyle(
-                            fontSize: 12,
-                            fontWeight: FontWeight.bold,
-                            color: AppTheme.forestGreen,
-                          ),
-                          overflow: TextOverflow.ellipsis,
-                        ),
-                      ],
-                    ),
-                  ),
-                  const SizedBox(width: 8),
-                  GestureDetector(
-                    onTap: () {
-                      setState(() {
-                        _isServiceAvailable = !_isServiceAvailable;
-                      });
-                    },
-                    child: Text(
-                      'CHANGE',
-                      style: TextStyle(
-                        fontSize: 12,
-                        fontWeight: FontWeight.bold,
-                        color: AppTheme.lightGreen,
-                      ),
-                    ),
                   ),
                 ],
               ),
             )
-            .animate()
-            .fadeIn(delay: 400.ms, duration: 500.ms)
-            .slideY(begin: 0.1, end: 0, curve: Curves.easeOutQuad),
-        const SizedBox(height: 24),
-        Row(
-          children: [
-            Expanded(
-                  child: GestureDetector(
-                    onTap: () => _showPointsHistory(context),
-                    child: Container(
-                      padding: const EdgeInsets.all(24),
-                      decoration: AppTheme.getClayDecoration(
-                        color: AppTheme.forestGreen,
+            .animate(
+              onPlay: (controller) => controller.repeat(reverse: true),
+            )
+            .shimmer(duration: 2000.ms, color: Colors.white24),
+          )
+        else
+          GestureDetector(
+            onTap: () => _showServiceZonesModal(context),
+            child: Container(
+              padding: const EdgeInsets.all(24),
+              decoration: AppTheme.getClayDecoration(
+                color: isDark ? const Color(0xFF1E293B) : Colors.white,
+                borderRadius: 32,
+              ),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Row(
+                    children: [
+                      Icon(
+                        LucideIcons.alertTriangle,
+                        color: Colors.orange.shade400,
+                        size: 24,
                       ),
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Container(
-                            padding: const EdgeInsets.all(10),
-                            decoration: BoxDecoration(
-                              color: Colors.white.withOpacity(0.1),
-                              shape: BoxShape.circle,
-                            ),
-                            child: const Icon(
-                              LucideIcons.zap,
-                              color: Colors.white,
-                              size: 16,
-                            ),
-                          ),
-                          const SizedBox(height: 32),
-                          const Text(
-                            '450',
-                            style: TextStyle(
-                              color: Colors.white,
-                              fontSize: 24,
-                              fontWeight: FontWeight.bold,
-                            ),
-                          ),
-                          Text(
-                            'ECOPOINTS',
-                            style: TextStyle(
-                              color: Colors.white.withOpacity(0.7),
-                              fontSize: 10,
-                              fontWeight: FontWeight.bold,
-                              letterSpacing: 1,
-                            ),
-                          ),
-                        ],
+                      const SizedBox(width: 12),
+                      Text(
+                        'Service Unavailable',
+                        style: TextStyle(
+                          fontWeight: FontWeight.bold,
+                          fontSize: 16,
+                          color: isDark ? Colors.white : Colors.grey.shade800,
+                        ),
                       ),
+                    ],
+                  ),
+                  const SizedBox(height: 12),
+                  Text(
+                    'We are currently expanding. Tap to view our active service zones in Kerala.',
+                    style: TextStyle(
+                      color: isDark ? Colors.grey.shade400 : Colors.grey.shade600,
+                      fontSize: 13,
+                      height: 1.4,
                     ),
                   ),
-                )
-                .animate()
-                .fadeIn(delay: 400.ms, duration: 500.ms)
-                .slideY(begin: 0.1, end: 0),
-            const SizedBox(width: 16),
-            Expanded(
-                  child: GestureDetector(
-                    onTap: () => _showAppInfo(context),
-                    child: Container(
-                      padding: const EdgeInsets.all(24),
-                      decoration: AppTheme.getClayDecoration(
-                        color: AppTheme.forestGreen,
+                  const SizedBox(height: 16),
+                  Wrap(
+                    spacing: 8,
+                    runSpacing: 8,
+                    children: [
+                      _buildZoneChip('Kochi', true),
+                      _buildZoneChip('Thrissur', true),
+                      _buildZoneChip('Calicut', false),
+                      _buildZoneChip('Trivandrum', false),
+                      _buildZoneChip('Kannur', false),
+                    ],
+                  ),
+                  const SizedBox(height: 12),
+                  Row(
+                    children: [
+                      Container(
+                        width: 8,
+                        height: 8,
+                        decoration: const BoxDecoration(
+                          color: AppTheme.leafGreen,
+                          shape: BoxShape.circle,
+                        ),
                       ),
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Container(
-                            padding: const EdgeInsets.all(10),
-                            decoration: BoxDecoration(
-                              color: Colors.white.withOpacity(0.1),
-                              shape: BoxShape.circle,
-                            ),
-                            child: const Icon(
-                              LucideIcons.info,
-                              color: Colors.white,
-                              size: 16,
-                            ),
-                          ),
-                          const SizedBox(height: 32),
-                          const Text(
-                            'What is\nReLoop?',
-                            style: TextStyle(
-                              color: Colors.white,
-                              fontSize: 20,
-                              fontWeight: FontWeight.bold,
-                            ),
-                          ),
-                        ],
+                      const SizedBox(width: 6),
+                      Text(
+                        'Active',
+                        style: TextStyle(
+                          fontSize: 11,
+                          color: isDark ? Colors.grey.shade400 : Colors.grey.shade600,
+                        ),
                       ),
+                      const SizedBox(width: 16),
+                      Container(
+                        width: 8,
+                        height: 8,
+                        decoration: BoxDecoration(
+                          color: isDark ? const Color(0xFF334155) : Colors.grey.shade300,
+                          shape: BoxShape.circle,
+                        ),
+                      ),
+                      const SizedBox(width: 6),
+                      Text(
+                        'Coming Soon',
+                        style: TextStyle(
+                          fontSize: 11,
+                          color: isDark ? Colors.grey.shade400 : Colors.grey.shade600,
+                        ),
+                      ),
+                    ],
+                  ),
+                ],
+              ),
+            ),
+          ),
+      ],
+    );
+  }
+
+  Widget _buildLocationBar(BuildContext context, bool isDark) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
+      decoration: AppTheme.getClayDecoration(
+        color: isDark ? const Color(0xFF1E293B) : Colors.white,
+        borderRadius: 24,
+      ),
+      child: Row(
+        children: [
+          Container(
+            padding: const EdgeInsets.all(8),
+            decoration: BoxDecoration(
+              color: isDark ? AppTheme.mintGreen.withOpacity(0.15) : AppTheme.leafGreen.withOpacity(0.1),
+              shape: BoxShape.circle,
+            ),
+            child: Icon(
+              LucideIcons.mapPin,
+              size: 16,
+              color: isDark ? AppTheme.mintGreen : AppTheme.forestGreen,
+            ),
+          ),
+          const SizedBox(width: 12),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  'Current Location',
+                  style: TextStyle(
+                    fontSize: 10,
+                    fontWeight: FontWeight.bold,
+                    color: isDark ? Colors.grey.shade400 : Colors.grey.shade500,
+                  ),
+                ),
+                const SizedBox(height: 2),
+                Text(
+                  '123 Green Valley Road, Eco Park, City Center',
+                  style: TextStyle(
+                    fontSize: 12,
+                    fontWeight: FontWeight.bold,
+                    color: isDark ? Colors.white : AppTheme.forestGreen,
+                  ),
+                  overflow: TextOverflow.ellipsis,
+                ),
+              ],
+            ),
+          ),
+          const SizedBox(width: 8),
+          GestureDetector(
+            onTap: () {
+              triggerStateUpdate(() {
+                _isServiceAvailable = !_isServiceAvailable;
+              });
+            },
+            child: Text(
+              'CHANGE',
+              style: TextStyle(
+                fontSize: 12,
+                fontWeight: FontWeight.bold,
+                color: isDark ? AppTheme.mintGreen : AppTheme.lightGreen,
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildPointsAndInfoSection(BuildContext context, bool isDark) {
+    return Row(
+      children: [
+        Expanded(
+          child: GestureDetector(
+            onTap: () => _showPointsHistory(context),
+            child: Container(
+              padding: const EdgeInsets.all(24),
+              decoration: AppTheme.getClayDecoration(
+                color: AppTheme.forestGreen,
+              ),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Container(
+                    padding: const EdgeInsets.all(10),
+                    decoration: BoxDecoration(
+                      color: Colors.white.withOpacity(0.1),
+                      shape: BoxShape.circle,
+                    ),
+                    child: const Icon(
+                      LucideIcons.zap,
+                      color: Colors.white,
+                      size: 16,
                     ),
                   ),
-                )
-                .animate()
-                .fadeIn(delay: 500.ms, duration: 500.ms)
-                .slideY(begin: 0.1, end: 0),
-          ],
+                  const SizedBox(height: 32),
+                  const Text(
+                    '450',
+                    style: TextStyle(
+                      color: Colors.white,
+                      fontSize: 24,
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
+                  Text(
+                    'ECOPOINTS',
+                    style: TextStyle(
+                      color: Colors.white.withOpacity(0.7),
+                      fontSize: 10,
+                      fontWeight: FontWeight.bold,
+                      letterSpacing: 1,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ),
         ),
-        const SizedBox(height: 32),
+        const SizedBox(width: 16),
+        Expanded(
+          child: GestureDetector(
+            onTap: () => _showAppInfo(context),
+            child: Container(
+              padding: const EdgeInsets.all(24),
+              decoration: AppTheme.getClayDecoration(
+                color: AppTheme.forestGreen,
+              ),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Container(
+                    padding: const EdgeInsets.all(10),
+                    decoration: BoxDecoration(
+                      color: Colors.white.withOpacity(0.1),
+                      shape: BoxShape.circle,
+                    ),
+                    child: const Icon(
+                      LucideIcons.info,
+                      color: Colors.white,
+                      size: 16,
+                    ),
+                  ),
+                  const SizedBox(height: 32),
+                  const Text(
+                    'What is\nReLoop?',
+                    style: TextStyle(
+                      color: Colors.white,
+                      fontSize: 20,
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ),
+        ),
+      ],
+    );
+  }
+
+  Widget _buildPricingSection(BuildContext context, bool isDark) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
         Row(
           mainAxisAlignment: MainAxisAlignment.spaceBetween,
           children: [
             Text(
               'PRICING (₹/KG)',
               style: TextStyle(
-                color: Colors.grey.shade500,
-                fontSize: 12,
+                color: isDark ? Colors.grey.shade400 : Colors.grey.shade500,
+                fontSize: context.scaleFont(12),
                 fontWeight: FontWeight.bold,
                 letterSpacing: 1,
               ),
@@ -808,8 +920,8 @@ extension HomeTabExtension on _HomeScreenState {
             Text(
               'DAILY RATES',
               style: TextStyle(
-                color: AppTheme.lightGreen,
-                fontSize: 10,
+                color: isDark ? AppTheme.mintGreen : AppTheme.lightGreen,
+                fontSize: context.scaleFont(10),
                 fontWeight: FontWeight.bold,
                 letterSpacing: 1,
               ),
@@ -849,12 +961,19 @@ extension HomeTabExtension on _HomeScreenState {
             ],
           ),
         ),
-        const SizedBox(height: 32),
+      ],
+    );
+  }
+
+  Widget _buildReviewsSection(BuildContext context, bool isDark) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
         Text(
           'CUSTOMER REVIEWS',
           style: TextStyle(
-            color: Colors.grey.shade500,
-            fontSize: 12,
+            color: isDark ? Colors.grey.shade400 : Colors.grey.shade500,
+            fontSize: context.scaleFont(12),
             fontWeight: FontWeight.bold,
             letterSpacing: 1,
           ),
@@ -885,107 +1004,96 @@ extension HomeTabExtension on _HomeScreenState {
               ),
             ],
           ),
-        ).animate().fadeIn(delay: 200.ms).slideY(begin: 0.1, end: 0),
-        // Referral Banner
-        const SizedBox(height: 32),
+        ),
+      ],
+    );
+  }
+
+  Widget _buildReferralBanner(BuildContext context, bool isDark) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
         Text(
           'REFER & EARN',
           style: TextStyle(
-            color: Colors.grey.shade500,
-            fontSize: 12,
+            color: isDark ? Colors.grey.shade400 : Colors.grey.shade500,
+            fontSize: context.scaleFont(12),
             fontWeight: FontWeight.bold,
             letterSpacing: 1,
           ),
         ),
         const SizedBox(height: 16),
         Container(
-              width: double.infinity,
-              padding: const EdgeInsets.all(24),
-              decoration: AppTheme.getClayDecoration(
-                color: isDark
-                    ? const Color(0xFF1E293B)
-                    : const Color(0xFFF0FDF4),
-              ),
-              child: Row(
-                children: [
-                  Expanded(
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text(
-                          'Invite & Earn',
-                          style: TextStyle(
-                            fontWeight: FontWeight.bold,
-                            fontSize: 18,
-                            color: isDark ? Colors.white : AppTheme.forestGreen,
-                          ),
-                        ),
-                        const SizedBox(height: 4),
-                        Text(
-                          'Get 500 Eco Points for every friend you refer.',
-                          style: TextStyle(
-                            color: isDark
-                                ? Colors.grey.shade400
-                                : Colors.grey.shade600,
-                            fontSize: 13,
-                          ),
-                        ),
-                        const SizedBox(height: 16),
-                        ElevatedButton(
-                          onPressed: () {},
-                          style: ElevatedButton.styleFrom(
-                            backgroundColor: isDark
-                                ? AppTheme.mintGreen
-                                : AppTheme.forestGreen,
-                            foregroundColor: isDark
-                                ? const Color(0xFF0F172A)
-                                : Colors.white,
-                            padding: const EdgeInsets.symmetric(
-                              horizontal: 20,
-                              vertical: 12,
-                            ),
-                            shape: RoundedRectangleBorder(
-                              borderRadius: BorderRadius.circular(12),
-                            ),
-                          ),
-                          child: const Text(
-                            'SHARE CODE',
-                            style: TextStyle(
-                              fontWeight: FontWeight.bold,
-                              fontSize: 12,
-                            ),
-                          ),
-                        ),
-                      ],
+          width: double.infinity,
+          padding: const EdgeInsets.all(24),
+          decoration: AppTheme.getClayDecoration(
+            color: isDark ? const Color(0xFF1E293B) : const Color(0xFFF0FDF4),
+          ),
+          child: Row(
+            children: [
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      'Invite & Earn',
+                      style: TextStyle(
+                        fontWeight: FontWeight.bold,
+                        fontSize: 18,
+                        color: isDark ? Colors.white : AppTheme.forestGreen,
+                      ),
                     ),
-                  ),
-                  Container(
-                        width: 80,
-                        height: 80,
-                        decoration: BoxDecoration(
-                          color:
-                              (isDark
-                                      ? AppTheme.mintGreen
-                                      : AppTheme.forestGreen)
-                                  .withOpacity(0.1),
-                          shape: BoxShape.circle,
+                    const SizedBox(height: 4),
+                    Text(
+                      'Get 500 Eco Points for every friend you refer.',
+                      style: TextStyle(
+                        color: isDark ? Colors.grey.shade400 : Colors.grey.shade600,
+                        fontSize: 13,
+                      ),
+                    ),
+                    const SizedBox(height: 16),
+                    ElevatedButton(
+                      onPressed: () {},
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: isDark ? AppTheme.mintGreen : AppTheme.forestGreen,
+                        foregroundColor: isDark ? const Color(0xFF0F172A) : Colors.white,
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 20,
+                          vertical: 12,
                         ),
-                        child: Icon(
-                          LucideIcons.gift,
-                          size: 40,
-                          color: isDark
-                              ? AppTheme.mintGreen
-                              : AppTheme.forestGreen,
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(12),
                         ),
-                      )
-                      .animate(onPlay: (c) => c.repeat(reverse: true))
-                      .scale(duration: 2.seconds, curve: Curves.easeInOut),
-                ],
+                      ),
+                      child: const Text(
+                        'SHARE CODE',
+                        style: TextStyle(
+                          fontWeight: FontWeight.bold,
+                          fontSize: 12,
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
               ),
-            )
-            .animate()
-            .fadeIn(delay: 800.ms)
-            .slideY(begin: 0.1, end: 0, curve: Curves.easeOutQuad),
+              Container(
+                width: 80,
+                height: 80,
+                decoration: BoxDecoration(
+                  color: (isDark ? AppTheme.mintGreen : AppTheme.forestGreen).withOpacity(0.1),
+                  shape: BoxShape.circle,
+                ),
+                child: Icon(
+                  LucideIcons.gift,
+                  size: 40,
+                  color: isDark ? AppTheme.mintGreen : AppTheme.forestGreen,
+                ),
+              )
+              .animate(onPlay: (c) => c.repeat(reverse: true))
+              .scale(duration: 2.seconds, curve: Curves.easeInOut),
+            ],
+          ),
+        ),
       ],
     );
   }
@@ -997,13 +1105,14 @@ extension HomeTabExtension on _HomeScreenState {
     IconData icon,
     String details,
   ) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
     return GestureDetector(
       onTap: () => _showPricingDetails(context, name, price, icon, details),
       child: Container(
-        width: MediaQuery.of(context).size.width * 0.30,
+        width: context.scaleCardWidth(mobileRatio: 0.30, tabletRatio: 0.20),
         padding: const EdgeInsets.all(16),
         decoration: AppTheme.getClayDecoration(
-          color: Colors.white,
+          color: isDark ? const Color(0xFF1E293B) : Colors.white,
           borderRadius: 32,
         ),
         child: Stack(
@@ -1014,28 +1123,32 @@ extension HomeTabExtension on _HomeScreenState {
               child: Icon(
                 LucideIcons.info,
                 size: 14,
-                color: Colors.grey.shade300,
+                color: isDark ? Colors.white.withOpacity(0.2) : Colors.grey.shade300,
               ),
             ),
             Center(
               child: Column(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
-                  Icon(icon, size: 32, color: AppTheme.forestGreen),
+                  Icon(
+                    icon,
+                    size: 32,
+                    color: isDark ? AppTheme.mintGreen : AppTheme.forestGreen,
+                  ),
                   const SizedBox(height: 12),
                   Text(
                     name,
-                    style: const TextStyle(
+                    style: TextStyle(
                       fontWeight: FontWeight.bold,
                       fontSize: 12,
-                      color: AppTheme.forestGreen,
+                      color: isDark ? Colors.white : AppTheme.forestGreen,
                     ),
                   ),
                   const SizedBox(height: 4),
                   Text(
                     price,
-                    style: const TextStyle(
-                      color: AppTheme.lightGreen,
+                    style: TextStyle(
+                      color: isDark ? AppTheme.mintGreen : AppTheme.lightGreen,
                       fontWeight: FontWeight.bold,
                       fontSize: 16,
                     ),
@@ -1056,14 +1169,15 @@ extension HomeTabExtension on _HomeScreenState {
     IconData icon,
     String details,
   ) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
     showModalBottomSheet(
       context: context,
       backgroundColor: Colors.transparent,
       builder: (context) => Container(
         padding: const EdgeInsets.all(32),
-        decoration: const BoxDecoration(
-          color: Colors.white,
-          borderRadius: BorderRadius.only(
+        decoration: BoxDecoration(
+          color: isDark ? const Color(0xFF1E293B) : Colors.white,
+          borderRadius: const BorderRadius.only(
             topLeft: Radius.circular(32),
             topRight: Radius.circular(32),
           ),
@@ -1079,25 +1193,29 @@ extension HomeTabExtension on _HomeScreenState {
                 Row(
                   crossAxisAlignment: CrossAxisAlignment.center,
                   children: [
-                    Icon(icon, size: 48, color: AppTheme.forestGreen),
+                    Icon(
+                      icon,
+                      size: 48,
+                      color: isDark ? AppTheme.mintGreen : AppTheme.forestGreen,
+                    ),
                     const SizedBox(width: 16),
                     Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
                         Text(
                           name,
-                          style: const TextStyle(
-                            fontSize: 28,
+                          style: TextStyle(
+                            fontSize: context.scaleFont(28),
                             fontWeight: FontWeight.bold,
-                            color: AppTheme.forestGreen,
+                            color: isDark ? Colors.white : AppTheme.forestGreen,
                           ),
                         ),
                         Text(
                           '$price per KG',
-                          style: const TextStyle(
+                          style: TextStyle(
                             fontSize: 16,
                             fontWeight: FontWeight.bold,
-                            color: AppTheme.lightGreen,
+                            color: isDark ? AppTheme.mintGreen : AppTheme.lightGreen,
                           ),
                         ),
                       ],
@@ -1107,13 +1225,15 @@ extension HomeTabExtension on _HomeScreenState {
                 Container(
                   decoration: BoxDecoration(
                     shape: BoxShape.circle,
-                    border: Border.all(color: Colors.grey.shade200),
+                    border: Border.all(
+                      color: isDark ? Colors.white.withOpacity(0.1) : Colors.grey.shade200,
+                    ),
                   ),
                   child: IconButton(
-                    icon: const Icon(
+                    icon: Icon(
                       LucideIcons.x,
                       size: 20,
-                      color: AppTheme.forestGreen,
+                      color: isDark ? Colors.white : AppTheme.forestGreen,
                     ),
                     onPressed: () => Navigator.pop(context),
                   ),
@@ -1135,7 +1255,7 @@ extension HomeTabExtension on _HomeScreenState {
               details,
               style: TextStyle(
                 fontSize: 16,
-                color: Colors.grey.shade600,
+                color: isDark ? Colors.grey.shade300 : Colors.grey.shade600,
                 height: 1.5,
               ),
             ),
@@ -1153,7 +1273,8 @@ extension HomeTabExtension on _HomeScreenState {
                   );
                 },
                 style: ElevatedButton.styleFrom(
-                  backgroundColor: AppTheme.forestGreen,
+                  backgroundColor: isDark ? AppTheme.mintGreen : AppTheme.forestGreen,
+                  foregroundColor: isDark ? const Color(0xFF0F172A) : Colors.white,
                   padding: const EdgeInsets.symmetric(vertical: 20),
                   shape: RoundedRectangleBorder(
                     borderRadius: BorderRadius.circular(16),
@@ -1161,7 +1282,7 @@ extension HomeTabExtension on _HomeScreenState {
                 ),
                 child: const Text(
                   'Schedule Now',
-                  style: TextStyle(fontSize: 16, color: Colors.white),
+                  style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
                 ),
               ),
             ),
@@ -1173,6 +1294,7 @@ extension HomeTabExtension on _HomeScreenState {
   }
 
   void _showPointsHistory(BuildContext context) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
     showModalBottomSheet(
       context: context,
       backgroundColor: Colors.transparent,
@@ -1180,9 +1302,9 @@ extension HomeTabExtension on _HomeScreenState {
       builder: (context) => Container(
         height: MediaQuery.of(context).size.height * 0.7,
         padding: const EdgeInsets.all(32),
-        decoration: const BoxDecoration(
-          color: Colors.white,
-          borderRadius: BorderRadius.only(
+        decoration: BoxDecoration(
+          color: isDark ? const Color(0xFF1E293B) : Colors.white,
+          borderRadius: const BorderRadius.only(
             topLeft: Radius.circular(32),
             topRight: Radius.circular(32),
           ),
@@ -1193,24 +1315,26 @@ extension HomeTabExtension on _HomeScreenState {
             Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
-                const Text(
+                Text(
                   'Points History',
                   style: TextStyle(
                     fontSize: 28,
                     fontWeight: FontWeight.bold,
-                    color: AppTheme.forestGreen,
+                    color: isDark ? Colors.white : AppTheme.forestGreen,
                   ),
                 ),
                 Container(
                   decoration: BoxDecoration(
                     shape: BoxShape.circle,
-                    border: Border.all(color: Colors.grey.shade200),
+                    border: Border.all(
+                      color: isDark ? Colors.white.withOpacity(0.1) : Colors.grey.shade200,
+                    ),
                   ),
                   child: IconButton(
-                    icon: const Icon(
+                    icon: Icon(
                       LucideIcons.x,
                       size: 20,
-                      color: AppTheme.forestGreen,
+                      color: isDark ? Colors.white : AppTheme.forestGreen,
                     ),
                     onPressed: () => Navigator.pop(context),
                   ),
@@ -1222,16 +1346,19 @@ extension HomeTabExtension on _HomeScreenState {
               child: ListView(
                 children: [
                   _buildHistoryRow(
+                    context,
                     'Paper Recycling',
                     '+150 pts',
                     '12 May 2026',
                   ).animate().fadeIn(delay: 100.ms).slideY(begin: 0.1, end: 0),
                   _buildHistoryRow(
+                    context,
                     'Cardboard Bulk',
                     '+200 pts',
                     '05 May 2026',
                   ).animate().fadeIn(delay: 200.ms).slideY(begin: 0.1, end: 0),
                   _buildHistoryRow(
+                    context,
                     'Referral Bonus',
                     '+100 pts',
                     '01 May 2026',
@@ -1245,7 +1372,8 @@ extension HomeTabExtension on _HomeScreenState {
     );
   }
 
-  Widget _buildHistoryRow(String title, String points, String date) {
+  Widget _buildHistoryRow(BuildContext context, String title, String points, String date) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
     return Padding(
       padding: const EdgeInsets.only(bottom: 24.0),
       child: Row(
@@ -1256,24 +1384,27 @@ extension HomeTabExtension on _HomeScreenState {
             children: [
               Text(
                 title,
-                style: const TextStyle(
+                style: TextStyle(
                   fontWeight: FontWeight.bold,
                   fontSize: 16,
-                  color: AppTheme.forestGreen,
+                  color: isDark ? Colors.white : AppTheme.forestGreen,
                 ),
               ),
               const SizedBox(height: 4),
               Text(
                 date,
-                style: TextStyle(color: Colors.grey.shade500, fontSize: 12),
+                style: TextStyle(
+                  color: isDark ? Colors.grey.shade400 : Colors.grey.shade500,
+                  fontSize: 12,
+                ),
               ),
             ],
           ),
           Text(
             points,
-            style: const TextStyle(
+            style: TextStyle(
               fontWeight: FontWeight.bold,
-              color: AppTheme.lightGreen,
+              color: isDark ? AppTheme.mintGreen : AppTheme.lightGreen,
               fontSize: 16,
             ),
           ),
@@ -1283,6 +1414,7 @@ extension HomeTabExtension on _HomeScreenState {
   }
 
   void _showAppInfo(BuildContext context) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
     showModalBottomSheet(
       context: context,
       backgroundColor: Colors.transparent,
@@ -1290,9 +1422,9 @@ extension HomeTabExtension on _HomeScreenState {
       builder: (context) => Container(
         height: MediaQuery.of(context).size.height * 0.7,
         padding: const EdgeInsets.all(32),
-        decoration: const BoxDecoration(
-          color: Colors.white,
-          borderRadius: BorderRadius.only(
+        decoration: BoxDecoration(
+          color: isDark ? const Color(0xFF1E293B) : Colors.white,
+          borderRadius: const BorderRadius.only(
             topLeft: Radius.circular(32),
             topRight: Radius.circular(32),
           ),
@@ -1303,24 +1435,26 @@ extension HomeTabExtension on _HomeScreenState {
             Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
-                const Text(
+                Text(
                   'What is ReLoop?',
                   style: TextStyle(
                     fontSize: 28,
                     fontWeight: FontWeight.bold,
-                    color: AppTheme.forestGreen,
+                    color: isDark ? Colors.white : AppTheme.forestGreen,
                   ),
                 ),
                 Container(
                   decoration: BoxDecoration(
                     shape: BoxShape.circle,
-                    border: Border.all(color: Colors.grey.shade200),
+                    border: Border.all(
+                      color: isDark ? Colors.white.withOpacity(0.1) : Colors.grey.shade200,
+                    ),
                   ),
                   child: IconButton(
-                    icon: const Icon(
+                    icon: Icon(
                       LucideIcons.x,
                       size: 20,
-                      color: AppTheme.forestGreen,
+                      color: isDark ? Colors.white : AppTheme.forestGreen,
                     ),
                     onPressed: () => Navigator.pop(context),
                   ),
@@ -1335,7 +1469,7 @@ extension HomeTabExtension on _HomeScreenState {
                     'ReLoop is a modern sustainability and recycling platform designed to make recycling easy, rewarding, and transparent.\n\nWe connect households and businesses with reliable pickup staff, ensuring your scrap materials (like paper and cardboard) are ethically recycled.\n\nOur mission is to build a greener future while rewarding our community with ECOPOINTS for every contribution.',
                     style: TextStyle(
                       fontSize: 16,
-                      color: Colors.grey.shade700,
+                      color: isDark ? Colors.grey.shade300 : Colors.grey.shade700,
                       height: 1.6,
                     ),
                   ).animate().fadeIn(delay: 200.ms).slideY(begin: 0.1, end: 0),
@@ -1349,15 +1483,16 @@ extension HomeTabExtension on _HomeScreenState {
   }
 
   void _showPickupDetails(BuildContext context) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
     showModalBottomSheet(
       context: context,
       backgroundColor: Colors.transparent,
       isScrollControlled: true,
       builder: (context) => Container(
         padding: const EdgeInsets.all(32),
-        decoration: const BoxDecoration(
-          color: Colors.white,
-          borderRadius: BorderRadius.only(
+        decoration: BoxDecoration(
+          color: isDark ? const Color(0xFF1E293B) : Colors.white,
+          borderRadius: const BorderRadius.only(
             topLeft: Radius.circular(32),
             topRight: Radius.circular(32),
           ),
@@ -1369,24 +1504,26 @@ extension HomeTabExtension on _HomeScreenState {
             Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
-                const Text(
+                Text(
                   'Pickup Details',
                   style: TextStyle(
                     fontSize: 24,
                     fontWeight: FontWeight.bold,
-                    color: AppTheme.forestGreen,
+                    color: isDark ? Colors.white : AppTheme.forestGreen,
                   ),
                 ),
                 Container(
                   decoration: BoxDecoration(
                     shape: BoxShape.circle,
-                    border: Border.all(color: Colors.grey.shade200),
+                    border: Border.all(
+                      color: isDark ? Colors.white.withOpacity(0.1) : Colors.grey.shade200,
+                    ),
                   ),
                   child: IconButton(
-                    icon: const Icon(
+                    icon: Icon(
                       LucideIcons.x,
                       size: 20,
-                      color: AppTheme.forestGreen,
+                      color: isDark ? Colors.white : AppTheme.forestGreen,
                     ),
                     onPressed: () => Navigator.pop(context),
                   ),
@@ -1397,17 +1534,17 @@ extension HomeTabExtension on _HomeScreenState {
             Container(
               padding: const EdgeInsets.all(24),
               decoration: AppTheme.getClayDecoration(
-                color: AppTheme.softBeige,
+                color: isDark ? const Color(0xFF334155) : AppTheme.softBeige,
                 borderRadius: 24,
               ),
               child: Column(
                 children: [
                   Row(
                     children: [
-                      const Icon(
+                      Icon(
                         LucideIcons.clock,
                         size: 20,
-                        color: AppTheme.forestGreen,
+                        color: isDark ? AppTheme.mintGreen : AppTheme.forestGreen,
                       ),
                       const SizedBox(width: 16),
                       Expanded(
@@ -1415,7 +1552,7 @@ extension HomeTabExtension on _HomeScreenState {
                           'Wed, 14 May • 10:00 AM - 1:00 PM',
                           style: TextStyle(
                             fontWeight: FontWeight.w600,
-                            color: AppTheme.forestGreen,
+                            color: isDark ? Colors.white : AppTheme.forestGreen,
                           ),
                         ),
                       ),
@@ -1426,10 +1563,10 @@ extension HomeTabExtension on _HomeScreenState {
                   const SizedBox(height: 16),
                   Row(
                     children: [
-                      const Icon(
+                      Icon(
                         LucideIcons.mapPin,
                         size: 20,
-                        color: AppTheme.forestGreen,
+                        color: isDark ? AppTheme.mintGreen : AppTheme.forestGreen,
                       ),
                       const SizedBox(width: 16),
                       Expanded(
@@ -1437,7 +1574,7 @@ extension HomeTabExtension on _HomeScreenState {
                           '123 Green Valley Road, Eco Park, City Center',
                           style: TextStyle(
                             fontWeight: FontWeight.w600,
-                            color: AppTheme.forestGreen,
+                            color: isDark ? Colors.white : AppTheme.forestGreen,
                             height: 1.5,
                           ),
                         ),
@@ -1451,7 +1588,7 @@ extension HomeTabExtension on _HomeScreenState {
             Container(
               padding: const EdgeInsets.all(24),
               decoration: AppTheme.getClayDecoration(
-                color: Colors.white,
+                color: isDark ? const Color(0xFF334155) : Colors.white,
                 borderRadius: 24,
               ),
               child: Row(
@@ -1460,12 +1597,14 @@ extension HomeTabExtension on _HomeScreenState {
                     width: 60,
                     height: 60,
                     decoration: BoxDecoration(
-                      color: AppTheme.leafGreen.withOpacity(0.2),
+                      color: isDark
+                          ? AppTheme.mintGreen.withOpacity(0.15)
+                          : AppTheme.leafGreen.withOpacity(0.2),
                       shape: BoxShape.circle,
                     ),
-                    child: const Icon(
+                    child: Icon(
                       LucideIcons.user,
-                      color: AppTheme.forestGreen,
+                      color: isDark ? AppTheme.mintGreen : AppTheme.forestGreen,
                       size: 32,
                     ),
                   ),
@@ -1474,12 +1613,12 @@ extension HomeTabExtension on _HomeScreenState {
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        const Text(
+                        Text(
                           'Rajesh Kumar',
                           style: TextStyle(
                             fontSize: 18,
                             fontWeight: FontWeight.bold,
-                            color: AppTheme.forestGreen,
+                            color: isDark ? Colors.white : AppTheme.forestGreen,
                           ),
                         ),
                         const SizedBox(height: 4),
@@ -1487,7 +1626,7 @@ extension HomeTabExtension on _HomeScreenState {
                           'Assigned Picker',
                           style: TextStyle(
                             fontSize: 14,
-                            color: Colors.grey.shade500,
+                            color: isDark ? Colors.grey.shade400 : Colors.grey.shade500,
                           ),
                         ),
                       ],
@@ -1505,7 +1644,8 @@ extension HomeTabExtension on _HomeScreenState {
                     icon: const Icon(LucideIcons.phone, size: 18),
                     label: const Text('Call'),
                     style: ElevatedButton.styleFrom(
-                      backgroundColor: AppTheme.forestGreen,
+                      backgroundColor: isDark ? AppTheme.mintGreen : AppTheme.forestGreen,
+                      foregroundColor: isDark ? const Color(0xFF0F172A) : Colors.white,
                       padding: const EdgeInsets.symmetric(vertical: 16),
                       shape: RoundedRectangleBorder(
                         borderRadius: BorderRadius.circular(16),
@@ -1517,17 +1657,18 @@ extension HomeTabExtension on _HomeScreenState {
                 Expanded(
                   child: ElevatedButton.icon(
                     onPressed: () {},
-                    icon: const Icon(
+                    icon: Icon(
                       LucideIcons.messageCircle,
                       size: 18,
-                      color: AppTheme.forestGreen,
+                      color: isDark ? const Color(0xFF0F172A) : AppTheme.forestGreen,
                     ),
-                    label: const Text(
+                    label: Text(
                       'WhatsApp',
-                      style: TextStyle(color: AppTheme.forestGreen),
+                      style: TextStyle(color: isDark ? const Color(0xFF0F172A) : AppTheme.forestGreen),
                     ),
                     style: ElevatedButton.styleFrom(
-                      backgroundColor: AppTheme.lightGreen.withOpacity(0.1),
+                      backgroundColor: isDark ? AppTheme.mintGreen.withOpacity(0.15) : AppTheme.lightGreen.withOpacity(0.1),
+                      foregroundColor: isDark ? AppTheme.mintGreen : AppTheme.forestGreen,
                       elevation: 0,
                       padding: const EdgeInsets.symmetric(vertical: 16),
                       shape: RoundedRectangleBorder(
@@ -1564,6 +1705,7 @@ extension HomeTabExtension on _HomeScreenState {
   }
 
   void _showCancelPickup(BuildContext context) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
     showModalBottomSheet(
       context: context,
       backgroundColor: Colors.transparent,
@@ -1575,9 +1717,9 @@ extension HomeTabExtension on _HomeScreenState {
           left: 32,
           right: 32,
         ),
-        decoration: const BoxDecoration(
-          color: Colors.white,
-          borderRadius: BorderRadius.only(
+        decoration: BoxDecoration(
+          color: isDark ? const Color(0xFF1E293B) : Colors.white,
+          borderRadius: const BorderRadius.only(
             topLeft: Radius.circular(32),
             topRight: Radius.circular(32),
           ),
@@ -1597,14 +1739,16 @@ extension HomeTabExtension on _HomeScreenState {
             const SizedBox(height: 16),
             Text(
               'Please let us know why you are canceling this pickup.',
-              style: TextStyle(color: Colors.grey.shade600),
+              style: TextStyle(color: isDark ? Colors.grey.shade300 : Colors.grey.shade600),
             ),
             const SizedBox(height: 24),
             TextField(
+              style: TextStyle(color: isDark ? Colors.white : Colors.black),
               decoration: InputDecoration(
                 hintText: 'Reason for cancellation',
+                hintStyle: TextStyle(color: isDark ? Colors.grey.shade500 : Colors.grey.shade400),
                 filled: true,
-                fillColor: Colors.grey.shade50,
+                fillColor: isDark ? const Color(0xFF0F172A) : Colors.grey.shade50,
                 border: OutlineInputBorder(
                   borderRadius: BorderRadius.circular(16),
                   borderSide: BorderSide.none,
@@ -1618,10 +1762,10 @@ extension HomeTabExtension on _HomeScreenState {
                 Expanded(
                   child: TextButton(
                     onPressed: () => Navigator.pop(context),
-                    child: const Text(
+                    child: Text(
                       'Back',
                       style: TextStyle(
-                        color: AppTheme.forestGreen,
+                        color: isDark ? AppTheme.mintGreen : AppTheme.forestGreen,
                         fontSize: 16,
                       ),
                     ),
@@ -1632,8 +1776,8 @@ extension HomeTabExtension on _HomeScreenState {
                   child: ElevatedButton(
                     onPressed: () {
                       Navigator.pop(context);
-                      setState(() {
-                        // Mark as cancelled, e.g. updating a state variable
+                      triggerStateUpdate(() {
+                        // Mark as cancelled
                       });
                       ScaffoldMessenger.of(context).showSnackBar(
                         const SnackBar(
@@ -1663,11 +1807,12 @@ extension HomeTabExtension on _HomeScreenState {
   }
 
   Widget _buildReviewCard(String name, String review, int rating) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
     return Container(
-      width: MediaQuery.of(context).size.width * 0.72,
+      width: context.scaleCardWidth(mobileRatio: 0.72, tabletRatio: 0.45),
       padding: const EdgeInsets.all(20),
       decoration: AppTheme.getClayDecoration(
-        color: Colors.white,
+        color: isDark ? const Color(0xFF1E293B) : Colors.white,
         borderRadius: 24,
       ),
       child: Column(
@@ -1678,10 +1823,10 @@ extension HomeTabExtension on _HomeScreenState {
             children: [
               Text(
                 name,
-                style: const TextStyle(
+                style: TextStyle(
                   fontWeight: FontWeight.bold,
                   fontSize: 16,
-                  color: AppTheme.forestGreen,
+                  color: isDark ? Colors.white : AppTheme.forestGreen,
                 ),
               ),
               Row(
@@ -1690,7 +1835,7 @@ extension HomeTabExtension on _HomeScreenState {
                   (index) => Icon(
                     index < rating ? LucideIcons.star : LucideIcons.starHalf,
                     size: 16,
-                    color: index < rating ? Colors.amber : Colors.grey.shade300,
+                    color: index < rating ? Colors.amber : (isDark ? Colors.white.withOpacity(0.1) : Colors.grey.shade300),
                   ),
                 ),
               ),
@@ -1701,7 +1846,7 @@ extension HomeTabExtension on _HomeScreenState {
             child: Text(
               '"$review"',
               style: TextStyle(
-                color: Colors.grey.shade600,
+                color: isDark ? Colors.grey.shade300 : Colors.grey.shade600,
                 height: 1.5,
                 fontStyle: FontStyle.italic,
               ),
@@ -1713,17 +1858,18 @@ extension HomeTabExtension on _HomeScreenState {
   }
 
   Widget _buildZoneChip(String name, bool isActive) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
       decoration: BoxDecoration(
         color: isActive
-            ? AppTheme.leafGreen.withOpacity(0.15)
-            : Colors.grey.shade100,
+            ? (isDark ? AppTheme.mintGreen.withOpacity(0.2) : AppTheme.leafGreen.withOpacity(0.15))
+            : (isDark ? Colors.white.withOpacity(0.05) : Colors.grey.shade100),
         borderRadius: BorderRadius.circular(20),
         border: Border.all(
           color: isActive
-              ? AppTheme.leafGreen.withOpacity(0.4)
-              : Colors.grey.shade300,
+              ? (isDark ? AppTheme.mintGreen.withOpacity(0.4) : AppTheme.leafGreen.withOpacity(0.4))
+              : (isDark ? Colors.white.withOpacity(0.1) : Colors.grey.shade300),
         ),
       ),
       child: Text(
@@ -1731,7 +1877,9 @@ extension HomeTabExtension on _HomeScreenState {
         style: TextStyle(
           fontSize: 12,
           fontWeight: FontWeight.bold,
-          color: isActive ? AppTheme.forestGreen : Colors.grey.shade500,
+          color: isActive
+              ? (isDark ? AppTheme.mintGreen : AppTheme.forestGreen)
+              : (isDark ? Colors.grey.shade400 : Colors.grey.shade500),
         ),
       ),
     );
@@ -1803,7 +1951,6 @@ extension HomeTabExtension on _HomeScreenState {
               ],
             ),
             const SizedBox(height: 16),
-            // Kerala Map — vertical strip layout matching actual geography
             Expanded(
               child: Container(
                 width: double.infinity,
@@ -1826,8 +1973,6 @@ extension HomeTabExtension on _HomeScreenState {
                   builder: (context, constraints) {
                     final w = constraints.maxWidth;
                     final h = constraints.maxHeight;
-                    // Kerala cities positioned N→S along a slightly curved vertical strip
-                    // Kannur (north), Calicut, Thrissur, Kochi, Trivandrum (south)
                     final zones = [
                       {'name': 'Kannur', 'active': false, 'x': 0.55, 'y': 0.10},
                       {
@@ -1853,12 +1998,10 @@ extension HomeTabExtension on _HomeScreenState {
 
                     return Stack(
                       children: [
-                        // Kerala outline shape (simplified CustomPaint)
                         CustomPaint(
                           size: Size(w, h),
                           painter: _KeralaOutlinePainter(isDark: isDark),
                         ),
-                        // Zone markers
                         ...zones.map((z) {
                           final isActive = z['active'] as bool;
                           final name = z['name'] as String;
@@ -1870,7 +2013,6 @@ extension HomeTabExtension on _HomeScreenState {
                             child: _buildMapZoneMarker(name, isActive),
                           );
                         }),
-                        // Watermark label
                         Positioned(
                           bottom: 12,
                           right: 16,
@@ -1892,7 +2034,6 @@ extension HomeTabExtension on _HomeScreenState {
               ),
             ),
             const SizedBox(height: 16),
-            // Zone list
             _buildZoneListItem('Kochi', 'Fully operational', true, isDark),
             const SizedBox(height: 6),
             _buildZoneListItem('Thrissur', 'Fully operational', true, isDark),
@@ -1914,6 +2055,7 @@ extension HomeTabExtension on _HomeScreenState {
   }
 
   Widget _buildMapZoneMarker(String name, bool isActive) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
     return Column(
       mainAxisSize: MainAxisSize.min,
       children: [
@@ -2029,7 +2171,6 @@ class _KeralaOutlinePainter extends CustomPainter {
     final w = size.width;
     final h = size.height;
 
-    // A very simplified representation of Kerala's vertical, slightly curved shape
     path.moveTo(w * 0.45, h * 0.05);
     path.quadraticBezierTo(w * 0.35, h * 0.25, w * 0.40, h * 0.45);
     path.quadraticBezierTo(w * 0.55, h * 0.65, w * 0.45, h * 0.95);

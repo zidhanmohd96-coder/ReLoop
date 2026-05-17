@@ -28,6 +28,13 @@ class _HomeScreenState extends State<HomeScreen> {
   int _currentOfferIndex = 0;
   Timer? _offersTimer;
   bool _isServiceAvailable = true;
+  bool _isLoadingHome = false;
+
+  void triggerStateUpdate(VoidCallback fn) {
+    if (mounted) {
+      setState(fn);
+    }
+  }
 
   final List<Map<String, dynamic>> _offers = [
     {

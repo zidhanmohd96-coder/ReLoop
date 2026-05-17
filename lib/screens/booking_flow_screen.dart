@@ -277,31 +277,33 @@ class _BookingFlowScreenState extends State<BookingFlowScreen> {
   }
 
   Widget _buildBottomActionBar() {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
     return Container(
       padding: const EdgeInsets.all(8),
       decoration: BoxDecoration(
-        color: Colors.white,
+        color: isDark ? const Color(0xFF1E293B) : Colors.white,
         borderRadius: BorderRadius.circular(40),
         boxShadow: [
-          BoxShadow(
-            color: Colors.black.withOpacity(0.05),
-            blurRadius: 20,
-            offset: const Offset(0, 10),
-          ),
+          if (!isDark)
+            BoxShadow(
+              color: Colors.black.withOpacity(0.05),
+              blurRadius: 20,
+              offset: const Offset(0, 10),
+            ),
         ],
       ),
       child: Row(
         children: [
           Container(
             decoration: BoxDecoration(
-              color: Colors.grey.shade100,
+              color: isDark ? const Color(0xFF0F172A) : Colors.grey.shade100,
               shape: BoxShape.circle,
             ),
             child: IconButton(
               onPressed: _prevStep,
-              icon: const Icon(
+              icon: Icon(
                 LucideIcons.chevronLeft,
-                color: AppTheme.forestGreen,
+                color: isDark ? AppTheme.mintGreen : AppTheme.forestGreen,
               ),
             ),
           ),
@@ -310,7 +312,8 @@ class _BookingFlowScreenState extends State<BookingFlowScreen> {
             child: ElevatedButton(
               onPressed: _nextStep,
               style: ElevatedButton.styleFrom(
-                backgroundColor: AppTheme.forestGreen,
+                backgroundColor: isDark ? AppTheme.mintGreen : AppTheme.forestGreen,
+                foregroundColor: isDark ? const Color(0xFF0F172A) : Colors.white,
                 padding: const EdgeInsets.symmetric(vertical: 20),
                 shape: RoundedRectangleBorder(
                   borderRadius: BorderRadius.circular(32),
@@ -321,12 +324,16 @@ class _BookingFlowScreenState extends State<BookingFlowScreen> {
                 children: [
                   Text(
                     _currentStep == 4 ? 'Book Now' : 'Continue',
-                    style: const TextStyle(fontSize: 16, color: Colors.white),
+                    style: TextStyle(
+                      fontSize: 16,
+                      fontWeight: FontWeight.bold,
+                      color: isDark ? const Color(0xFF0F172A) : Colors.white,
+                    ),
                   ),
                   const SizedBox(width: 8),
-                  const Icon(
+                  Icon(
                     LucideIcons.chevronRight,
-                    color: Colors.white,
+                    color: isDark ? const Color(0xFF0F172A) : Colors.white,
                     size: 20,
                   ),
                 ],
@@ -339,6 +346,7 @@ class _BookingFlowScreenState extends State<BookingFlowScreen> {
   }
 
   Widget _buildScrapTypeStep() {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -346,7 +354,11 @@ class _BookingFlowScreenState extends State<BookingFlowScreen> {
           'What are we\nrecycling?',
           style: Theme.of(
             context,
-          ).textTheme.displayMedium?.copyWith(fontSize: 48, height: 1.1),
+          ).textTheme.displayMedium?.copyWith(
+            fontSize: 48,
+            height: 1.1,
+            color: isDark ? Colors.white : AppTheme.forestGreen,
+          ),
         ),
         const SizedBox(height: 48),
         GridView.builder(
@@ -375,16 +387,18 @@ class _BookingFlowScreenState extends State<BookingFlowScreen> {
                   child: AnimatedContainer(
                     duration: const Duration(milliseconds: 300),
                     decoration: BoxDecoration(
-                      color: Colors.white,
+                      color: isDark
+                          ? (isSelected ? const Color(0xFF1E293B) : const Color(0xFF0F172A))
+                          : Colors.white,
                       border: Border.all(
                         color: isSelected
-                            ? AppTheme.forestGreen
-                            : Colors.transparent,
+                            ? (isDark ? AppTheme.mintGreen : AppTheme.forestGreen)
+                            : (isDark ? const Color(0xFF334155) : Colors.transparent),
                         width: 2,
                       ),
                       borderRadius: BorderRadius.circular(32),
                       boxShadow: [
-                        if (!isSelected)
+                        if (!isSelected && !isDark)
                           BoxShadow(
                             color: Colors.black.withOpacity(0.02),
                             blurRadius: 10,
@@ -398,14 +412,18 @@ class _BookingFlowScreenState extends State<BookingFlowScreen> {
                         Icon(
                           type['icon'],
                           size: 40,
-                          color: AppTheme.forestGreen,
+                          color: isSelected
+                              ? (isDark ? AppTheme.mintGreen : AppTheme.forestGreen)
+                              : (isDark ? Colors.grey.shade400 : AppTheme.forestGreen),
                         ),
                         const SizedBox(height: 16),
                         Text(
                           type['title'],
                           style: TextStyle(
                             fontWeight: FontWeight.w600,
-                            color: AppTheme.forestGreen,
+                            color: isSelected
+                                ? (isDark ? AppTheme.mintGreen : AppTheme.forestGreen)
+                                : (isDark ? Colors.grey.shade400 : AppTheme.forestGreen),
                             fontSize: 16,
                           ),
                         ),
@@ -750,6 +768,7 @@ class _BookingFlowScreenState extends State<BookingFlowScreen> {
   }
 
   Widget _buildAddressStep() {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
     return Consumer<AppState>(
       builder: (context, state, child) {
         final address = state.addresses.isNotEmpty
@@ -766,15 +785,22 @@ class _BookingFlowScreenState extends State<BookingFlowScreen> {
               'Pickup\nAddress',
               style: Theme.of(
                 context,
-              ).textTheme.displayMedium?.copyWith(fontSize: 48, height: 1.1),
+              ).textTheme.displayMedium?.copyWith(
+                fontSize: 48,
+                height: 1.1,
+                color: isDark ? Colors.white : AppTheme.forestGreen,
+              ),
             ),
             const SizedBox(height: 48),
             if (address != null)
               Container(
                 padding: const EdgeInsets.all(24),
                 decoration: BoxDecoration(
-                  color: AppTheme.leafGreen.withOpacity(0.1),
-                  border: Border.all(color: AppTheme.forestGreen, width: 2),
+                  color: isDark ? const Color(0xFF1E293B) : AppTheme.leafGreen.withOpacity(0.1),
+                  border: Border.all(
+                    color: isDark ? AppTheme.mintGreen : AppTheme.forestGreen,
+                    width: 2,
+                  ),
                   borderRadius: BorderRadius.circular(32),
                 ),
                 child: Row(
@@ -782,12 +808,12 @@ class _BookingFlowScreenState extends State<BookingFlowScreen> {
                     Container(
                       padding: const EdgeInsets.all(12),
                       decoration: BoxDecoration(
-                        color: Colors.grey.shade200,
+                        color: isDark ? const Color(0xFF0F172A) : Colors.grey.shade200,
                         shape: BoxShape.circle,
                       ),
-                      child: const Icon(
+                      child: Icon(
                         LucideIcons.mapPin,
-                        color: AppTheme.forestGreen,
+                        color: isDark ? AppTheme.mintGreen : AppTheme.forestGreen,
                         size: 20,
                       ),
                     ),
@@ -798,23 +824,26 @@ class _BookingFlowScreenState extends State<BookingFlowScreen> {
                         children: [
                           Text(
                             'Home',
-                            style: const TextStyle(
+                            style: TextStyle(
                               fontWeight: FontWeight.bold,
-                              color: AppTheme.forestGreen,
+                              color: isDark ? Colors.white : AppTheme.forestGreen,
                               fontSize: 16,
                             ),
                           ),
                           Text(
                             '${address.houseName}, ${address.area}',
                             style: TextStyle(
-                              color: Colors.grey.shade600,
+                              color: isDark ? Colors.grey.shade400 : Colors.grey.shade600,
                               fontSize: 12,
                             ),
                           ),
                         ],
                       ),
                     ),
-                    const Icon(LucideIcons.check, color: AppTheme.forestGreen),
+                    Icon(
+                      LucideIcons.check,
+                      color: isDark ? AppTheme.mintGreen : AppTheme.forestGreen,
+                    ),
                   ],
                 ),
               ),
@@ -832,6 +861,10 @@ class _BookingFlowScreenState extends State<BookingFlowScreen> {
                 padding: const EdgeInsets.all(24),
                 decoration: BoxDecoration(
                   color: Colors.transparent,
+                  border: Border.all(
+                    color: isDark ? const Color(0xFF334155) : Colors.grey.shade200,
+                    width: 2,
+                  ),
                   borderRadius: BorderRadius.circular(32),
                 ),
                 child: Row(
@@ -839,14 +872,14 @@ class _BookingFlowScreenState extends State<BookingFlowScreen> {
                   children: [
                     Icon(
                       LucideIcons.plus,
-                      color: Colors.grey.shade400,
+                      color: isDark ? Colors.grey.shade300 : Colors.grey.shade500,
                       size: 20,
                     ),
                     const SizedBox(width: 8),
                     Text(
                       'Add New Address',
                       style: TextStyle(
-                        color: Colors.grey.shade400,
+                        color: isDark ? Colors.grey.shade300 : Colors.grey.shade500,
                         fontSize: 16,
                         fontWeight: FontWeight.w600,
                       ),
@@ -906,13 +939,14 @@ class _BookingFlowScreenState extends State<BookingFlowScreen> {
     int maxLines = 1,
     TextInputType? keyboardType,
   }) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Text(
           label,
           style: TextStyle(
-            color: Colors.grey.shade500,
+            color: isDark ? Colors.grey.shade400 : Colors.grey.shade500,
             fontSize: 10,
             fontWeight: FontWeight.bold,
             letterSpacing: 1,
@@ -923,23 +957,23 @@ class _BookingFlowScreenState extends State<BookingFlowScreen> {
           controller: controller,
           maxLines: maxLines,
           keyboardType: keyboardType,
-          style: const TextStyle(
-            color: AppTheme.forestGreen,
+          style: TextStyle(
+            color: isDark ? Colors.white : AppTheme.forestGreen,
             fontWeight: FontWeight.w600,
             fontSize: 16,
           ),
           decoration: InputDecoration(
             hintText: hint,
             hintStyle: TextStyle(
-              color: Colors.grey.shade400,
+              color: isDark ? Colors.grey.shade500 : Colors.grey.shade400,
               fontWeight: FontWeight.w400,
             ),
             prefixIcon: Padding(
               padding: EdgeInsets.only(bottom: maxLines > 1 ? 48.0 : 0),
-              child: Icon(icon, color: Colors.grey.shade400),
+              child: Icon(icon, color: isDark ? Colors.grey.shade400 : Colors.grey.shade400),
             ),
             filled: true,
-            fillColor: Colors.white,
+            fillColor: isDark ? const Color(0xFF1E293B) : Colors.white,
             contentPadding: const EdgeInsets.symmetric(
               horizontal: 24,
               vertical: 20,
@@ -950,7 +984,7 @@ class _BookingFlowScreenState extends State<BookingFlowScreen> {
             ),
             focusedBorder: OutlineInputBorder(
               borderRadius: BorderRadius.circular(maxLines > 1 ? 16 : 32),
-              borderSide: const BorderSide(color: AppTheme.leafGreen, width: 2),
+              borderSide: BorderSide(color: isDark ? AppTheme.mintGreen : AppTheme.leafGreen, width: 2),
             ),
           ),
         ),

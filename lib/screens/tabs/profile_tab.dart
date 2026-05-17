@@ -253,7 +253,7 @@ extension ProfileTabExtension on _HomeScreenState {
           SizedBox(
             width: double.infinity,
             child: ElevatedButton(
-              onPressed: () { Navigator.pop(ctx); setState(() { _currentIndex = 1; _mainPageController.animateToPage(1, duration: const Duration(milliseconds: 600), curve: Curves.easeOutQuint); }); },
+              onPressed: () { Navigator.pop(ctx); triggerStateUpdate(() { _currentIndex = 1; _mainPageController.animateToPage(1, duration: const Duration(milliseconds: 600), curve: Curves.easeOutQuint); }); },
               style: ElevatedButton.styleFrom(
                 backgroundColor: isDark ? AppTheme.mintGreen : AppTheme.forestGreen, 
                 foregroundColor: isDark ? const Color(0xFF0F172A) : Colors.white,
