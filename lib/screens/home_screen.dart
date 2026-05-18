@@ -1,18 +1,11 @@
-import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:lucide_icons/lucide_icons.dart';
 import 'package:flutter_animate/flutter_animate.dart';
-import 'package:provider/provider.dart';
-import 'package:url_launcher/url_launcher.dart';
-import '../providers/app_state.dart';
 import '../theme.dart';
-import 'address_management_screen.dart';
-import 'booking_flow_screen.dart';
-
-part 'tabs/home_tab.dart';
-part 'tabs/bookings_tab.dart';
-part 'tabs/rewards_tab.dart';
-part 'tabs/profile_tab.dart';
+import '../features/home/presentation/screens/home_tab.dart';
+import '../features/bookings/presentation/tabs/bookings_tab.dart';
+import '../features/rewards/presentation/tabs/rewards_tab.dart';
+import '../features/profile/presentation/tabs/profile_tab.dart';
 
 class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
@@ -23,70 +16,20 @@ class HomeScreen extends StatefulWidget {
 
 class _HomeScreenState extends State<HomeScreen> {
   int _currentIndex = 0;
-  final PageController _offersPageController = PageController();
   final PageController _mainPageController = PageController();
-  int _currentOfferIndex = 0;
-  Timer? _offersTimer;
-  bool _isServiceAvailable = true;
-  bool _isLoadingHome = false;
-
-  void triggerStateUpdate(VoidCallback fn) {
-    if (mounted) {
-      setState(fn);
-    }
-  }
-
-  final List<Map<String, dynamic>> _offers = [
-    {
-      'title': 'Super Sunday',
-      'desc': 'Extra 2₹/kg on all paper items this\nSunday!',
-      'color': const Color(0xFF1D4ED8),
-      'icon': LucideIcons.sparkles,
-      'modalTitle': 'Super Sunday',
-      'modalDesc': 'Extra 2₹/kg on all paper items this Sunday!',
-      'iconColor': Colors.amber,
-    },
-    {
-      'title': 'Eco Warrior',
-      'desc': 'Refer a friend and get 500 bonus points.',
-      'color': const Color(0xFFD97706),
-      'icon': LucideIcons.users,
-      'modalTitle': 'Eco Warrior',
-      'modalDesc': 'Refer a friend and get 500 bonus points.',
-      'iconColor': Colors.orange,
-    },
-    {
-      'title': 'Cardboard King',
-      'desc': 'Special rates for bulk cardboard (50kg+).',
-      'color': const Color(0xFF047857),
-      'icon': LucideIcons.crown,
-      'modalTitle': 'Cardboard King',
-      'modalDesc': 'Special rates for bulk cardboard (50kg+).',
-      'iconColor': Colors.amber,
-    },
-  ];
-
-  @override
-  void initState() {
-    super.initState();
-    _offersTimer = Timer.periodic(const Duration(seconds: 4), (timer) {
-      if (_offersPageController.hasClients) {
-        _currentOfferIndex = (_currentOfferIndex + 1) % _offers.length;
-        _offersPageController.animateToPage(
-          _currentOfferIndex,
-          duration: const Duration(milliseconds: 800),
-          curve: Curves.easeInOutCubic,
-        );
-      }
-    });
-  }
 
   @override
   void dispose() {
-    _offersTimer?.cancel();
-    _offersPageController.dispose();
     _mainPageController.dispose();
     super.dispose();
+  }
+
+  void _navigateToTab(int index) {
+    _mainPageController.animateToPage(
+      index,
+      duration: const Duration(milliseconds: 600),
+      curve: Curves.easeOutQuint,
+    );
   }
 
   @override
@@ -111,10 +54,14 @@ class _HomeScreenState extends State<HomeScreen> {
                   });
                 },
                 children: [
-                  _buildHomeTab(context).animate().fadeIn(duration: 400.ms).slideX(begin: 0.1, end: 0),
-                  _buildBookingsTab(context).animate().fadeIn(duration: 400.ms).slideX(begin: 0.1, end: 0),
-                  _buildRewardsTab(context).animate().fadeIn(duration: 400.ms).slideX(begin: 0.1, end: 0),
-                  _buildProfileTab(context).animate().fadeIn(duration: 400.ms).slideX(begin: 0.1, end: 0),
+                  const HomeTab().animate().fadeIn(duration: 400.ms).slideX(begin: 0.1, end: 0),
+                  const BookingsTab().animate().fadeIn(duration: 400.ms).slideX(begin: 0.1, end: 0),
+                  const RewardsTab().animate().fadeIn(duration: 400.ms).slideX(begin: 0.1, end: 0),
+                  ProfileTab(
+                    onViewHistory: () {
+                      _navigateToTab(1);
+                    },
+                  ).animate().fadeIn(duration: 400.ms).slideX(begin: 0.1, end: 0),
                 ],
               ),
               Positioned(
@@ -168,13 +115,7 @@ class _HomeScreenState extends State<HomeScreen> {
   Widget _buildNavItem(int index, IconData icon, bool isDark) {
     final isSelected = _currentIndex == index;
     return GestureDetector(
-      onTap: () {
-        _mainPageController.animateToPage(
-          index,
-          duration: const Duration(milliseconds: 600),
-          curve: Curves.easeOutQuint,
-        );
-      },
+      onTap: () => _navigateToTab(index),
       child: Center(
         child: AnimatedContainer(
           duration: const Duration(milliseconds: 300),

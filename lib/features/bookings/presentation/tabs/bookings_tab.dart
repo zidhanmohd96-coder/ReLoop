@@ -1,10 +1,20 @@
-part of '../home_screen.dart';
+import 'package:flutter/material.dart';
+import 'package:lucide_icons/lucide_icons.dart';
+import 'package:flutter_animate/flutter_animate.dart';
+import 'package:provider/provider.dart';
+import '../../../../theme.dart';
+import '../../../../providers/app_state.dart';
+import '../../../../core/utils/responsive_helper.dart';
 
-extension BookingsTabExtension on _HomeScreenState {
-  Widget _buildBookingsTab(BuildContext context) {
+class BookingsTab extends StatelessWidget {
+  const BookingsTab({super.key});
+
+  @override
+  Widget build(BuildContext context) {
     final isDark = Theme.of(context).brightness == Brightness.dark;
     final screenWidth = MediaQuery.of(context).size.width;
-    final hPad = screenWidth < 380 ? 16.0 : 24.0;
+    final hPad = context.scalePadding(24.0);
+
     return DefaultTabController(
       length: 3,
       child: SafeArea(
@@ -67,16 +77,16 @@ extension BookingsTabExtension on _HomeScreenState {
                     padding: EdgeInsets.fromLTRB(hPad, hPad, hPad, 120),
                     children: [
                       _buildBookingCard(
-                        'office_paper',
-                        'Scheduled',
-                        Colors.orange.shade400,
-                        'Scheduled for Wed, 14 May',
-                        'Home',
-                        '₹0',
-                        'Pending',
-                        LucideIcons.clock,
-                        context,
-                        isDark,
+                        context: context,
+                        items: 'office_paper',
+                        status: 'Scheduled',
+                        statusColor: Colors.orange.shade400,
+                        schedule: 'Scheduled for Wed, 14 May',
+                        location: 'Home',
+                        earned: '₹0',
+                        points: 'Pending',
+                        icon: LucideIcons.clock,
+                        isDark: isDark,
                       ),
                     ],
                   ),
@@ -85,16 +95,16 @@ extension BookingsTabExtension on _HomeScreenState {
                     padding: EdgeInsets.fromLTRB(hPad, hPad, hPad, 120),
                     children: [
                       _buildBookingCard(
-                        'newspaper, cardboard, books',
-                        'Completed',
-                        AppTheme.mintGreen,
-                        'Completed on Fri, 10 May',
-                        'Office',
-                        '₹320',
-                        '+230 POINTS',
-                        LucideIcons.checkCircle,
-                        context,
-                        isDark,
+                        context: context,
+                        items: 'newspaper, cardboard, books',
+                        status: 'Completed',
+                        statusColor: AppTheme.mintGreen,
+                        schedule: 'Completed on Fri, 10 May',
+                        location: 'Office',
+                        earned: '₹320',
+                        points: '+230 POINTS',
+                        icon: LucideIcons.checkCircle,
+                        isDark: isDark,
                       ),
                     ],
                   ),
@@ -103,16 +113,16 @@ extension BookingsTabExtension on _HomeScreenState {
                     padding: EdgeInsets.fromLTRB(hPad, hPad, hPad, 120),
                     children: [
                       _buildBookingCard(
-                        'Plastic bottles',
-                        'Cancelled',
-                        Colors.red.shade400,
-                        'Cancelled on Mon, 08 May',
-                        'Home',
-                        '₹0',
-                        '0 POINTS',
-                        LucideIcons.xCircle,
-                        context,
-                        isDark,
+                        context: context,
+                        items: 'Plastic bottles',
+                        status: 'Cancelled',
+                        statusColor: Colors.red.shade400,
+                        schedule: 'Cancelled on Mon, 08 May',
+                        location: 'Home',
+                        earned: '₹0',
+                        points: '0 POINTS',
+                        icon: LucideIcons.xCircle,
+                        isDark: isDark,
                       ),
                     ],
                   ),
@@ -125,18 +135,18 @@ extension BookingsTabExtension on _HomeScreenState {
     );
   }
 
-  Widget _buildBookingCard(
-    String items,
-    String status,
-    Color statusColor,
-    String schedule,
-    String location,
-    String earned,
-    String points,
-    IconData icon,
-    BuildContext context,
-    bool isDark,
-  ) {
+  Widget _buildBookingCard({
+    required BuildContext context,
+    required String items,
+    required String status,
+    required Color statusColor,
+    required String schedule,
+    required String location,
+    required String earned,
+    required String points,
+    required IconData icon,
+    required bool isDark,
+  }) {
     return GestureDetector(
       onTap: () => _showBookingFullDetails(context),
       child: Container(

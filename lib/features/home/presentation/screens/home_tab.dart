@@ -1,18 +1,69 @@
-part of '../home_screen.dart';
+import 'dart:async';
+import 'package:flutter/material.dart';
+import 'package:lucide_icons/lucide_icons.dart';
+import 'package:flutter_animate/flutter_animate.dart';
+import 'package:provider/provider.dart';
+import '../../../../theme.dart';
+import '../../../../providers/app_state.dart';
+import '../../../../core/constants/app_constants.dart';
+import '../../../../core/utils/responsive_helper.dart';
+import '../painters/kerala_outline_painter.dart';
+import '../../../../screens/booking_flow_screen.dart';
 
-extension HomeTabExtension on _HomeScreenState {
-  Widget _buildHomeTab(BuildContext context) {
+class HomeTab extends StatefulWidget {
+  const HomeTab({super.key});
+
+  @override
+  State<HomeTab> createState() => _HomeTabState();
+}
+
+class _HomeTabState extends State<HomeTab> {
+  bool _isLoadingHome = false;
+  late final PageController _offersPageController;
+  int _currentOfferIndex = 0;
+  Timer? _offersTimer;
+  bool _isServiceAvailable = true;
+
+  @override
+  void initState() {
+    super.initState();
+    _offersPageController = PageController();
+    _startOffersTimer();
+  }
+
+  void _startOffersTimer() {
+    _offersTimer = Timer.periodic(const Duration(seconds: 4), (timer) {
+      if (_offersPageController.hasClients) {
+        final nextIndex = _offersPageController.page!.round() + 1;
+        _offersPageController.animateToPage(
+          nextIndex,
+          duration: const Duration(milliseconds: 600),
+          curve: Curves.easeOutQuint,
+        );
+      }
+    });
+  }
+
+  @override
+  void dispose() {
+    _offersTimer?.cancel();
+    _offersPageController.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
     final isDark = Theme.of(context).brightness == Brightness.dark;
     final screenWidth = MediaQuery.of(context).size.width;
     final hPad = context.scalePadding(24.0);
 
     return RefreshIndicator(
       onRefresh: () async {
-        triggerStateUpdate(() {
+        setState(() {
           _isLoadingHome = true;
         });
         await Future.delayed(const Duration(milliseconds: 1500));
-        triggerStateUpdate(() {
+        setState(() {
           _isLoadingHome = false;
         });
       },
@@ -254,13 +305,13 @@ extension HomeTabExtension on _HomeScreenState {
           child: PageView.builder(
             controller: _offersPageController,
             onPageChanged: (index) {
-              triggerStateUpdate(() {
-                _currentOfferIndex = index % _offers.length;
+              setState(() {
+                _currentOfferIndex = index % AppConstants.offers.length;
               });
             },
             itemBuilder: (context, i) {
-              final index = i % _offers.length;
-              final offer = _offers[index];
+              final index = i % AppConstants.offers.length;
+              final offer = AppConstants.offers[index];
               return AnimatedContainer(
                 duration: const Duration(milliseconds: 500),
                 margin: const EdgeInsets.only(right: 8),
@@ -773,7 +824,7 @@ extension HomeTabExtension on _HomeScreenState {
                   style: TextStyle(
                     fontSize: 10,
                     fontWeight: FontWeight.bold,
-                    color: isDark ? Colors.grey.shade400 : Colors.grey.shade500,
+                    color: isDark ? Colors.grey.shade400 : Colors.grey.shade50,
                   ),
                 ),
                 const SizedBox(height: 2),
@@ -792,7 +843,7 @@ extension HomeTabExtension on _HomeScreenState {
           const SizedBox(width: 8),
           GestureDetector(
             onTap: () {
-              triggerStateUpdate(() {
+              setState(() {
                 _isServiceAvailable = !_isServiceAvailable;
               });
             },
@@ -931,34 +982,23 @@ extension HomeTabExtension on _HomeScreenState {
         const SizedBox(height: 16),
         SizedBox(
           height: 130,
-          child: ListView(
+          child: ListView.builder(
             scrollDirection: Axis.horizontal,
             clipBehavior: Clip.none,
-            children: [
-              _buildPricingCard(
-                context,
-                'Paper',
-                '₹17',
-                LucideIcons.bookOpen,
-                'Includes old newspapers, magazines, and notebooks. Please ensure they are dry and not contaminated with food waste.',
-              ),
-              const SizedBox(width: 16),
-              _buildPricingCard(
-                context,
-                'Cardboard',
-                '₹10',
-                LucideIcons.package,
-                'Shipping boxes, packaging, and brown paper. Please flatten the boxes to save space.',
-              ),
-              const SizedBox(width: 16),
-              _buildPricingCard(
-                context,
-                'Books',
-                '₹16',
-                LucideIcons.library,
-                'Old textbooks, novels, and hardbounds. Heavily damaged or missing covers are also accepted.',
-              ),
-            ],
+            itemCount: AppConstants.pricingItems.length,
+            itemBuilder: (context, index) {
+              final item = AppConstants.pricingItems[index];
+              return Padding(
+                padding: const EdgeInsets.only(right: 16.0),
+                child: _buildPricingCard(
+                  context,
+                  item['name'],
+                  item['price'],
+                  item['icon'],
+                  item['details'],
+                ),
+              );
+            },
           ),
         ),
       ],
@@ -981,28 +1021,21 @@ extension HomeTabExtension on _HomeScreenState {
         const SizedBox(height: 16),
         SizedBox(
           height: 180,
-          child: ListView(
+          child: ListView.builder(
             scrollDirection: Axis.horizontal,
             clipBehavior: Clip.none,
-            children: [
-              _buildReviewCard(
-                'Salman Nazeer.',
-                'Very professional and on time. Highly recommended!',
-                5,
-              ),
-              const SizedBox(width: 16),
-              _buildReviewCard(
-                'Sadiq.',
-                'Great app to recycle old newspapers. Got my eco points instantly.',
-                5,
-              ),
-              const SizedBox(width: 16),
-              _buildReviewCard(
-                'Sulaiman.',
-                'The picker was polite and the whole process was smooth.',
-                4,
-              ),
-            ],
+            itemCount: AppConstants.customerReviews.length,
+            itemBuilder: (context, index) {
+              final item = AppConstants.customerReviews[index];
+              return Padding(
+                padding: const EdgeInsets.only(right: 16.0),
+                child: _buildReviewCard(
+                  item['name'],
+                  item['review'],
+                  item['rating'],
+                ),
+              );
+            },
           ),
         ),
       ],
@@ -1626,7 +1659,7 @@ extension HomeTabExtension on _HomeScreenState {
                           'Assigned Picker',
                           style: TextStyle(
                             fontSize: 14,
-                            color: isDark ? Colors.grey.shade400 : Colors.grey.shade500,
+                            color: isDark ? Colors.grey.shade400 : Colors.grey.shade50,
                           ),
                         ),
                       ],
@@ -1776,9 +1809,6 @@ extension HomeTabExtension on _HomeScreenState {
                   child: ElevatedButton(
                     onPressed: () {
                       Navigator.pop(context);
-                      triggerStateUpdate(() {
-                        // Mark as cancelled
-                      });
                       ScaffoldMessenger.of(context).showSnackBar(
                         const SnackBar(
                           content: Text('Pickup cancelled successfully.'),
@@ -1973,36 +2003,14 @@ extension HomeTabExtension on _HomeScreenState {
                   builder: (context, constraints) {
                     final w = constraints.maxWidth;
                     final h = constraints.maxHeight;
-                    final zones = [
-                      {'name': 'Kannur', 'active': false, 'x': 0.55, 'y': 0.10},
-                      {
-                        'name': 'Calicut',
-                        'active': false,
-                        'x': 0.40,
-                        'y': 0.26,
-                      },
-                      {
-                        'name': 'Thrissur',
-                        'active': true,
-                        'x': 0.48,
-                        'y': 0.44,
-                      },
-                      {'name': 'Kochi', 'active': true, 'x': 0.55, 'y': 0.58},
-                      {
-                        'name': 'Trivandrum',
-                        'active': false,
-                        'x': 0.45,
-                        'y': 0.85,
-                      },
-                    ];
 
                     return Stack(
                       children: [
                         CustomPaint(
                           size: Size(w, h),
-                          painter: _KeralaOutlinePainter(isDark: isDark),
+                          painter: KeralaOutlinePainter(isDark: isDark),
                         ),
-                        ...zones.map((z) {
+                        ...AppConstants.coverageZones.map((z) {
                           final isActive = z['active'] as bool;
                           final name = z['name'] as String;
                           final px = (z['x'] as double) * w;
@@ -2034,20 +2042,23 @@ extension HomeTabExtension on _HomeScreenState {
               ),
             ),
             const SizedBox(height: 16),
-            _buildZoneListItem('Kochi', 'Fully operational', true, isDark),
-            const SizedBox(height: 6),
-            _buildZoneListItem('Thrissur', 'Fully operational', true, isDark),
-            const SizedBox(height: 6),
-            _buildZoneListItem('Calicut', 'Launching Q3 2026', false, isDark),
-            const SizedBox(height: 6),
-            _buildZoneListItem(
-              'Trivandrum',
-              'Launching Q4 2026',
-              false,
-              isDark,
+            Expanded(
+              child: ListView.builder(
+                itemCount: AppConstants.coverageZones.length,
+                itemBuilder: (context, index) {
+                  final z = AppConstants.coverageZones[index];
+                  return Padding(
+                    padding: const EdgeInsets.only(bottom: 6.0),
+                    child: _buildZoneListItem(
+                      z['name'],
+                      z['status'],
+                      z['active'],
+                      isDark,
+                    ),
+                  );
+                },
+              ),
             ),
-            const SizedBox(height: 6),
-            _buildZoneListItem('Kannur', 'Launching Q1 2027', false, isDark),
           ],
         ),
       ),
@@ -2055,7 +2066,6 @@ extension HomeTabExtension on _HomeScreenState {
   }
 
   Widget _buildMapZoneMarker(String name, bool isActive) {
-    final isDark = Theme.of(context).brightness == Brightness.dark;
     return Column(
       mainAxisSize: MainAxisSize.min,
       children: [
@@ -2153,44 +2163,4 @@ extension HomeTabExtension on _HomeScreenState {
       ),
     );
   }
-}
-
-class _KeralaOutlinePainter extends CustomPainter {
-  final bool isDark;
-  _KeralaOutlinePainter({required this.isDark});
-
-  @override
-  void paint(Canvas canvas, Size size) {
-    final paint = Paint()
-      ..color = isDark
-          ? Colors.white.withOpacity(0.05)
-          : Colors.black.withOpacity(0.03)
-      ..style = PaintingStyle.fill;
-
-    final path = Path();
-    final w = size.width;
-    final h = size.height;
-
-    path.moveTo(w * 0.45, h * 0.05);
-    path.quadraticBezierTo(w * 0.35, h * 0.25, w * 0.40, h * 0.45);
-    path.quadraticBezierTo(w * 0.55, h * 0.65, w * 0.45, h * 0.95);
-    path.lineTo(w * 0.65, h * 0.90);
-    path.quadraticBezierTo(w * 0.75, h * 0.60, w * 0.60, h * 0.35);
-    path.quadraticBezierTo(w * 0.55, h * 0.15, w * 0.60, h * 0.05);
-    path.close();
-
-    canvas.drawPath(path, paint);
-
-    final strokePaint = Paint()
-      ..color = isDark
-          ? Colors.white.withOpacity(0.1)
-          : Colors.black.withOpacity(0.05)
-      ..style = PaintingStyle.stroke
-      ..strokeWidth = 2;
-
-    canvas.drawPath(path, strokePaint);
-  }
-
-  @override
-  bool shouldRepaint(covariant CustomPainter oldDelegate) => false;
 }
