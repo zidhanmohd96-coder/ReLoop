@@ -63,12 +63,20 @@ class RewardsTab extends StatelessWidget {
                   color: Colors.white.withOpacity(0.1),
                   shape: BoxShape.circle,
                 ),
-                child: const Icon(LucideIcons.medal, color: Colors.amber, size: 40),
+                child: const Icon(
+                  LucideIcons.medal,
+                  color: Colors.amber,
+                  size: 40,
+                ),
               ),
               const SizedBox(height: 16),
               const Text(
                 'Gold Recycler',
-                style: TextStyle(color: Colors.white, fontSize: 24, fontWeight: FontWeight.bold),
+                style: TextStyle(
+                  color: Colors.white,
+                  fontSize: 24,
+                  fontWeight: FontWeight.bold,
+                ),
               ),
               const SizedBox(height: 4),
               Text(
@@ -85,7 +93,9 @@ class RewardsTab extends StatelessWidget {
                 child: LinearProgressIndicator(
                   value: 0.75,
                   backgroundColor: Colors.white.withOpacity(0.2),
-                  valueColor: const AlwaysStoppedAnimation<Color>(AppTheme.mintGreen),
+                  valueColor: const AlwaysStoppedAnimation<Color>(
+                    AppTheme.mintGreen,
+                  ),
                   minHeight: 8,
                 ),
               ),
@@ -103,7 +113,11 @@ class RewardsTab extends StatelessWidget {
                   ),
                   const Text(
                     '75%',
-                    style: TextStyle(color: Colors.white, fontSize: 12, fontWeight: FontWeight.bold),
+                    style: TextStyle(
+                      color: Colors.white,
+                      fontSize: 12,
+                      fontWeight: FontWeight.bold,
+                    ),
                   ),
                 ],
               ),
@@ -125,10 +139,16 @@ class RewardsTab extends StatelessWidget {
               Container(
                 padding: const EdgeInsets.all(14),
                 decoration: BoxDecoration(
-                  color: isDark ? Colors.amber.withOpacity(0.1) : Colors.amber.shade50,
+                  color: isDark
+                      ? Colors.amber.withOpacity(0.1)
+                      : Colors.amber.shade50,
                   shape: BoxShape.circle,
                 ),
-                child: Icon(LucideIcons.coins, color: isDark ? Colors.amber : Colors.amber.shade700, size: 24),
+                child: Icon(
+                  LucideIcons.coins,
+                  color: isDark ? Colors.amber : Colors.amber.shade700,
+                  size: 24,
+                ),
               ),
               const SizedBox(width: 16),
               Expanded(
@@ -146,23 +166,36 @@ class RewardsTab extends StatelessWidget {
                     const SizedBox(height: 2),
                     Text(
                       'Worth ₹45 in vouchers',
-                      style: TextStyle(color: isDark ? Colors.grey.shade400 : Colors.grey.shade600, fontSize: 13),
+                      style: TextStyle(
+                        color: isDark
+                            ? Colors.grey.shade400
+                            : Colors.grey.shade600,
+                        fontSize: 13,
+                      ),
                     ),
                   ],
                 ),
               ),
               Container(
-                padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 16,
+                  vertical: 10,
+                ),
                 decoration: BoxDecoration(
                   color: isDark ? AppTheme.mintGreen : AppTheme.forestGreen,
                   borderRadius: BorderRadius.circular(20),
                 ),
-                child: Text(
-                  'History',
-                  style: TextStyle(
-                    color: isDark ? const Color(0xFF0F172A) : Colors.white,
-                    fontWeight: FontWeight.bold,
-                    fontSize: 12,
+                child: TextButton(
+                  onPressed: () {
+                    _showPointsHistory(context);
+                  },
+                  child: Text(
+                    'History',
+                    style: TextStyle(
+                      color: isDark ? Colors.white70 : Colors.white70,
+                      fontWeight: FontWeight.bold,
+                      fontSize: 14,
+                    ),
                   ),
                 ),
               ),
@@ -185,11 +218,32 @@ class RewardsTab extends StatelessWidget {
         const SizedBox(height: 12),
         Row(
           children: [
-            Expanded(child: _buildPointInfoCard(LucideIcons.truck, '1 Pickup', '+10 pts', isDark)),
+            Expanded(
+              child: _buildPointInfoCard(
+                LucideIcons.truck,
+                '1 Pickup',
+                '+10 pts',
+                isDark,
+              ),
+            ),
             const SizedBox(width: 12),
-            Expanded(child: _buildPointInfoCard(LucideIcons.award, 'Referral', '+50 pts', isDark)),
+            Expanded(
+              child: _buildPointInfoCard(
+                LucideIcons.award,
+                'Referral',
+                '+50 pts',
+                isDark,
+              ),
+            ),
             const SizedBox(width: 12),
-            Expanded(child: _buildPointInfoCard(LucideIcons.star, 'Review', '+5 pts', isDark)),
+            Expanded(
+              child: _buildPointInfoCard(
+                LucideIcons.star,
+                'Review',
+                '+5 pts',
+                isDark,
+              ),
+            ),
           ],
         ).animate().fadeIn(delay: 200.ms).slideY(begin: 0.1, end: 0),
 
@@ -211,7 +265,7 @@ class RewardsTab extends StatelessWidget {
           '500 pts',
           LucideIcons.shoppingBag,
           Colors.orange,
-          false,
+          true,
           isDark,
         ),
         const SizedBox(height: 12),
@@ -220,7 +274,7 @@ class RewardsTab extends StatelessWidget {
           '1000 pts',
           LucideIcons.utensils,
           Colors.deepOrange,
-          false,
+          true,
           isDark,
         ),
         const SizedBox(height: 12),
@@ -249,15 +303,33 @@ class RewardsTab extends StatelessWidget {
         Row(
           children: [
             Expanded(
-              child: _buildStatCard(LucideIcons.droplets, Colors.blue.shade400, '850L', 'WATER SAVED', isDark),
+              child: _buildStatCard(
+                LucideIcons.droplets,
+                Colors.blue.shade400,
+                '850L',
+                'WATER SAVED',
+                isDark,
+              ),
             ),
             const SizedBox(width: 12),
             Expanded(
-              child: _buildStatCard(LucideIcons.zap, Colors.amber.shade400, '320kW', 'ENERGY SAVED', isDark),
+              child: _buildStatCard(
+                LucideIcons.zap,
+                Colors.amber.shade400,
+                '320kW',
+                'ENERGY SAVED',
+                isDark,
+              ),
             ),
             const SizedBox(width: 12),
             Expanded(
-              child: _buildStatCard(LucideIcons.wind, AppTheme.mintGreen, '45kg', 'CO2 REDUCED', isDark),
+              child: _buildStatCard(
+                LucideIcons.wind,
+                AppTheme.mintGreen,
+                '45kg',
+                'CO2 REDUCED',
+                isDark,
+              ),
             ),
           ],
         ).animate().fadeIn(delay: 300.ms).slideY(begin: 0.1, end: 0),
@@ -338,9 +410,19 @@ class RewardsTab extends StatelessWidget {
           ),
         ),
         const SizedBox(height: 12),
-        _buildMilestoneRow('MAY\n10', '100kg Cardboard Milestone', '+50 pts', isDark),
+        _buildMilestoneRow(
+          'MAY\n10',
+          '100kg Cardboard Milestone',
+          '+50 pts',
+          isDark,
+        ),
         const SizedBox(height: 12),
-        _buildMilestoneRow('APR\n28', 'First Premium Pickup', '+20 pts', isDark),
+        _buildMilestoneRow(
+          'APR\n28',
+          'First Premium Pickup',
+          '+20 pts',
+          isDark,
+        ),
         const SizedBox(height: 12),
         _buildMilestoneRow('APR\n15', 'Earth Day Bonus', '+100 pts', isDark),
 
@@ -348,10 +430,18 @@ class RewardsTab extends StatelessWidget {
         SizedBox(
           width: double.infinity,
           child: ElevatedButton(
-            onPressed: () {},
+            onPressed: () {
+              ScaffoldMessenger.of(
+                context,
+              ).showSnackBar(const SnackBar(content: Text('Coming Soon!!!')));
+            },
             style: ElevatedButton.styleFrom(
-              backgroundColor: isDark ? AppTheme.mintGreen.withOpacity(0.15) : AppTheme.leafGreen.withOpacity(0.1),
-              foregroundColor: isDark ? AppTheme.mintGreen : AppTheme.forestGreen,
+              backgroundColor: isDark
+                  ? AppTheme.mintGreen.withOpacity(0.15)
+                  : AppTheme.leafGreen.withOpacity(0.1),
+              foregroundColor: isDark
+                  ? AppTheme.mintGreen
+                  : AppTheme.forestGreen,
               elevation: 0,
               padding: const EdgeInsets.symmetric(vertical: 20),
               shape: RoundedRectangleBorder(
@@ -368,7 +458,12 @@ class RewardsTab extends StatelessWidget {
     );
   }
 
-  Widget _buildPointInfoCard(IconData icon, String title, String pts, bool isDark) {
+  Widget _buildPointInfoCard(
+    IconData icon,
+    String title,
+    String pts,
+    bool isDark,
+  ) {
     return Container(
       padding: const EdgeInsets.all(16),
       decoration: AppTheme.getClayDecoration(
@@ -377,20 +472,42 @@ class RewardsTab extends StatelessWidget {
       ),
       child: Column(
         children: [
-          Icon(icon, color: isDark ? AppTheme.mintGreen : AppTheme.forestGreen, size: 22),
+          Icon(
+            icon,
+            color: isDark ? AppTheme.mintGreen : AppTheme.forestGreen,
+            size: 22,
+          ),
           const SizedBox(height: 8),
-          Text(title, style: TextStyle(
-            fontSize: 11, fontWeight: FontWeight.bold,
-            color: isDark ? Colors.white70 : AppTheme.forestGreen,
-          )),
+          Text(
+            title,
+            style: TextStyle(
+              fontSize: 11,
+              fontWeight: FontWeight.bold,
+              color: isDark ? Colors.white70 : AppTheme.forestGreen,
+            ),
+          ),
           const SizedBox(height: 4),
-          Text(pts, style: TextStyle(fontSize: 13, fontWeight: FontWeight.bold, color: AppTheme.mintGreen)),
+          Text(
+            pts,
+            style: TextStyle(
+              fontSize: 13,
+              fontWeight: FontWeight.bold,
+              color: AppTheme.mintGreen,
+            ),
+          ),
         ],
       ),
     );
   }
 
-  Widget _buildVoucherCard(String title, String cost, IconData icon, Color color, bool comingSoon, bool isDark) {
+  Widget _buildVoucherCard(
+    String title,
+    String cost,
+    IconData icon,
+    Color color,
+    bool comingSoon,
+    bool isDark,
+  ) {
     return Container(
       padding: const EdgeInsets.all(20),
       decoration: AppTheme.getClayDecoration(
@@ -413,29 +530,42 @@ class RewardsTab extends StatelessWidget {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Text(title, style: TextStyle(
-                  fontWeight: FontWeight.bold, fontSize: 15,
-                  color: isDark ? Colors.white : AppTheme.forestGreen,
-                )),
+                Text(
+                  title,
+                  style: TextStyle(
+                    fontWeight: FontWeight.bold,
+                    fontSize: 15,
+                    color: isDark ? Colors.white : AppTheme.forestGreen,
+                  ),
+                ),
                 const SizedBox(height: 2),
-                Text(cost, style: TextStyle(color: AppTheme.mintGreen, fontWeight: FontWeight.bold, fontSize: 13)),
+                Text(
+                  cost,
+                  style: TextStyle(
+                    color: AppTheme.mintGreen,
+                    fontWeight: FontWeight.bold,
+                    fontSize: 13,
+                  ),
+                ),
               ],
             ),
           ),
           Container(
             padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
             decoration: BoxDecoration(
-              color: comingSoon 
-                ? (isDark ? Colors.white.withOpacity(0.05) : Colors.grey.shade200) 
-                : (isDark ? AppTheme.mintGreen : AppTheme.forestGreen),
+              color: comingSoon
+                  ? (isDark
+                        ? Colors.white.withOpacity(0.05)
+                        : Colors.grey.shade200)
+                  : (isDark ? AppTheme.mintGreen : AppTheme.forestGreen),
               borderRadius: BorderRadius.circular(20),
             ),
             child: Text(
               comingSoon ? 'Coming Soon' : 'Redeem',
               style: TextStyle(
-                color: comingSoon 
-                  ? (isDark ? Colors.grey.shade600 : Colors.grey.shade500) 
-                  : (isDark ? const Color(0xFF0F172A) : Colors.white),
+                color: comingSoon
+                    ? (isDark ? Colors.grey.shade600 : Colors.grey.shade500)
+                    : (isDark ? const Color(0xFF0F172A) : Colors.white),
                 fontWeight: FontWeight.bold,
                 fontSize: 12,
               ),
@@ -446,7 +576,13 @@ class RewardsTab extends StatelessWidget {
     ).animate().fadeIn(delay: 250.ms).slideY(begin: 0.05, end: 0);
   }
 
-  Widget _buildStatCard(IconData icon, Color iconColor, String value, String label, bool isDark) {
+  Widget _buildStatCard(
+    IconData icon,
+    Color iconColor,
+    String value,
+    String label,
+    bool isDark,
+  ) {
     return Container(
       padding: const EdgeInsets.all(16),
       decoration: AppTheme.getClayDecoration(
@@ -460,12 +596,21 @@ class RewardsTab extends StatelessWidget {
           const SizedBox(height: 12),
           Text(
             value,
-            style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold, color: isDark ? Colors.white : AppTheme.forestGreen),
+            style: TextStyle(
+              fontSize: 20,
+              fontWeight: FontWeight.bold,
+              color: isDark ? Colors.white : AppTheme.forestGreen,
+            ),
           ),
           const SizedBox(height: 2),
           Text(
             label,
-            style: TextStyle(fontSize: 9, color: AppTheme.mintGreen, fontWeight: FontWeight.bold, letterSpacing: 1),
+            style: TextStyle(
+              fontSize: 9,
+              color: AppTheme.mintGreen,
+              fontWeight: FontWeight.bold,
+              letterSpacing: 1,
+            ),
           ),
         ],
       ),
@@ -492,15 +637,21 @@ class RewardsTab extends StatelessWidget {
           Container(
             padding: const EdgeInsets.all(12),
             decoration: BoxDecoration(
-              color: unlocked 
-                ? color.withOpacity(isDark ? 0.2 : 0.15) 
-                : (isDark ? Colors.white.withOpacity(0.04) : Colors.grey.shade100),
+              color: unlocked
+                  ? color.withOpacity(isDark ? 0.2 : 0.15)
+                  : (isDark
+                        ? Colors.white.withOpacity(0.04)
+                        : Colors.grey.shade100),
               shape: BoxShape.circle,
-              border: unlocked && isDark ? Border.all(color: color.withOpacity(0.3)) : null,
+              border: unlocked && isDark
+                  ? Border.all(color: color.withOpacity(0.3))
+                  : null,
             ),
             child: Icon(
               icon,
-              color: unlocked ? color : (isDark ? Colors.grey.shade700 : Colors.grey.shade400),
+              color: unlocked
+                  ? color
+                  : (isDark ? Colors.grey.shade700 : Colors.grey.shade400),
               size: 22,
             ),
           ),
@@ -516,27 +667,40 @@ class RewardsTab extends StatelessWidget {
                       style: TextStyle(
                         fontWeight: FontWeight.bold,
                         fontSize: 15,
-                        color: unlocked 
-                          ? (isDark ? Colors.white : AppTheme.forestGreen) 
-                          : (isDark ? Colors.grey.shade600 : Colors.grey.shade500),
+                        color: unlocked
+                            ? (isDark ? Colors.white : AppTheme.forestGreen)
+                            : (isDark
+                                  ? Colors.grey.shade600
+                                  : Colors.grey.shade500),
                       ),
                     ),
                     if (unlocked) ...[
                       const SizedBox(width: 8),
-                      Icon(LucideIcons.checkCircle, color: AppTheme.mintGreen, size: 16),
+                      Icon(
+                        LucideIcons.checkCircle,
+                        color: AppTheme.mintGreen,
+                        size: 16,
+                      ),
                     ],
                   ],
                 ),
                 const SizedBox(height: 2),
                 Text(
                   requirement,
-                  style: TextStyle(color: isDark ? Colors.grey.shade500 : Colors.grey.shade500, fontSize: 12),
+                  style: TextStyle(
+                    color: isDark ? Colors.grey.shade500 : Colors.grey.shade500,
+                    fontSize: 12,
+                  ),
                 ),
                 const SizedBox(height: 4),
                 Text(
                   benefit,
                   style: TextStyle(
-                    color: unlocked ? AppTheme.mintGreen : (isDark ? Colors.grey.shade700 : Colors.grey.shade400),
+                    color: unlocked
+                        ? AppTheme.mintGreen
+                        : (isDark
+                              ? Colors.grey.shade700
+                              : Colors.grey.shade400),
                     fontSize: 11,
                     fontWeight: FontWeight.bold,
                   ),
@@ -549,7 +713,12 @@ class RewardsTab extends StatelessWidget {
     ).animate().fadeIn(delay: 200.ms).slideY(begin: 0.05, end: 0);
   }
 
-  Widget _buildMilestoneRow(String date, String title, String points, bool isDark) {
+  Widget _buildMilestoneRow(
+    String date,
+    String title,
+    String points,
+    bool isDark,
+  ) {
     return Container(
       padding: const EdgeInsets.all(16),
       decoration: AppTheme.getClayDecoration(
@@ -572,17 +741,147 @@ class RewardsTab extends StatelessWidget {
             child: Text(
               title,
               style: TextStyle(
-                fontWeight: FontWeight.w600, 
+                fontWeight: FontWeight.w600,
                 color: isDark ? Colors.white : AppTheme.forestGreen,
               ),
             ),
           ),
           Text(
             points,
-            style: const TextStyle(color: AppTheme.mintGreen, fontWeight: FontWeight.bold),
+            style: const TextStyle(
+              color: AppTheme.mintGreen,
+              fontWeight: FontWeight.bold,
+            ),
           ),
         ],
       ),
     );
   }
+}
+
+Widget _buildHistoryRow(
+  BuildContext context,
+  String title,
+  String points,
+  String date,
+) {
+  final isDark = Theme.of(context).brightness == Brightness.dark;
+  return Padding(
+    padding: const EdgeInsets.only(bottom: 24.0),
+    child: Row(
+      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+      children: [
+        Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(
+              title,
+              style: TextStyle(
+                fontWeight: FontWeight.bold,
+                fontSize: 16,
+                color: isDark ? Colors.white : AppTheme.forestGreen,
+              ),
+            ),
+            const SizedBox(height: 4),
+            Text(
+              date,
+              style: TextStyle(
+                color: isDark ? Colors.grey.shade400 : Colors.grey.shade500,
+                fontSize: 12,
+              ),
+            ),
+          ],
+        ),
+        Text(
+          points,
+          style: TextStyle(
+            fontWeight: FontWeight.bold,
+            color: isDark ? AppTheme.mintGreen : AppTheme.lightGreen,
+            fontSize: 16,
+          ),
+        ),
+      ],
+    ),
+  );
+}
+
+void _showPointsHistory(BuildContext context) {
+  final isDark = Theme.of(context).brightness == Brightness.dark;
+  showModalBottomSheet(
+    context: context,
+    backgroundColor: Colors.transparent,
+    isScrollControlled: true,
+    builder: (context) => Container(
+      height: MediaQuery.of(context).size.height * 0.7,
+      padding: const EdgeInsets.all(32),
+      decoration: BoxDecoration(
+        color: isDark ? const Color(0xFF1E293B) : Colors.white,
+        borderRadius: const BorderRadius.only(
+          topLeft: Radius.circular(32),
+          topRight: Radius.circular(32),
+        ),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              Text(
+                'Points History',
+                style: TextStyle(
+                  fontSize: 28,
+                  fontWeight: FontWeight.bold,
+                  color: isDark ? Colors.white : AppTheme.forestGreen,
+                ),
+              ),
+              Container(
+                decoration: BoxDecoration(
+                  shape: BoxShape.circle,
+                  border: Border.all(
+                    color: isDark
+                        ? Colors.white.withOpacity(0.1)
+                        : Colors.grey.shade200,
+                  ),
+                ),
+                child: IconButton(
+                  icon: Icon(
+                    LucideIcons.x,
+                    size: 20,
+                    color: isDark ? Colors.white : AppTheme.forestGreen,
+                  ),
+                  onPressed: () => Navigator.pop(context),
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 32),
+          Expanded(
+            child: ListView(
+              children: [
+                _buildHistoryRow(
+                  context,
+                  'Paper Recycling',
+                  '+150 pts',
+                  '12 May 2026',
+                ).animate().fadeIn(delay: 100.ms).slideY(begin: 0.1, end: 0),
+                _buildHistoryRow(
+                  context,
+                  'Cardboard Bulk',
+                  '+200 pts',
+                  '05 May 2026',
+                ).animate().fadeIn(delay: 200.ms).slideY(begin: 0.1, end: 0),
+                _buildHistoryRow(
+                  context,
+                  'Referral Bonus',
+                  '+100 pts',
+                  '01 May 2026',
+                ).animate().fadeIn(delay: 300.ms).slideY(begin: 0.1, end: 0),
+              ],
+            ),
+          ),
+        ],
+      ),
+    ),
+  );
 }

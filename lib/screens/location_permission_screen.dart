@@ -3,6 +3,7 @@ import 'package:lucide_icons/lucide_icons.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 import '../theme.dart';
 import 'home_screen.dart';
+import '../core/services/location_service.dart';
 
 class LocationPermissionScreen extends StatefulWidget {
   const LocationPermissionScreen({super.key});
@@ -15,18 +16,19 @@ class LocationPermissionScreen extends StatefulWidget {
 class _LocationPermissionScreenState extends State<LocationPermissionScreen> {
   bool _isLoading = false;
   bool _locationFetched = false;
+  String _currentAddress = '123 Green Valley Road, Eco Park, City Center';
 
-  void _fetchLocation() {
+  void _fetchLocation() async {
     setState(() {
       _isLoading = true;
     });
 
-    // Simulate location fetching delay
-    Future.delayed(const Duration(seconds: 2), () {
-      setState(() {
-        _isLoading = false;
-        _locationFetched = true;
-      });
+    final loc = await LocationService.getCurrentLocation();
+
+    setState(() {
+      _isLoading = false;
+      _locationFetched = true;
+      _currentAddress = '${loc.zip}, ${loc.city}, ${loc.region} (${loc.latitude.toStringAsFixed(4)}, ${loc.longitude.toStringAsFixed(4)})';
     });
   }
 
@@ -213,7 +215,7 @@ class _LocationPermissionScreenState extends State<LocationPermissionScreen> {
                                         ),
                                         const SizedBox(height: 4),
                                         Text(
-                                          '123 Green Valley Road, Eco Park, City Center',
+                                          _currentAddress,
                                           style: TextStyle(
                                             color: isDark ? Colors.white : AppTheme.forestGreen,
                                             fontSize: 14,

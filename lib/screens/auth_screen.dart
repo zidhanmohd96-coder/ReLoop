@@ -3,6 +3,7 @@ import 'package:flutter_animate/flutter_animate.dart';
 import 'package:lucide_icons/lucide_icons.dart';
 import '../theme.dart';
 import 'location_permission_screen.dart';
+import 'otp_verification_screen.dart';
 
 class AuthScreen extends StatefulWidget {
   const AuthScreen({super.key});
@@ -13,6 +14,13 @@ class AuthScreen extends StatefulWidget {
 
 class _AuthScreenState extends State<AuthScreen> {
   bool _isLogin = true;
+  final _phoneController = TextEditingController();
+
+  @override
+  void dispose() {
+    _phoneController.dispose();
+    super.dispose();
+  }
 
   void _toggleAuth() {
     setState(() {
@@ -28,6 +36,21 @@ class _AuthScreenState extends State<AuthScreen> {
         transitionsBuilder: (context, a1, a2, child) =>
             FadeTransition(opacity: a1, child: child),
         transitionDuration: const Duration(milliseconds: 800),
+      ),
+    );
+  }
+
+  void _navigateToOtp() {
+    final phone = _phoneController.text.trim();
+    final displayPhone = phone.isEmpty ? '+91 77369 50910' : phone;
+
+    Navigator.push(
+      context,
+      PageRouteBuilder(
+        pageBuilder: (context, a1, a2) => OtpVerificationScreen(phoneNumber: displayPhone),
+        transitionsBuilder: (context, a1, a2, child) =>
+            FadeTransition(opacity: a1, child: child),
+        transitionDuration: const Duration(milliseconds: 600),
       ),
     );
   }
@@ -123,6 +146,7 @@ class _AuthScreenState extends State<AuthScreen> {
                       icon: LucideIcons.phone,
                       keyboardType: TextInputType.phone,
                       isDark: isDark,
+                      controller: _phoneController,
                     )
                         .animate()
                         .fadeIn(delay: 200.ms)
@@ -217,7 +241,7 @@ class _AuthScreenState extends State<AuthScreen> {
                     SizedBox(
                       width: double.infinity,
                       child: OutlinedButton.icon(
-                        onPressed: _navigateToHome,
+                        onPressed: _navigateToOtp,
                         icon: const Icon(LucideIcons.smartphone, size: 18),
                         label: const Text(
                           'Continue with OTP',
@@ -321,6 +345,7 @@ class _AuthScreenState extends State<AuthScreen> {
     required bool isDark,
     bool isPassword = false,
     TextInputType? keyboardType,
+    TextEditingController? controller,
   }) {
     return Container(
       decoration: AppTheme.getClayDecoration(
@@ -328,6 +353,7 @@ class _AuthScreenState extends State<AuthScreen> {
         borderRadius: 24,
       ),
       child: TextField(
+        controller: controller,
         obscureText: isPassword,
         keyboardType: keyboardType,
         style: TextStyle(color: isDark ? Colors.white : Colors.black),

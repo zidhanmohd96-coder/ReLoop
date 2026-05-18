@@ -2,9 +2,10 @@ import 'package:flutter/material.dart';
 import 'package:lucide_icons/lucide_icons.dart';
 import 'package:provider/provider.dart';
 import 'package:flutter_animate/flutter_animate.dart';
-import '../models/address.dart';
-import '../providers/app_state.dart';
-import '../theme.dart';
+import '../../models/address.dart';
+import '../../providers/app_state.dart';
+import '../../theme.dart';
+import '../../core/services/location_service.dart';
 
 class AddressManagementScreen extends StatefulWidget {
   const AddressManagementScreen({super.key});
@@ -26,191 +27,163 @@ class _AddressManagementScreenState extends State<AddressManagementScreen> {
 
   @override
   Widget build(BuildContext context) {
-    final isDark = Theme.of(context).brightness == Brightness.dark;
+    final theme = Theme.of(context);
+    final isDark = theme.brightness == Brightness.dark;
 
     return Scaffold(
-      body: Container(
-        decoration: BoxDecoration(
-          gradient: isDark ? AppTheme.darkBgGradient : AppTheme.lightBgGradient,
-        ),
-        child: SafeArea(
-          child: Column(
-            children: [
-              AppBar(
-                title: Text(
-                  'My Addresses',
-                  style: TextStyle(
-                    color: isDark ? Colors.white : AppTheme.forestGreen,
-                    fontWeight: FontWeight.bold,
-                    fontSize: 20,
-                  ),
-                ),
-                backgroundColor: Colors.transparent,
-                elevation: 0,
-                iconTheme: IconThemeData(
-                  color: isDark ? Colors.white : AppTheme.forestGreen,
-                ),
-              ),
-              Expanded(
-                child: Consumer<AppState>(
-                  builder: (context, state, child) {
-                    final filtered = state.addresses.where((a) {
-                      if (_searchQuery.isEmpty) return true;
-                      final q = _searchQuery.toLowerCase();
-                      return a.houseName.toLowerCase().contains(q) ||
-                          a.area.toLowerCase().contains(q) ||
-                          a.city.toLowerCase().contains(q) ||
-                          a.label.toLowerCase().contains(q);
-                    }).toList();
-
-                    return Column(
-                      children: [
-                        // Search bar
-                        Padding(
-                          padding: const EdgeInsets.fromLTRB(24, 8, 24, 16),
-                          child: Container(
-                            decoration: BoxDecoration(
-                              color: isDark
-                                  ? const Color(0xFF1E293B)
-                                  : Colors.white,
-                              borderRadius: BorderRadius.circular(16),
-                              border: Border.all(
-                                color: isDark
-                                    ? const Color(0xFF334155)
-                                    : Colors.grey.shade200,
-                              ),
-                            ),
-                            child: TextField(
-                              controller: _searchController,
-                              onChanged: (v) =>
-                                  setState(() => _searchQuery = v),
-                              style: TextStyle(
-                                color: isDark
-                                    ? Colors.white
-                                    : AppTheme.forestGreen,
-                              ),
-                              decoration: InputDecoration(
-                                hintText: 'Search addresses...',
-                                hintStyle: TextStyle(
-                                  color: isDark
-                                      ? Colors.grey.shade600
-                                      : Colors.grey.shade400,
-                                ),
-                                prefixIcon: Icon(
-                                  LucideIcons.search,
-                                  size: 18,
-                                  color: isDark
-                                      ? Colors.grey.shade500
-                                      : Colors.grey.shade400,
-                                ),
-                                border: InputBorder.none,
-                                contentPadding: const EdgeInsets.symmetric(
-                                  vertical: 14,
-                                ),
-                              ),
-                            ),
-                          ),
-                        ),
-                        // Address count
-                        Padding(
-                          padding: const EdgeInsets.symmetric(horizontal: 32),
-                          child: Row(
-                            children: [
-                              Text(
-                                '${filtered.length} saved address${filtered.length != 1 ? 'es' : ''}',
-                                style: TextStyle(
-                                  color: isDark
-                                      ? Colors.grey.shade500
-                                      : Colors.grey.shade500,
-                                  fontSize: 12,
-                                  fontWeight: FontWeight.bold,
-                                  letterSpacing: 0.5,
-                                ),
-                              ),
-                            ],
-                          ),
-                        ),
-                        const SizedBox(height: 8),
-                        // Address list
-                        Expanded(
-                          child: filtered.isEmpty
-                              ? Center(
-                                  child: Column(
-                                    mainAxisAlignment: MainAxisAlignment.center,
-                                    children: [
-                                      Icon(
-                                        LucideIcons.mapPin,
-                                        size: 64,
-                                        color: isDark
-                                            ? Colors.grey.shade700
-                                            : Colors.grey.shade300,
-                                      ),
-                                      const SizedBox(height: 16),
-                                      Text(
-                                        state.addresses.isEmpty
-                                            ? 'No addresses saved yet'
-                                            : 'No matching addresses',
-                                        style: TextStyle(
-                                          color: isDark
-                                              ? Colors.grey.shade500
-                                              : Colors.grey.shade500,
-                                          fontSize: 16,
-                                        ),
-                                      ),
-                                      const SizedBox(height: 8),
-                                      Text(
-                                        'Tap + to add your first address',
-                                        style: TextStyle(
-                                          color: isDark
-                                              ? Colors.grey.shade600
-                                              : Colors.grey.shade400,
-                                          fontSize: 13,
-                                        ),
-                                      ),
-                                    ],
-                                  ).animate().fadeIn(),
-                                )
-                              : ListView.builder(
-                                  padding: const EdgeInsets.fromLTRB(
-                                    24,
-                                    8,
-                                    24,
-                                    100,
-                                  ),
-                                  itemCount: filtered.length,
-                                  itemBuilder: (context, index) {
-                                    final address = filtered[index];
-                                    return _buildAddressCard(
-                                      address,
-                                      state,
-                                      isDark,
-                                      index,
-                                    );
-                                  },
-                                ),
-                        ),
-                      ],
-                    );
-                  },
-                ),
-              ),
-            ],
+      backgroundColor: theme.colorScheme.background,
+      appBar: AppBar(
+        title: Text(
+          'Saved Addresses',
+          style: theme.textTheme.titleLarge?.copyWith(
+            fontWeight: FontWeight.bold,
           ),
         ),
+        backgroundColor: Colors.transparent,
+        elevation: 0,
+        leading: IconButton(
+          icon: Icon(
+            Icons.arrow_back_ios_new_rounded,
+            color: theme.colorScheme.onBackground,
+          ),
+          onPressed: () => Navigator.pop(context),
+        ),
+      ),
+      body: Consumer<AppState>(
+        builder: (context, state, child) {
+          final filtered = state.addresses.where((a) {
+            if (_searchQuery.isEmpty) return true;
+            final q = _searchQuery.toLowerCase();
+            return a.houseName.toLowerCase().contains(q) ||
+                a.area.toLowerCase().contains(q) ||
+                a.city.toLowerCase().contains(q) ||
+                a.label.toLowerCase().contains(q);
+          }).toList();
+
+          return Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              // Search field
+              Padding(
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 24,
+                  vertical: 8,
+                ),
+                child: Container(
+                  decoration: BoxDecoration(
+                    color: isDark ? const Color(0xFF1E293B) : Colors.white,
+                    borderRadius: BorderRadius.circular(16),
+                    border: Border.all(
+                      color: isDark
+                          ? Colors.white.withOpacity(0.05)
+                          : Colors.grey[200]!,
+                    ),
+                  ),
+                  child: TextField(
+                    controller: _searchController,
+                    onChanged: (v) => setState(() => _searchQuery = v),
+                    style: theme.textTheme.bodyMedium,
+                    decoration: InputDecoration(
+                      hintText: 'Search addresses...',
+                      hintStyle: TextStyle(
+                        color: Colors.grey[500],
+                        fontSize: 13,
+                      ),
+                      prefixIcon: const Icon(
+                        Icons.search_rounded,
+                        color: Color(0xFF0D9488),
+                      ),
+                      border: InputBorder.none,
+                      contentPadding: const EdgeInsets.symmetric(vertical: 14),
+                    ),
+                  ),
+                ),
+              ),
+
+              // Address count
+              Padding(
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 28,
+                  vertical: 8,
+                ),
+                child: Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    Text(
+                      'SAVED LOCATIONS',
+                      style: theme.textTheme.bodySmall?.copyWith(
+                        color: const Color(0xFF0D9488),
+                        fontWeight: FontWeight.bold,
+                        letterSpacing: 1.2,
+                      ),
+                    ),
+                    Text(
+                      '${filtered.length} Address${filtered.length != 1 ? 'es' : ''}',
+                      style: const TextStyle(color: Colors.grey, fontSize: 12),
+                    ),
+                  ],
+                ),
+              ),
+
+              // Address list
+              Expanded(
+                child: filtered.isEmpty
+                    ? Center(
+                        child: Column(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          children: [
+                            Icon(
+                              LucideIcons.mapPin,
+                              size: 64,
+                              color: Colors.grey[400],
+                            ),
+                            const SizedBox(height: 16),
+                            Text(
+                              state.addresses.isEmpty
+                                  ? 'No addresses saved yet'
+                                  : 'No matching addresses',
+                              style: theme.textTheme.titleMedium?.copyWith(
+                                color: Colors.grey[500],
+                                fontWeight: FontWeight.bold,
+                              ),
+                            ),
+                            const SizedBox(height: 8),
+                            Text(
+                              'Tap the button below to add an address',
+                              style: TextStyle(
+                                color: Colors.grey[400],
+                                fontSize: 13,
+                              ),
+                            ),
+                          ],
+                        ).animate().fadeIn(),
+                      )
+                    : ListView.builder(
+                        padding: const EdgeInsets.fromLTRB(24, 8, 24, 100),
+                        itemCount: filtered.length,
+                        itemBuilder: (context, index) {
+                          final address = filtered[index];
+                          return _buildAddressCard(
+                            address,
+                            state,
+                            isDark,
+                            index,
+                          );
+                        },
+                      ),
+              ),
+            ],
+          );
+        },
       ),
       floatingActionButton: FloatingActionButton.extended(
         onPressed: () => _showAddAddressModal(context),
-        backgroundColor: isDark ? AppTheme.mintGreen : AppTheme.forestGreen,
-        icon: Icon(
-          LucideIcons.plus,
-          color: isDark ? const Color(0xFF0F172A) : Colors.white,
-        ),
-        label: Text(
+        backgroundColor: const Color(0xFF0D9488),
+        elevation: 2,
+        icon: const Icon(LucideIcons.plus, color: Colors.white),
+        label: const Text(
           'Add Address',
-          style: TextStyle(
-            color: isDark ? const Color(0xFF0F172A) : Colors.white,
-            fontWeight: FontWeight.bold,
-          ),
+          style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold),
         ),
       ),
     );
@@ -235,7 +208,7 @@ class _AddressManagementScreenState extends State<AddressManagementScreen> {
         margin: const EdgeInsets.only(bottom: 16),
         decoration: BoxDecoration(
           color: Colors.red.shade400,
-          borderRadius: BorderRadius.circular(24),
+          borderRadius: BorderRadius.circular(20),
         ),
         alignment: Alignment.centerRight,
         padding: const EdgeInsets.only(right: 24),
@@ -245,6 +218,9 @@ class _AddressManagementScreenState extends State<AddressManagementScreen> {
         return await showDialog<bool>(
               context: context,
               builder: (ctx) => AlertDialog(
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(24),
+                ),
                 title: const Text('Delete Address'),
                 content: Text(
                   'Remove "${address.houseName}" from saved addresses?',
@@ -252,13 +228,19 @@ class _AddressManagementScreenState extends State<AddressManagementScreen> {
                 actions: [
                   TextButton(
                     onPressed: () => Navigator.pop(ctx, false),
-                    child: const Text('Cancel'),
+                    child: const Text(
+                      'Cancel',
+                      style: TextStyle(color: Colors.grey),
+                    ),
                   ),
                   TextButton(
                     onPressed: () => Navigator.pop(ctx, true),
                     child: const Text(
                       'Delete',
-                      style: TextStyle(color: Colors.red),
+                      style: TextStyle(
+                        color: Colors.red,
+                        fontWeight: FontWeight.bold,
+                      ),
                     ),
                   ),
                 ],
@@ -273,23 +255,21 @@ class _AddressManagementScreenState extends State<AddressManagementScreen> {
         decoration: BoxDecoration(
           color: isDark ? const Color(0xFF1E293B) : Colors.white,
           borderRadius: BorderRadius.circular(24),
-          border: address.isDefault
-              ? Border.all(
-                  color: AppTheme.mintGreen.withOpacity(0.5),
-                  width: 1.5,
-                )
-              : Border.all(
-                  color: isDark
-                      ? const Color(0xFF334155)
-                      : Colors.grey.shade100,
-                ),
-          boxShadow: [
-            BoxShadow(
-              color: Colors.black.withOpacity(isDark ? 0.2 : 0.04),
-              blurRadius: 12,
-              offset: const Offset(0, 4),
-            ),
-          ],
+          border: Border.all(
+            color: address.isDefault
+                ? const Color(0xFF0D9488).withOpacity(0.5)
+                : (isDark ? Colors.white.withOpacity(0.05) : Colors.grey[200]!),
+            width: address.isDefault ? 1.5 : 1.0,
+          ),
+          boxShadow: isDark
+              ? []
+              : [
+                  BoxShadow(
+                    color: Colors.black.withOpacity(0.03),
+                    blurRadius: 12,
+                    offset: const Offset(0, 4),
+                  ),
+                ],
         ),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
@@ -301,21 +281,17 @@ class _AddressManagementScreenState extends State<AddressManagementScreen> {
                   padding: const EdgeInsets.all(10),
                   decoration: BoxDecoration(
                     color: address.isDefault
-                        ? (isDark
-                              ? AppTheme.mintGreen.withOpacity(0.15)
-                              : AppTheme.leafGreen.withOpacity(0.1))
+                        ? const Color(0xFF0D9488).withOpacity(0.1)
                         : (isDark
-                              ? Colors.white.withOpacity(0.06)
-                              : Colors.grey.shade50),
+                              ? Colors.white.withOpacity(0.04)
+                              : Colors.grey[50]!),
                     borderRadius: BorderRadius.circular(14),
                   ),
                   child: Icon(
                     labelIcon,
                     color: address.isDefault
-                        ? (isDark ? AppTheme.mintGreen : AppTheme.forestGreen)
-                        : (isDark
-                              ? Colors.grey.shade400
-                              : Colors.grey.shade500),
+                        ? const Color(0xFF0D9488)
+                        : (isDark ? Colors.grey[400] : Colors.grey[500]),
                     size: 20,
                   ),
                 ),
@@ -331,9 +307,7 @@ class _AddressManagementScreenState extends State<AddressManagementScreen> {
                             style: TextStyle(
                               fontWeight: FontWeight.bold,
                               fontSize: 16,
-                              color: isDark
-                                  ? Colors.white
-                                  : AppTheme.forestGreen,
+                              color: isDark ? Colors.white : Colors.black87,
                             ),
                           ),
                           if (address.isDefault) ...[
@@ -369,9 +343,7 @@ class _AddressManagementScreenState extends State<AddressManagementScreen> {
                       Text(
                         address.houseName,
                         style: TextStyle(
-                          color: isDark
-                              ? Colors.grey.shade400
-                              : Colors.grey.shade700,
+                          color: isDark ? Colors.grey[400] : Colors.grey[750],
                           fontSize: 13,
                           fontWeight: FontWeight.w500,
                         ),
@@ -381,17 +353,24 @@ class _AddressManagementScreenState extends State<AddressManagementScreen> {
                 ),
                 // 3-dot menu
                 PopupMenuButton<String>(
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(16),
+                  ),
                   icon: Icon(
                     LucideIcons.moreVertical,
-                    color: isDark ? Colors.grey.shade500 : Colors.grey.shade400,
+                    color: isDark ? Colors.grey[500] : Colors.grey[400],
                     size: 20,
                   ),
                   onSelected: (value) {
-                    if (value == 'default')
+                    if (value == 'default') {
                       state.updateAddress(address.copyWith(isDefault: true));
-                    if (value == 'edit')
+                    }
+                    if (value == 'edit') {
                       _showAddAddressModal(context, editing: address);
-                    if (value == 'delete') state.deleteAddress(address.id);
+                    }
+                    if (value == 'delete') {
+                      state.deleteAddress(address.id);
+                    }
                   },
                   itemBuilder: (ctx) => [
                     if (!address.isDefault)
@@ -404,7 +383,10 @@ class _AddressManagementScreenState extends State<AddressManagementScreen> {
                       value: 'delete',
                       child: Text(
                         'Delete',
-                        style: TextStyle(color: Colors.red),
+                        style: TextStyle(
+                          color: Colors.red,
+                          fontWeight: FontWeight.bold,
+                        ),
                       ),
                     ),
                   ],
@@ -412,35 +394,37 @@ class _AddressManagementScreenState extends State<AddressManagementScreen> {
               ],
             ),
             const SizedBox(height: 12),
-            // Full address
+            // Full address details
             Container(
-              padding: const EdgeInsets.all(12),
+              padding: const EdgeInsets.all(14),
               decoration: BoxDecoration(
                 color: isDark
-                    ? Colors.white.withOpacity(0.03)
-                    : Colors.grey.shade50,
-                borderRadius: BorderRadius.circular(12),
+                    ? Colors.white.withOpacity(0.02)
+                    : Colors.grey[50]!,
+                borderRadius: BorderRadius.circular(16),
+                border: Border.all(
+                  color: isDark
+                      ? Colors.white.withOpacity(0.02)
+                      : Colors.grey[200]!,
+                ),
               ),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Row(
+                    crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       Icon(
                         LucideIcons.mapPin,
                         size: 14,
-                        color: isDark
-                            ? Colors.grey.shade500
-                            : Colors.grey.shade400,
+                        color: const Color(0xFF0D9488),
                       ),
                       const SizedBox(width: 8),
                       Expanded(
                         child: Text(
                           '${address.area}, ${address.city} - ${address.pincode}',
                           style: TextStyle(
-                            color: isDark
-                                ? Colors.grey.shade400
-                                : Colors.grey.shade600,
+                            color: isDark ? Colors.grey[300] : Colors.grey[700],
                             fontSize: 13,
                             height: 1.4,
                           ),
@@ -449,47 +433,40 @@ class _AddressManagementScreenState extends State<AddressManagementScreen> {
                     ],
                   ),
                   if (address.landmark.isNotEmpty) ...[
-                    const SizedBox(height: 6),
+                    const SizedBox(height: 8),
                     Row(
                       children: [
-                        Icon(
+                        const Icon(
                           LucideIcons.landmark,
                           size: 14,
-                          color: isDark
-                              ? Colors.grey.shade500
-                              : Colors.grey.shade400,
+                          color: Color(0xFF0D9488),
                         ),
                         const SizedBox(width: 8),
                         Text(
                           address.landmark,
                           style: TextStyle(
-                            color: isDark
-                                ? Colors.grey.shade500
-                                : Colors.grey.shade500,
-                            fontSize: 12,
+                            color: isDark ? Colors.grey[400] : Colors.grey[600],
+                            fontSize: 12.5,
                           ),
                         ),
                       ],
                     ),
                   ],
-                  const SizedBox(height: 6),
+                  const SizedBox(height: 8),
                   Row(
                     children: [
-                      Icon(
+                      const Icon(
                         LucideIcons.phone,
                         size: 14,
-                        color: isDark
-                            ? Colors.grey.shade500
-                            : Colors.grey.shade400,
+                        color: Color(0xFF0D9488),
                       ),
                       const SizedBox(width: 8),
                       Text(
                         address.mobileNumber,
                         style: TextStyle(
-                          color: isDark
-                              ? Colors.grey.shade400
-                              : Colors.grey.shade600,
-                          fontSize: 12,
+                          color: isDark ? Colors.grey[400] : Colors.grey[600],
+                          fontSize: 12.5,
+                          fontWeight: FontWeight.w500,
                         ),
                       ),
                     ],
@@ -497,7 +474,7 @@ class _AddressManagementScreenState extends State<AddressManagementScreen> {
                 ],
               ),
             ),
-            // Quick actions
+            // Quick defaults
             if (!address.isDefault) ...[
               const SizedBox(height: 12),
               Row(
@@ -507,28 +484,22 @@ class _AddressManagementScreenState extends State<AddressManagementScreen> {
                       onPressed: () => state.updateAddress(
                         address.copyWith(isDefault: true),
                       ),
-                      icon: Icon(
+                      icon: const Icon(
                         LucideIcons.checkCircle2,
                         size: 16,
-                        color: isDark
-                            ? AppTheme.mintGreen
-                            : AppTheme.forestGreen,
+                        color: Color(0xFF0D9488),
                       ),
-                      label: Text(
-                        'Set Default',
+                      label: const Text(
+                        'Set Default Address',
                         style: TextStyle(
-                          color: isDark
-                              ? AppTheme.mintGreen
-                              : AppTheme.forestGreen,
+                          color: Color(0xFF0D9488),
                           fontWeight: FontWeight.bold,
                           fontSize: 12,
                         ),
                       ),
                       style: OutlinedButton.styleFrom(
                         side: BorderSide(
-                          color: isDark
-                              ? AppTheme.mintGreen.withOpacity(0.4)
-                              : AppTheme.forestGreen.withOpacity(0.3),
+                          color: const Color(0xFF0D9488).withOpacity(0.3),
                         ),
                         shape: RoundedRectangleBorder(
                           borderRadius: BorderRadius.circular(12),
@@ -616,40 +587,86 @@ class _AddressManagementScreenState extends State<AddressManagementScreen> {
                 child: ListView(
                   children: [
                     // Use current location
-                    Container(
-                      padding: const EdgeInsets.all(14),
-                      decoration: BoxDecoration(
-                        gradient: const LinearGradient(
-                          colors: [Color(0xFF0D9488), Color(0xFF10B981)],
-                        ),
-                        borderRadius: BorderRadius.circular(16),
-                      ),
-                      child: Row(
-                        children: [
-                          const Icon(
-                            LucideIcons.navigation,
-                            color: Colors.white,
-                            size: 20,
+                    GestureDetector(
+                      onTap: () async {
+                        ScaffoldMessenger.of(context).showSnackBar(
+                          const SnackBar(
+                            content: Row(
+                              children: [
+                                SizedBox(
+                                  width: 20,
+                                  height: 20,
+                                  child: CircularProgressIndicator(
+                                    strokeWidth: 2,
+                                    color: Colors.white,
+                                  ),
+                                ),
+                                SizedBox(width: 16),
+                                Text('Fetching current location...'),
+                              ],
+                            ),
+                            duration: Duration(seconds: 1),
                           ),
-                          const SizedBox(width: 12),
-                          const Expanded(
-                            child: Text(
-                              'Use Current Location',
-                              style: TextStyle(
-                                fontWeight: FontWeight.bold,
-                                color: Colors.white,
+                        );
+
+                        final loc = await LocationService.getCurrentLocation();
+
+                        setModalState(() {
+                          houseCtrl.text = 'Flat 4B, Eco Vista Residency';
+                          areaCtrl.text = 'Cochin Eco Park';
+                          cityCtrl.text = loc.city;
+                          pincodeCtrl.text = loc.zip;
+                          landmarkCtrl.text =
+                              '${loc.region} (${loc.latitude.toStringAsFixed(3)}, ${loc.longitude.toStringAsFixed(3)})';
+                        });
+
+                        if (context.mounted) {
+                          ScaffoldMessenger.of(context).showSnackBar(
+                            const SnackBar(
+                              content: Text(
+                                'Successfully loaded live location!',
+                              ),
+                              backgroundColor: Color(0xFF0D9488),
+                            ),
+                          );
+                        }
+                      },
+                      child: Container(
+                        padding: const EdgeInsets.all(14),
+                        decoration: BoxDecoration(
+                          gradient: const LinearGradient(
+                            colors: [Color(0xFF0D9488), Color(0xFF10B981)],
+                          ),
+                          borderRadius: BorderRadius.circular(16),
+                        ),
+                        child: Row(
+                          children: [
+                            const Icon(
+                              LucideIcons.navigation,
+                              color: Colors.white,
+                              size: 20,
+                            ),
+                            const SizedBox(width: 12),
+                            const Expanded(
+                              child: Text(
+                                'Use Current Location',
+                                style: TextStyle(
+                                  fontWeight: FontWeight.bold,
+                                  color: Colors.white,
+                                ),
                               ),
                             ),
-                          ),
-                          Icon(
-                            LucideIcons.chevronRight,
-                            color: Colors.white.withOpacity(0.7),
-                            size: 20,
-                          ),
-                        ],
+                            Icon(
+                              LucideIcons.chevronRight,
+                              color: Colors.white.withOpacity(0.7),
+                              size: 20,
+                            ),
+                          ],
+                        ),
                       ),
                     ),
                     const SizedBox(height: 20),
+
                     // Label picker
                     Text(
                       'ADDRESS LABEL',
@@ -657,9 +674,7 @@ class _AddressManagementScreenState extends State<AddressManagementScreen> {
                         fontSize: 11,
                         fontWeight: FontWeight.bold,
                         letterSpacing: 1,
-                        color: isDark
-                            ? Colors.grey.shade500
-                            : Colors.grey.shade500,
+                        color: Colors.grey[500],
                       ),
                     ),
                     const SizedBox(height: 8),
@@ -680,18 +695,14 @@ class _AddressManagementScreenState extends State<AddressManagementScreen> {
                               padding: const EdgeInsets.symmetric(vertical: 12),
                               decoration: BoxDecoration(
                                 color: isSelected
-                                    ? (isDark
-                                          ? AppTheme.mintGreen.withOpacity(0.15)
-                                          : AppTheme.leafGreen.withOpacity(0.1))
+                                    ? const Color(0xFF0D9488).withOpacity(0.1)
                                     : (isDark
                                           ? Colors.white.withOpacity(0.04)
-                                          : Colors.grey.shade50),
+                                          : Colors.grey[50]),
                                 borderRadius: BorderRadius.circular(12),
                                 border: Border.all(
                                   color: isSelected
-                                      ? (isDark
-                                            ? AppTheme.mintGreen
-                                            : AppTheme.leafGreen)
+                                      ? const Color(0xFF0D9488)
                                       : Colors.transparent,
                                   width: 1.5,
                                 ),
@@ -702,10 +713,8 @@ class _AddressManagementScreenState extends State<AddressManagementScreen> {
                                     icon,
                                     size: 20,
                                     color: isSelected
-                                        ? (isDark
-                                              ? AppTheme.mintGreen
-                                              : AppTheme.forestGreen)
-                                        : Colors.grey.shade400,
+                                        ? const Color(0xFF0D9488)
+                                        : Colors.grey[400],
                                   ),
                                   const SizedBox(height: 4),
                                   Text(
@@ -714,10 +723,8 @@ class _AddressManagementScreenState extends State<AddressManagementScreen> {
                                       fontSize: 12,
                                       fontWeight: FontWeight.bold,
                                       color: isSelected
-                                          ? (isDark
-                                                ? AppTheme.mintGreen
-                                                : AppTheme.forestGreen)
-                                          : Colors.grey.shade500,
+                                          ? const Color(0xFF0D9488)
+                                          : Colors.grey[500],
                                     ),
                                   ),
                                 ],
@@ -728,6 +735,7 @@ class _AddressManagementScreenState extends State<AddressManagementScreen> {
                       }).toList(),
                     ),
                     const SizedBox(height: 20),
+
                     // Contact info
                     Text(
                       'CONTACT INFO',
@@ -735,9 +743,7 @@ class _AddressManagementScreenState extends State<AddressManagementScreen> {
                         fontSize: 11,
                         fontWeight: FontWeight.bold,
                         letterSpacing: 1,
-                        color: isDark
-                            ? Colors.grey.shade500
-                            : Colors.grey.shade500,
+                        color: Colors.grey[500],
                       ),
                     ),
                     const SizedBox(height: 8),
@@ -764,15 +770,14 @@ class _AddressManagementScreenState extends State<AddressManagementScreen> {
                       ],
                     ),
                     const SizedBox(height: 20),
+
                     Text(
                       'ADDRESS DETAILS',
                       style: TextStyle(
                         fontSize: 11,
                         fontWeight: FontWeight.bold,
                         letterSpacing: 1,
-                        color: isDark
-                            ? Colors.grey.shade500
-                            : Colors.grey.shade500,
+                        color: Colors.grey[500],
                       ),
                     ),
                     const SizedBox(height: 8),
@@ -820,6 +825,7 @@ class _AddressManagementScreenState extends State<AddressManagementScreen> {
                       ],
                     ),
                     const SizedBox(height: 28),
+
                     SizedBox(
                       width: double.infinity,
                       child: ElevatedButton(
@@ -864,12 +870,8 @@ class _AddressManagementScreenState extends State<AddressManagementScreen> {
                           Navigator.pop(context);
                         },
                         style: ElevatedButton.styleFrom(
-                          backgroundColor: isDark
-                              ? AppTheme.mintGreen
-                              : AppTheme.forestGreen,
-                          foregroundColor: isDark
-                              ? const Color(0xFF0F172A)
-                              : Colors.white,
+                          backgroundColor: const Color(0xFF0D9488),
+                          foregroundColor: Colors.white,
                           padding: const EdgeInsets.symmetric(vertical: 18),
                           shape: RoundedRectangleBorder(
                             borderRadius: BorderRadius.circular(16),
@@ -906,36 +908,27 @@ class _AddressManagementScreenState extends State<AddressManagementScreen> {
       controller: controller,
       keyboardType: keyboard,
       style: TextStyle(
-        color: isDark ? Colors.white : AppTheme.forestGreen,
-        fontWeight: FontWeight.w500,
+        color: isDark ? Colors.white : Colors.black87,
+        fontWeight: FontWeight.bold,
+        fontSize: 14,
       ),
       decoration: InputDecoration(
         labelText: label,
-        labelStyle: TextStyle(
-          color: isDark ? Colors.grey.shade500 : Colors.grey.shade500,
-          fontSize: 13,
-        ),
+        labelStyle: TextStyle(color: Colors.grey[500], fontSize: 13),
         prefixIcon: icon != null
-            ? Icon(
-                icon,
-                size: 18,
-                color: isDark ? Colors.grey.shade600 : Colors.grey.shade400,
-              )
+            ? Icon(icon, size: 18, color: Colors.grey[400])
             : null,
         filled: true,
-        fillColor: isDark
-            ? Colors.white.withOpacity(0.05)
-            : Colors.grey.shade50,
+        fillColor: isDark ? const Color(0xFF1E293B) : Colors.grey[50],
         border: OutlineInputBorder(
           borderRadius: BorderRadius.circular(14),
-          borderSide: BorderSide.none,
+          borderSide: isDark
+              ? BorderSide.none
+              : BorderSide(color: Colors.grey[200]!),
         ),
         focusedBorder: OutlineInputBorder(
           borderRadius: BorderRadius.circular(14),
-          borderSide: BorderSide(
-            color: isDark ? AppTheme.mintGreen : AppTheme.forestGreen,
-            width: 1.5,
-          ),
+          borderSide: const BorderSide(color: Color(0xFF0D9488), width: 1.5),
         ),
         contentPadding: const EdgeInsets.symmetric(
           horizontal: 16,

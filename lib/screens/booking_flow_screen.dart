@@ -5,7 +5,7 @@ import '../models/booking.dart';
 import '../providers/app_state.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 import '../theme.dart';
-import 'address_management_screen.dart';
+import 'profile/address_management_screen.dart';
 import 'booking_confirmed_screen.dart';
 
 class BookingFlowScreen extends StatefulWidget {
@@ -58,7 +58,8 @@ class _BookingFlowScreenState extends State<BookingFlowScreen> {
 
   // Service availability by day-of-week (0=Mon..6=Sun). Sunday unavailable.
   bool _isDateAvailable(DateTime d) {
-    if (d.isBefore(DateTime.now().subtract(const Duration(days: 1)))) return false;
+    if (d.isBefore(DateTime.now().subtract(const Duration(days: 1))))
+      return false;
     if (d.weekday == DateTime.sunday) return false;
     return true;
   }
@@ -115,9 +116,9 @@ class _BookingFlowScreenState extends State<BookingFlowScreen> {
       return;
     }
     if (_currentStep == 2 && _selectedDate == null) {
-      ScaffoldMessenger.of(
-        context,
-      ).showSnackBar(const SnackBar(content: Text('Please select a pickup date')));
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Please select a pickup date')),
+      );
       return;
     }
 
@@ -162,7 +163,9 @@ class _BookingFlowScreenState extends State<BookingFlowScreen> {
     final isDark = Theme.of(context).brightness == Brightness.dark;
     return Scaffold(
       appBar: AppBar(
-        backgroundColor: isDark ? const Color(0xFF0F172A) : const Color(0xFFF0FDF4),
+        backgroundColor: isDark
+            ? const Color(0xFF0F172A)
+            : const Color(0xFFF0FDF4),
         elevation: 0,
         centerTitle: true,
         title: Column(
@@ -312,8 +315,12 @@ class _BookingFlowScreenState extends State<BookingFlowScreen> {
             child: ElevatedButton(
               onPressed: _nextStep,
               style: ElevatedButton.styleFrom(
-                backgroundColor: isDark ? AppTheme.mintGreen : AppTheme.forestGreen,
-                foregroundColor: isDark ? const Color(0xFF0F172A) : Colors.white,
+                backgroundColor: isDark
+                    ? AppTheme.mintGreen
+                    : AppTheme.forestGreen,
+                foregroundColor: isDark
+                    ? const Color(0xFF0F172A)
+                    : Colors.white,
                 padding: const EdgeInsets.symmetric(vertical: 20),
                 shape: RoundedRectangleBorder(
                   borderRadius: BorderRadius.circular(32),
@@ -352,9 +359,7 @@ class _BookingFlowScreenState extends State<BookingFlowScreen> {
       children: [
         Text(
           'What are we\nrecycling?',
-          style: Theme.of(
-            context,
-          ).textTheme.displayMedium?.copyWith(
+          style: Theme.of(context).textTheme.displayMedium?.copyWith(
             fontSize: 48,
             height: 1.1,
             color: isDark ? Colors.white : AppTheme.forestGreen,
@@ -388,12 +393,18 @@ class _BookingFlowScreenState extends State<BookingFlowScreen> {
                     duration: const Duration(milliseconds: 300),
                     decoration: BoxDecoration(
                       color: isDark
-                          ? (isSelected ? const Color(0xFF1E293B) : const Color(0xFF0F172A))
+                          ? (isSelected
+                                ? const Color(0xFF1E293B)
+                                : const Color(0xFF0F172A))
                           : Colors.white,
                       border: Border.all(
                         color: isSelected
-                            ? (isDark ? AppTheme.mintGreen : AppTheme.forestGreen)
-                            : (isDark ? const Color(0xFF334155) : Colors.transparent),
+                            ? (isDark
+                                  ? AppTheme.mintGreen
+                                  : AppTheme.forestGreen)
+                            : (isDark
+                                  ? const Color(0xFF334155)
+                                  : Colors.transparent),
                         width: 2,
                       ),
                       borderRadius: BorderRadius.circular(32),
@@ -413,8 +424,12 @@ class _BookingFlowScreenState extends State<BookingFlowScreen> {
                           type['icon'],
                           size: 40,
                           color: isSelected
-                              ? (isDark ? AppTheme.mintGreen : AppTheme.forestGreen)
-                              : (isDark ? Colors.grey.shade400 : AppTheme.forestGreen),
+                              ? (isDark
+                                    ? AppTheme.mintGreen
+                                    : AppTheme.forestGreen)
+                              : (isDark
+                                    ? Colors.grey.shade400
+                                    : AppTheme.forestGreen),
                         ),
                         const SizedBox(height: 16),
                         Text(
@@ -422,8 +437,12 @@ class _BookingFlowScreenState extends State<BookingFlowScreen> {
                           style: TextStyle(
                             fontWeight: FontWeight.w600,
                             color: isSelected
-                                ? (isDark ? AppTheme.mintGreen : AppTheme.forestGreen)
-                                : (isDark ? Colors.grey.shade400 : AppTheme.forestGreen),
+                                ? (isDark
+                                      ? AppTheme.mintGreen
+                                      : AppTheme.forestGreen)
+                                : (isDark
+                                      ? Colors.grey.shade400
+                                      : AppTheme.forestGreen),
                             fontSize: 16,
                           ),
                         ),
@@ -448,7 +467,8 @@ class _BookingFlowScreenState extends State<BookingFlowScreen> {
         Text(
           'Estimate\nQuantity',
           style: Theme.of(context).textTheme.displayMedium?.copyWith(
-            fontSize: 48, height: 1.1,
+            fontSize: 48,
+            height: 1.1,
             color: isDark ? Colors.white : null,
           ),
         ),
@@ -463,7 +483,9 @@ class _BookingFlowScreenState extends State<BookingFlowScreen> {
                 padding: const EdgeInsets.all(24),
                 decoration: BoxDecoration(
                   color: isSelected
-                      ? (isDark ? AppTheme.leafGreen.withOpacity(0.2) : AppTheme.leafGreen.withOpacity(0.1))
+                      ? (isDark
+                            ? AppTheme.leafGreen.withOpacity(0.2)
+                            : AppTheme.leafGreen.withOpacity(0.1))
                       : (isDark ? const Color(0xFF1E293B) : Colors.white),
                   border: Border.all(
                     color: isSelected ? AppTheme.mintGreen : Colors.transparent,
@@ -476,20 +498,42 @@ class _BookingFlowScreenState extends State<BookingFlowScreen> {
                     Container(
                       padding: const EdgeInsets.all(8),
                       decoration: BoxDecoration(
-                        color: isDark ? Colors.white.withOpacity(0.08) : Colors.grey.shade100,
+                        color: isDark
+                            ? Colors.white.withOpacity(0.08)
+                            : Colors.grey.shade100,
                         shape: BoxShape.circle,
                       ),
-                      child: Icon(LucideIcons.scale, color: isDark ? AppTheme.mintGreen : AppTheme.forestGreen, size: 20),
+                      child: Icon(
+                        LucideIcons.scale,
+                        color: isDark
+                            ? AppTheme.mintGreen
+                            : AppTheme.forestGreen,
+                        size: 20,
+                      ),
                     ),
                     const SizedBox(width: 16),
                     Expanded(
-                      child: Text(q, style: TextStyle(fontWeight: FontWeight.w600, color: isDark ? Colors.white : AppTheme.forestGreen, fontSize: 18)),
+                      child: Text(
+                        q,
+                        style: TextStyle(
+                          fontWeight: FontWeight.w600,
+                          color: isDark ? Colors.white : AppTheme.forestGreen,
+                          fontSize: 18,
+                        ),
+                      ),
                     ),
                     if (isSelected)
                       Container(
                         padding: const EdgeInsets.all(2),
-                        decoration: BoxDecoration(color: AppTheme.mintGreen, shape: BoxShape.circle),
-                        child: const Icon(LucideIcons.check, color: Colors.white, size: 16),
+                        decoration: BoxDecoration(
+                          color: AppTheme.mintGreen,
+                          shape: BoxShape.circle,
+                        ),
+                        child: const Icon(
+                          LucideIcons.check,
+                          color: Colors.white,
+                          size: 16,
+                        ),
                       ),
                   ],
                 ),
@@ -523,9 +567,10 @@ class _BookingFlowScreenState extends State<BookingFlowScreen> {
       decoration: BoxDecoration(
         gradient: LinearGradient(
           colors: isDark
-            ? [const Color(0xFF1E293B), const Color(0xFF0F172A)]
-            : [const Color(0xFFF0FDF4), const Color(0xFFD1FAE5)],
-          begin: Alignment.topLeft, end: Alignment.bottomRight,
+              ? [const Color(0xFF1E293B), const Color(0xFF0F172A)]
+              : [const Color(0xFFF0FDF4), const Color(0xFFD1FAE5)],
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
         ),
         borderRadius: BorderRadius.circular(24),
         border: Border.all(color: AppTheme.mintGreen.withOpacity(0.3)),
@@ -535,26 +580,49 @@ class _BookingFlowScreenState extends State<BookingFlowScreen> {
         children: [
           Row(
             children: [
-              Icon(LucideIcons.indianRupee, color: AppTheme.accentAmber, size: 20),
+              Icon(
+                LucideIcons.indianRupee,
+                color: AppTheme.accentAmber,
+                size: 20,
+              ),
               const SizedBox(width: 8),
-              Text('ESTIMATED EARNINGS', style: TextStyle(
-                fontSize: 11, fontWeight: FontWeight.bold, letterSpacing: 1,
-                color: isDark ? AppTheme.mintGreen : AppTheme.forestGreen,
-              )),
+              Text(
+                'ESTIMATED EARNINGS',
+                style: TextStyle(
+                  fontSize: 11,
+                  fontWeight: FontWeight.bold,
+                  letterSpacing: 1,
+                  color: isDark ? AppTheme.mintGreen : AppTheme.forestGreen,
+                ),
+              ),
             ],
           ),
           const SizedBox(height: 16),
           ..._selectedScrapTypes.map((t) {
             final price = _scrapPrices[t] ?? 12;
-            final minE = (range[0] / _selectedScrapTypes.length * price).round();
-            final maxE = (range[1] / _selectedScrapTypes.length * price).round();
+            final minE = (range[0] / _selectedScrapTypes.length * price)
+                .round();
+            final maxE = (range[1] / _selectedScrapTypes.length * price)
+                .round();
             return Padding(
               padding: const EdgeInsets.only(bottom: 8),
               child: Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
-                  Text(t, style: TextStyle(color: isDark ? Colors.white70 : AppTheme.forestGreen, fontWeight: FontWeight.w500)),
-                  Text('₹$minE – ₹$maxE', style: TextStyle(color: isDark ? AppTheme.paleGreen : AppTheme.lightGreen, fontWeight: FontWeight.bold)),
+                  Text(
+                    t,
+                    style: TextStyle(
+                      color: isDark ? Colors.white70 : AppTheme.forestGreen,
+                      fontWeight: FontWeight.w500,
+                    ),
+                  ),
+                  Text(
+                    '₹$minE – ₹$maxE',
+                    style: TextStyle(
+                      color: isDark ? AppTheme.paleGreen : AppTheme.lightGreen,
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
                 ],
               ),
             );
@@ -563,12 +631,33 @@ class _BookingFlowScreenState extends State<BookingFlowScreen> {
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
-              Text('Total Range', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16, color: isDark ? Colors.white : AppTheme.forestGreen)),
-              Text('₹${totalMin.round()} – ₹${totalMax.round()}', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 18, color: AppTheme.accentAmber)),
+              Text(
+                'Total Range',
+                style: TextStyle(
+                  fontWeight: FontWeight.bold,
+                  fontSize: 16,
+                  color: isDark ? Colors.white : AppTheme.forestGreen,
+                ),
+              ),
+              Text(
+                '₹${totalMin.round()} – ₹${totalMax.round()}',
+                style: TextStyle(
+                  fontWeight: FontWeight.bold,
+                  fontSize: 18,
+                  color: AppTheme.accentAmber,
+                ),
+              ),
             ],
           ),
           const SizedBox(height: 8),
-          Text('+ Bonus EcoPoints on every pickup!', style: TextStyle(fontSize: 12, color: isDark ? Colors.grey.shade500 : Colors.grey.shade600, fontStyle: FontStyle.italic)),
+          Text(
+            '+ Bonus EcoPoints on every pickup!',
+            style: TextStyle(
+              fontSize: 12,
+              color: isDark ? Colors.grey.shade500 : Colors.grey.shade600,
+              fontStyle: FontStyle.italic,
+            ),
+          ),
         ],
       ),
     );
@@ -578,10 +667,27 @@ class _BookingFlowScreenState extends State<BookingFlowScreen> {
     final isDark = Theme.of(context).brightness == Brightness.dark;
     final now = DateTime.now();
     final firstOfMonth = DateTime(_calendarMonth.year, _calendarMonth.month, 1);
-    final daysInMonth = DateTime(_calendarMonth.year, _calendarMonth.month + 1, 0).day;
+    final daysInMonth = DateTime(
+      _calendarMonth.year,
+      _calendarMonth.month + 1,
+      0,
+    ).day;
     final startWeekday = firstOfMonth.weekday; // 1=Mon
     const dayLabels = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'];
-    final months = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+    final months = [
+      'Jan',
+      'Feb',
+      'Mar',
+      'Apr',
+      'May',
+      'Jun',
+      'Jul',
+      'Aug',
+      'Sep',
+      'Oct',
+      'Nov',
+      'Dec',
+    ];
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
@@ -589,7 +695,8 @@ class _BookingFlowScreenState extends State<BookingFlowScreen> {
         Text(
           'Pick a\nDate',
           style: Theme.of(context).textTheme.displayMedium?.copyWith(
-            fontSize: 48, height: 1.1,
+            fontSize: 48,
+            height: 1.1,
             color: isDark ? Colors.white : null,
           ),
         ),
@@ -603,7 +710,8 @@ class _BookingFlowScreenState extends State<BookingFlowScreen> {
             boxShadow: [
               BoxShadow(
                 color: Colors.black.withOpacity(isDark ? 0.3 : 0.06),
-                blurRadius: 16, offset: const Offset(0, 6),
+                blurRadius: 16,
+                offset: const Offset(0, 6),
               ),
             ],
           ),
@@ -614,25 +722,40 @@ class _BookingFlowScreenState extends State<BookingFlowScreen> {
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
                   IconButton(
-                    icon: Icon(LucideIcons.chevronLeft, color: isDark ? Colors.white70 : AppTheme.forestGreen, size: 20),
+                    icon: Icon(
+                      LucideIcons.chevronLeft,
+                      color: isDark ? Colors.white70 : AppTheme.forestGreen,
+                      size: 20,
+                    ),
                     onPressed: () {
                       setState(() {
-                        _calendarMonth = DateTime(_calendarMonth.year, _calendarMonth.month - 1);
+                        _calendarMonth = DateTime(
+                          _calendarMonth.year,
+                          _calendarMonth.month - 1,
+                        );
                       });
                     },
                   ),
                   Text(
                     '${months[_calendarMonth.month - 1]} ${_calendarMonth.year}',
                     style: TextStyle(
-                      fontSize: 18, fontWeight: FontWeight.bold,
+                      fontSize: 18,
+                      fontWeight: FontWeight.bold,
                       color: isDark ? Colors.white : AppTheme.forestGreen,
                     ),
                   ),
                   IconButton(
-                    icon: Icon(LucideIcons.chevronRight, color: isDark ? Colors.white70 : AppTheme.forestGreen, size: 20),
+                    icon: Icon(
+                      LucideIcons.chevronRight,
+                      color: isDark ? Colors.white70 : AppTheme.forestGreen,
+                      size: 20,
+                    ),
                     onPressed: () {
                       setState(() {
-                        _calendarMonth = DateTime(_calendarMonth.year, _calendarMonth.month + 1);
+                        _calendarMonth = DateTime(
+                          _calendarMonth.year,
+                          _calendarMonth.month + 1,
+                        );
                       });
                     },
                   ),
@@ -641,17 +764,29 @@ class _BookingFlowScreenState extends State<BookingFlowScreen> {
               const SizedBox(height: 12),
               // Day headers
               Row(
-                children: dayLabels.map((d) => Expanded(
-                  child: Center(
-                    child: Text(d, style: TextStyle(
-                      fontSize: 11, fontWeight: FontWeight.bold,
-                      color: d == 'Sun'
-                        ? (isDark ? Colors.red.shade300 : Colors.red.shade400)
-                        : (isDark ? Colors.grey.shade500 : Colors.grey.shade500),
-                      letterSpacing: 0.5,
-                    )),
-                  ),
-                )).toList(),
+                children: dayLabels
+                    .map(
+                      (d) => Expanded(
+                        child: Center(
+                          child: Text(
+                            d,
+                            style: TextStyle(
+                              fontSize: 11,
+                              fontWeight: FontWeight.bold,
+                              color: d == 'Sun'
+                                  ? (isDark
+                                        ? Colors.red.shade300
+                                        : Colors.red.shade400)
+                                  : (isDark
+                                        ? Colors.grey.shade500
+                                        : Colors.grey.shade500),
+                              letterSpacing: 0.5,
+                            ),
+                          ),
+                        ),
+                      ),
+                    )
+                    .toList(),
               ),
               const SizedBox(height: 8),
               // Day grid
@@ -664,42 +799,63 @@ class _BookingFlowScreenState extends State<BookingFlowScreen> {
                       if (dayNum < 1 || dayNum > daysInMonth) {
                         return const Expanded(child: SizedBox(height: 42));
                       }
-                      final date = DateTime(_calendarMonth.year, _calendarMonth.month, dayNum);
+                      final date = DateTime(
+                        _calendarMonth.year,
+                        _calendarMonth.month,
+                        dayNum,
+                      );
                       final isAvailable = _isDateAvailable(date);
-                      final isSelected = _selectedDate != null &&
-                        _selectedDate!.year == date.year &&
-                        _selectedDate!.month == date.month &&
-                        _selectedDate!.day == date.day;
-                      final isToday = date.year == now.year && date.month == now.month && date.day == now.day;
-                      
+                      final isSelected =
+                          _selectedDate != null &&
+                          _selectedDate!.year == date.year &&
+                          _selectedDate!.month == date.month &&
+                          _selectedDate!.day == date.day;
+                      final isToday =
+                          date.year == now.year &&
+                          date.month == now.month &&
+                          date.day == now.day;
+
                       return Expanded(
                         child: GestureDetector(
-                          onTap: isAvailable ? () => setState(() => _selectedDate = date) : null,
+                          onTap: isAvailable
+                              ? () => setState(() => _selectedDate = date)
+                              : null,
                           child: Container(
                             height: 42,
                             margin: const EdgeInsets.all(2),
                             decoration: BoxDecoration(
                               color: isSelected
-                                ? AppTheme.leafGreen
-                                : isToday
-                                  ? (isDark ? AppTheme.mintGreen.withOpacity(0.15) : AppTheme.mintGreen.withOpacity(0.12))
+                                  ? AppTheme.leafGreen
+                                  : isToday
+                                  ? (isDark
+                                        ? AppTheme.mintGreen.withOpacity(0.15)
+                                        : AppTheme.mintGreen.withOpacity(0.12))
                                   : Colors.transparent,
                               borderRadius: BorderRadius.circular(12),
                               border: isToday && !isSelected
-                                ? Border.all(color: AppTheme.mintGreen, width: 1.5)
-                                : null,
+                                  ? Border.all(
+                                      color: AppTheme.mintGreen,
+                                      width: 1.5,
+                                    )
+                                  : null,
                             ),
                             child: Center(
                               child: Text(
                                 '$dayNum',
                                 style: TextStyle(
                                   fontSize: 14,
-                                  fontWeight: isSelected || isToday ? FontWeight.bold : FontWeight.w500,
+                                  fontWeight: isSelected || isToday
+                                      ? FontWeight.bold
+                                      : FontWeight.w500,
                                   color: isSelected
-                                    ? Colors.white
-                                    : !isAvailable
-                                      ? (isDark ? Colors.grey.shade700 : Colors.grey.shade300)
-                                      : (isDark ? Colors.white : AppTheme.forestGreen),
+                                      ? Colors.white
+                                      : !isAvailable
+                                      ? (isDark
+                                            ? Colors.grey.shade700
+                                            : Colors.grey.shade300)
+                                      : (isDark
+                                            ? Colors.white
+                                            : AppTheme.forestGreen),
                                 ),
                               ),
                             ),
@@ -715,17 +871,64 @@ class _BookingFlowScreenState extends State<BookingFlowScreen> {
               Row(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
-                  Container(width: 10, height: 10, decoration: BoxDecoration(color: AppTheme.leafGreen, borderRadius: BorderRadius.circular(3))),
+                  Container(
+                    width: 10,
+                    height: 10,
+                    decoration: BoxDecoration(
+                      color: AppTheme.leafGreen,
+                      borderRadius: BorderRadius.circular(3),
+                    ),
+                  ),
                   const SizedBox(width: 6),
-                  Text('Selected', style: TextStyle(fontSize: 11, color: isDark ? Colors.grey.shade400 : Colors.grey.shade600)),
+                  Text(
+                    'Selected',
+                    style: TextStyle(
+                      fontSize: 11,
+                      color: isDark
+                          ? Colors.grey.shade400
+                          : Colors.grey.shade600,
+                    ),
+                  ),
                   const SizedBox(width: 16),
-                  Container(width: 10, height: 10, decoration: BoxDecoration(border: Border.all(color: AppTheme.mintGreen, width: 1.5), borderRadius: BorderRadius.circular(3))),
+                  Container(
+                    width: 10,
+                    height: 10,
+                    decoration: BoxDecoration(
+                      border: Border.all(color: AppTheme.mintGreen, width: 1.5),
+                      borderRadius: BorderRadius.circular(3),
+                    ),
+                  ),
                   const SizedBox(width: 6),
-                  Text('Today', style: TextStyle(fontSize: 11, color: isDark ? Colors.grey.shade400 : Colors.grey.shade600)),
+                  Text(
+                    'Today',
+                    style: TextStyle(
+                      fontSize: 11,
+                      color: isDark
+                          ? Colors.grey.shade400
+                          : Colors.grey.shade600,
+                    ),
+                  ),
                   const SizedBox(width: 16),
-                  Container(width: 10, height: 10, decoration: BoxDecoration(color: isDark ? Colors.grey.shade700 : Colors.grey.shade300, borderRadius: BorderRadius.circular(3))),
+                  Container(
+                    width: 10,
+                    height: 10,
+                    decoration: BoxDecoration(
+                      color: isDark
+                          ? Colors.grey.shade700
+                          : Colors.grey.shade300,
+                      borderRadius: BorderRadius.circular(3),
+                    ),
+                  ),
                   const SizedBox(width: 6),
-                  Text('Unavailable', style: TextStyle(fontSize: 11, color: isDark ? Colors.grey.shade400 : Colors.grey.shade600)),
+                  Text(
+                    'Unavailable',
+                    style: TextStyle(
+                      fontSize: 11,
+                      color: isDark
+                          ? Colors.grey.shade400
+                          : Colors.grey.shade600,
+                    ),
+                  ),
                 ],
               ),
             ],
@@ -736,28 +939,58 @@ class _BookingFlowScreenState extends State<BookingFlowScreen> {
           Container(
             padding: const EdgeInsets.all(16),
             decoration: BoxDecoration(
-              gradient: const LinearGradient(colors: [Color(0xFF0D9488), Color(0xFF10B981)]),
+              gradient: const LinearGradient(
+                colors: [Color(0xFF0D9488), Color(0xFF10B981)],
+              ),
               borderRadius: BorderRadius.circular(20),
             ),
             child: Row(
               children: [
-                const Icon(LucideIcons.calendarCheck, color: Colors.white, size: 22),
+                const Icon(
+                  LucideIcons.calendarCheck,
+                  color: Colors.white,
+                  size: 22,
+                ),
                 const SizedBox(width: 12),
                 Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    const Text('Pickup Date', style: TextStyle(color: Colors.white70, fontSize: 11, fontWeight: FontWeight.bold)),
+                    const Text(
+                      'Pickup Date',
+                      style: TextStyle(
+                        color: Colors.white70,
+                        fontSize: 11,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
                     Text(
                       '${_selectedDate!.day} ${months[_selectedDate!.month - 1]} ${_selectedDate!.year}',
-                      style: const TextStyle(color: Colors.white, fontSize: 16, fontWeight: FontWeight.bold),
+                      style: const TextStyle(
+                        color: Colors.white,
+                        fontSize: 16,
+                        fontWeight: FontWeight.bold,
+                      ),
                     ),
                   ],
                 ),
                 const Spacer(),
                 Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
-                  decoration: BoxDecoration(color: Colors.white.withOpacity(0.2), borderRadius: BorderRadius.circular(12)),
-                  child: const Text('10AM - 1PM', style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 12)),
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 12,
+                    vertical: 6,
+                  ),
+                  decoration: BoxDecoration(
+                    color: Colors.white.withOpacity(0.2),
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                  child: const Text(
+                    '10AM - 1PM',
+                    style: TextStyle(
+                      color: Colors.white,
+                      fontWeight: FontWeight.bold,
+                      fontSize: 12,
+                    ),
+                  ),
                 ),
               ],
             ),
@@ -783,9 +1016,7 @@ class _BookingFlowScreenState extends State<BookingFlowScreen> {
           children: [
             Text(
               'Pickup\nAddress',
-              style: Theme.of(
-                context,
-              ).textTheme.displayMedium?.copyWith(
+              style: Theme.of(context).textTheme.displayMedium?.copyWith(
                 fontSize: 48,
                 height: 1.1,
                 color: isDark ? Colors.white : AppTheme.forestGreen,
@@ -796,7 +1027,9 @@ class _BookingFlowScreenState extends State<BookingFlowScreen> {
               Container(
                 padding: const EdgeInsets.all(24),
                 decoration: BoxDecoration(
-                  color: isDark ? const Color(0xFF1E293B) : AppTheme.leafGreen.withOpacity(0.1),
+                  color: isDark
+                      ? const Color(0xFF1E293B)
+                      : AppTheme.leafGreen.withOpacity(0.1),
                   border: Border.all(
                     color: isDark ? AppTheme.mintGreen : AppTheme.forestGreen,
                     width: 2,
@@ -808,12 +1041,16 @@ class _BookingFlowScreenState extends State<BookingFlowScreen> {
                     Container(
                       padding: const EdgeInsets.all(12),
                       decoration: BoxDecoration(
-                        color: isDark ? const Color(0xFF0F172A) : Colors.grey.shade200,
+                        color: isDark
+                            ? const Color(0xFF0F172A)
+                            : Colors.grey.shade200,
                         shape: BoxShape.circle,
                       ),
                       child: Icon(
                         LucideIcons.mapPin,
-                        color: isDark ? AppTheme.mintGreen : AppTheme.forestGreen,
+                        color: isDark
+                            ? AppTheme.mintGreen
+                            : AppTheme.forestGreen,
                         size: 20,
                       ),
                     ),
@@ -826,14 +1063,18 @@ class _BookingFlowScreenState extends State<BookingFlowScreen> {
                             'Home',
                             style: TextStyle(
                               fontWeight: FontWeight.bold,
-                              color: isDark ? Colors.white : AppTheme.forestGreen,
+                              color: isDark
+                                  ? Colors.white
+                                  : AppTheme.forestGreen,
                               fontSize: 16,
                             ),
                           ),
                           Text(
                             '${address.houseName}, ${address.area}',
                             style: TextStyle(
-                              color: isDark ? Colors.grey.shade400 : Colors.grey.shade600,
+                              color: isDark
+                                  ? Colors.grey.shade400
+                                  : Colors.grey.shade600,
                               fontSize: 12,
                             ),
                           ),
@@ -862,7 +1103,9 @@ class _BookingFlowScreenState extends State<BookingFlowScreen> {
                 decoration: BoxDecoration(
                   color: Colors.transparent,
                   border: Border.all(
-                    color: isDark ? const Color(0xFF334155) : Colors.grey.shade200,
+                    color: isDark
+                        ? const Color(0xFF334155)
+                        : Colors.grey.shade200,
                     width: 2,
                   ),
                   borderRadius: BorderRadius.circular(32),
@@ -872,14 +1115,18 @@ class _BookingFlowScreenState extends State<BookingFlowScreen> {
                   children: [
                     Icon(
                       LucideIcons.plus,
-                      color: isDark ? Colors.grey.shade300 : Colors.grey.shade500,
+                      color: isDark
+                          ? Colors.grey.shade300
+                          : Colors.grey.shade500,
                       size: 20,
                     ),
                     const SizedBox(width: 8),
                     Text(
                       'Add New Address',
                       style: TextStyle(
-                        color: isDark ? Colors.grey.shade300 : Colors.grey.shade500,
+                        color: isDark
+                            ? Colors.grey.shade300
+                            : Colors.grey.shade500,
                         fontSize: 16,
                         fontWeight: FontWeight.w600,
                       ),
@@ -970,7 +1217,10 @@ class _BookingFlowScreenState extends State<BookingFlowScreen> {
             ),
             prefixIcon: Padding(
               padding: EdgeInsets.only(bottom: maxLines > 1 ? 48.0 : 0),
-              child: Icon(icon, color: isDark ? Colors.grey.shade400 : Colors.grey.shade400),
+              child: Icon(
+                icon,
+                color: isDark ? Colors.grey.shade400 : Colors.grey.shade400,
+              ),
             ),
             filled: true,
             fillColor: isDark ? const Color(0xFF1E293B) : Colors.white,
@@ -984,7 +1234,10 @@ class _BookingFlowScreenState extends State<BookingFlowScreen> {
             ),
             focusedBorder: OutlineInputBorder(
               borderRadius: BorderRadius.circular(maxLines > 1 ? 16 : 32),
-              borderSide: BorderSide(color: isDark ? AppTheme.mintGreen : AppTheme.leafGreen, width: 2),
+              borderSide: BorderSide(
+                color: isDark ? AppTheme.mintGreen : AppTheme.leafGreen,
+                width: 2,
+              ),
             ),
           ),
         ),

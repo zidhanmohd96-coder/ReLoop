@@ -9,6 +9,8 @@ import '../../../../core/constants/app_constants.dart';
 import '../../../../core/utils/responsive_helper.dart';
 import '../painters/kerala_outline_painter.dart';
 import '../../../../screens/booking_flow_screen.dart';
+import '../../../../core/services/location_service.dart';
+import '../../../../screens/profile/notification_history_screen.dart';
 
 class HomeTab extends StatefulWidget {
   const HomeTab({super.key});
@@ -23,6 +25,8 @@ class _HomeTabState extends State<HomeTab> {
   int _currentOfferIndex = 0;
   Timer? _offersTimer;
   bool _isServiceAvailable = true;
+  String _currentAddress = '123 Green Valley Road, Eco Park, City Center';
+  bool _isFetchingLocation = false;
 
   @override
   void initState() {
@@ -72,8 +76,8 @@ class _HomeTabState extends State<HomeTab> {
       child: _isLoadingHome
           ? _buildHomeSkeleton(context, hPad, isDark)
           : (context.isTablet || context.isLandscape)
-              ? _buildTabletHomeLayout(context, hPad, isDark)
-              : _buildMobileHomeLayout(context, hPad, isDark),
+          ? _buildTabletHomeLayout(context, hPad, isDark)
+          : _buildMobileHomeLayout(context, hPad, isDark),
     );
   }
 
@@ -81,17 +85,21 @@ class _HomeTabState extends State<HomeTab> {
     final bgColor = isDark ? const Color(0xFF1E293B) : Colors.grey.shade200;
     final shimmerColor = isDark ? Colors.white10 : Colors.white60;
 
-    Widget skeletonBox({required double width, required double height, double borderRadius = 16}) {
+    Widget skeletonBox({
+      required double width,
+      required double height,
+      double borderRadius = 16,
+    }) {
       return Container(
-        width: width,
-        height: height,
-        decoration: BoxDecoration(
-          color: bgColor,
-          borderRadius: BorderRadius.circular(borderRadius),
-        ),
-      )
-      .animate(onPlay: (controller) => controller.repeat())
-      .shimmer(duration: 1500.ms, color: shimmerColor);
+            width: width,
+            height: height,
+            decoration: BoxDecoration(
+              color: bgColor,
+              borderRadius: BorderRadius.circular(borderRadius),
+            ),
+          )
+          .animate(onPlay: (controller) => controller.repeat())
+          .shimmer(duration: 1500.ms, color: shimmerColor);
     }
 
     return ListView(
@@ -128,9 +136,21 @@ class _HomeTabState extends State<HomeTab> {
         const SizedBox(height: 32),
         Row(
           children: [
-            Expanded(child: skeletonBox(width: double.infinity, height: 120, borderRadius: 24)),
+            Expanded(
+              child: skeletonBox(
+                width: double.infinity,
+                height: 120,
+                borderRadius: 24,
+              ),
+            ),
             const SizedBox(width: 16),
-            Expanded(child: skeletonBox(width: double.infinity, height: 120, borderRadius: 24)),
+            Expanded(
+              child: skeletonBox(
+                width: double.infinity,
+                height: 120,
+                borderRadius: 24,
+              ),
+            ),
           ],
         ),
         const SizedBox(height: 32),
@@ -149,7 +169,11 @@ class _HomeTabState extends State<HomeTab> {
     );
   }
 
-  Widget _buildMobileHomeLayout(BuildContext context, double hPad, bool isDark) {
+  Widget _buildMobileHomeLayout(
+    BuildContext context,
+    double hPad,
+    bool isDark,
+  ) {
     return ListView(
       padding: EdgeInsets.fromLTRB(hPad, hPad, hPad, 120),
       children: [
@@ -174,7 +198,11 @@ class _HomeTabState extends State<HomeTab> {
     );
   }
 
-  Widget _buildTabletHomeLayout(BuildContext context, double hPad, bool isDark) {
+  Widget _buildTabletHomeLayout(
+    BuildContext context,
+    double hPad,
+    bool isDark,
+  ) {
     return ListView(
       padding: EdgeInsets.fromLTRB(hPad, hPad, hPad, 120),
       children: [
@@ -262,24 +290,87 @@ class _HomeTabState extends State<HomeTab> {
             ),
           ],
         ),
-        ClipRRect(
-          borderRadius: BorderRadius.circular(20),
-          child: Image.network(
-            'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=100',
-            width: 40,
-            height: 40,
-            fit: BoxFit.cover,
-            errorBuilder: (context, error, stackTrace) => Container(
-              width: 40,
-              height: 40,
-              color: isDark ? AppTheme.mintGreen.withOpacity(0.2) : AppTheme.forestGreen.withOpacity(0.1),
-              child: Icon(
-                LucideIcons.user,
-                size: 20,
-                color: isDark ? AppTheme.mintGreen : AppTheme.forestGreen,
+        Row(
+          children: [
+            Stack(
+              clipBehavior: Clip.none,
+              children: [
+                GestureDetector(
+                  onTap: () => Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                      builder: (_) => const NotificationHistoryScreen(),
+                    ),
+                  ),
+                  child: Container(
+                    padding: const EdgeInsets.all(10),
+                    decoration: AppTheme.getClayDecoration(
+                      color: isDark ? const Color(0xFF1E293B) : Colors.white,
+                      borderRadius: 16,
+                    ),
+                    child: Icon(
+                      LucideIcons.bell,
+                      color: isDark ? AppTheme.mintGreen : AppTheme.forestGreen,
+                      size: 20,
+                    ),
+                  ),
+                ),
+                Consumer<AppState>(
+                  builder: (context, appState, _) {
+                    final unreadCount = appState.unreadNotificationsCount;
+                    if (unreadCount == 0) return const SizedBox.shrink();
+                    return Positioned(
+                      top: -4,
+                      right: -4,
+                      child: Container(
+                        padding: const EdgeInsets.all(4),
+                        decoration: const BoxDecoration(
+                          color: Colors.redAccent,
+                          shape: BoxShape.circle,
+                        ),
+                        constraints: const BoxConstraints(
+                          minWidth: 16,
+                          minHeight: 16,
+                        ),
+                        child: Center(
+                          child: Text(
+                            '$unreadCount',
+                            style: const TextStyle(
+                              color: Colors.white,
+                              fontSize: 9,
+                              fontWeight: FontWeight.bold,
+                            ),
+                          ),
+                        ),
+                      ),
+                    );
+                  },
+                ),
+              ],
+            ),
+            const SizedBox(width: 12),
+            ClipRRect(
+              borderRadius: BorderRadius.circular(20),
+              child: Image.network(
+                'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=100',
+                width: 40,
+                height: 40,
+                fit: BoxFit.cover,
+                errorBuilder: (context, error, stackTrace) => Container(
+                  width: 40,
+                  height: 40,
+                  color: isDark
+                      ? AppTheme.mintGreen.withOpacity(0.2)
+                      : AppTheme.forestGreen.withOpacity(0.1),
+                  child: Icon(
+                    LucideIcons.user,
+                    size: 20,
+                    color: isDark ? AppTheme.mintGreen : AppTheme.forestGreen,
+                  ),
+                ),
               ),
             ),
-          ),
+          ],
         ),
       ],
     );
@@ -351,7 +442,9 @@ class _HomeTabState extends State<HomeTab> {
                               builder: (context) => Container(
                                 padding: const EdgeInsets.all(32),
                                 decoration: BoxDecoration(
-                                  color: isDark ? const Color(0xFF1E293B) : Colors.white,
+                                  color: isDark
+                                      ? const Color(0xFF1E293B)
+                                      : Colors.white,
                                   borderRadius: const BorderRadius.only(
                                     topLeft: Radius.circular(32),
                                     topRight: Radius.circular(32),
@@ -362,7 +455,8 @@ class _HomeTabState extends State<HomeTab> {
                                   crossAxisAlignment: CrossAxisAlignment.start,
                                   children: [
                                     Row(
-                                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                                      mainAxisAlignment:
+                                          MainAxisAlignment.spaceBetween,
                                       children: [
                                         Row(
                                           children: [
@@ -377,7 +471,9 @@ class _HomeTabState extends State<HomeTab> {
                                               style: TextStyle(
                                                 fontSize: context.scaleFont(24),
                                                 fontWeight: FontWeight.bold,
-                                                color: isDark ? Colors.white : AppTheme.forestGreen,
+                                                color: isDark
+                                                    ? Colors.white
+                                                    : AppTheme.forestGreen,
                                               ),
                                               overflow: TextOverflow.ellipsis,
                                             ),
@@ -387,16 +483,23 @@ class _HomeTabState extends State<HomeTab> {
                                           decoration: BoxDecoration(
                                             shape: BoxShape.circle,
                                             border: Border.all(
-                                              color: isDark ? Colors.white.withOpacity(0.1) : Colors.grey.shade200,
+                                              color: isDark
+                                                  ? Colors.white.withOpacity(
+                                                      0.1,
+                                                    )
+                                                  : Colors.grey.shade200,
                                             ),
                                           ),
                                           child: IconButton(
                                             icon: Icon(
                                               LucideIcons.x,
                                               size: 20,
-                                              color: isDark ? Colors.white : AppTheme.forestGreen,
+                                              color: isDark
+                                                  ? Colors.white
+                                                  : AppTheme.forestGreen,
                                             ),
-                                            onPressed: () => Navigator.pop(context),
+                                            onPressed: () =>
+                                                Navigator.pop(context),
                                           ),
                                         ),
                                       ],
@@ -416,7 +519,9 @@ class _HomeTabState extends State<HomeTab> {
                                       offer['modalDesc'],
                                       style: TextStyle(
                                         fontSize: context.scaleFont(16),
-                                        color: isDark ? Colors.grey.shade300 : AppTheme.forestGreen,
+                                        color: isDark
+                                            ? Colors.grey.shade300
+                                            : AppTheme.forestGreen,
                                         height: 1.5,
                                       ),
                                     ),
@@ -426,25 +531,54 @@ class _HomeTabState extends State<HomeTab> {
                                       child: ElevatedButton(
                                         onPressed: () {
                                           Navigator.pop(context);
-                                          Navigator.push(
-                                            context,
-                                            MaterialPageRoute(
-                                              builder: (context) => const BookingFlowScreen(),
-                                            ),
-                                          );
+                                          offer['title'] == "Eco Warrior"
+                                              ? ScaffoldMessenger.of(
+                                                  context,
+                                                ).showSnackBar(
+                                                  const SnackBar(
+                                                    content: Text(
+                                                      'Coming Soon!!!',
+                                                    ),
+                                                  ),
+                                                )
+                                              : Navigator.push(
+                                                  context,
+                                                  MaterialPageRoute(
+                                                    builder: (context) =>
+                                                        const BookingFlowScreen(),
+                                                  ),
+                                                );
                                         },
                                         style: ElevatedButton.styleFrom(
-                                          backgroundColor: isDark ? AppTheme.mintGreen : AppTheme.forestGreen,
-                                          foregroundColor: isDark ? const Color(0xFF0F172A) : Colors.white,
-                                          padding: const EdgeInsets.symmetric(vertical: 20),
+                                          backgroundColor: isDark
+                                              ? AppTheme.mintGreen
+                                              : AppTheme.forestGreen,
+                                          foregroundColor: isDark
+                                              ? const Color(0xFF0F172A)
+                                              : Colors.white,
+                                          padding: const EdgeInsets.symmetric(
+                                            vertical: 20,
+                                          ),
                                           shape: RoundedRectangleBorder(
-                                            borderRadius: BorderRadius.circular(16),
+                                            borderRadius: BorderRadius.circular(
+                                              16,
+                                            ),
                                           ),
                                         ),
-                                        child: const Text(
-                                          'BOOK PICKUP',
-                                          style: TextStyle(fontWeight: FontWeight.bold),
-                                        ),
+                                        child:
+                                            offer['modalTitle'] == "Eco Warrior"
+                                            ? Text(
+                                                'Coming Soon!!!',
+                                                style: TextStyle(
+                                                  fontWeight: FontWeight.bold,
+                                                ),
+                                              )
+                                            : Text(
+                                                'BOOK PICKUP',
+                                                style: TextStyle(
+                                                  fontWeight: FontWeight.bold,
+                                                ),
+                                              ),
                                       ),
                                     ),
                                   ],
@@ -463,13 +597,18 @@ class _HomeTabState extends State<HomeTab> {
                               borderRadius: BorderRadius.circular(16),
                             ),
                           ),
-                          child: const Text(
-                            'CLAIM NOW',
-                            style: TextStyle(
-                              fontSize: 12,
-                              fontWeight: FontWeight.bold,
-                            ),
-                          ),
+                          child: offer['title'] == "Eco Warrior"
+                              ? Text(
+                                  'Coming Soon!!!',
+                                  style: TextStyle(fontWeight: FontWeight.bold),
+                                )
+                              : Text(
+                                  'CLAIM NOW',
+                                  style: TextStyle(
+                                    fontSize: 12,
+                                    fontWeight: FontWeight.bold,
+                                  ),
+                                ),
                         ),
                       ],
                     ),
@@ -527,7 +666,9 @@ class _HomeTabState extends State<HomeTab> {
                       ),
                       child: Icon(
                         LucideIcons.truck,
-                        color: isDark ? AppTheme.mintGreen : AppTheme.forestGreen,
+                        color: isDark
+                            ? AppTheme.mintGreen
+                            : AppTheme.forestGreen,
                         size: 24,
                       ),
                     ),
@@ -541,14 +682,18 @@ class _HomeTabState extends State<HomeTab> {
                             style: TextStyle(
                               fontSize: context.scaleFont(16),
                               fontWeight: FontWeight.bold,
-                              color: isDark ? Colors.white : AppTheme.forestGreen,
+                              color: isDark
+                                  ? Colors.white
+                                  : AppTheme.forestGreen,
                             ),
                           ),
                           const SizedBox(height: 4),
                           Text(
                             'Estimated Value: ₹350',
                             style: TextStyle(
-                              color: isDark ? AppTheme.mintGreen : AppTheme.lightGreen,
+                              color: isDark
+                                  ? AppTheme.mintGreen
+                                  : AppTheme.lightGreen,
                               fontWeight: FontWeight.w600,
                               fontSize: context.scaleFont(12),
                             ),
@@ -591,7 +736,9 @@ class _HomeTabState extends State<HomeTab> {
                       child: Text(
                         'Wed, 14 May • 10:00 AM - 1:00 PM',
                         style: TextStyle(
-                          color: isDark ? Colors.grey.shade300 : Colors.grey.shade600,
+                          color: isDark
+                              ? Colors.grey.shade300
+                              : Colors.grey.shade600,
                           fontSize: 13,
                         ),
                         overflow: TextOverflow.ellipsis,
@@ -600,7 +747,9 @@ class _HomeTabState extends State<HomeTab> {
                     Icon(
                       LucideIcons.chevronRight,
                       size: 16,
-                      color: isDark ? Colors.grey.shade500 : Colors.grey.shade400,
+                      color: isDark
+                          ? Colors.grey.shade500
+                          : Colors.grey.shade400,
                     ),
                   ],
                 ),
@@ -636,65 +785,66 @@ class _HomeTabState extends State<HomeTab> {
                 ),
               );
             },
-            child: Container(
-              padding: const EdgeInsets.symmetric(
-                vertical: 24,
-                horizontal: 32,
-              ),
-              decoration: BoxDecoration(
-                gradient: const LinearGradient(
-                  colors: [AppTheme.forestGreen, Color(0xFF1E5631)],
-                  begin: Alignment.topLeft,
-                  end: Alignment.bottomRight,
-                ),
-                borderRadius: BorderRadius.circular(40),
-                boxShadow: [
-                  BoxShadow(
-                    color: AppTheme.forestGreen.withOpacity(0.3),
-                    blurRadius: 20,
-                    offset: const Offset(0, 10),
-                  ),
-                ],
-              ),
-              child: Row(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  Column(
-                    children: [
-                      Row(
-                        children: [
-                          Text(
-                            'Book Pickup',
-                            style: TextStyle(
-                              fontSize: context.scaleFont(24),
-                              fontWeight: FontWeight.bold,
-                              color: Colors.white,
-                            ),
-                          ),
-                          const SizedBox(width: 8),
-                          const Icon(
-                            LucideIcons.arrowRight,
-                            color: AppTheme.leafGreen,
+            child:
+                Container(
+                      padding: const EdgeInsets.symmetric(
+                        vertical: 24,
+                        horizontal: 32,
+                      ),
+                      decoration: BoxDecoration(
+                        gradient: const LinearGradient(
+                          colors: [AppTheme.forestGreen, Color(0xFF1E5631)],
+                          begin: Alignment.topLeft,
+                          end: Alignment.bottomRight,
+                        ),
+                        borderRadius: BorderRadius.circular(40),
+                        boxShadow: [
+                          BoxShadow(
+                            color: AppTheme.forestGreen.withOpacity(0.3),
+                            blurRadius: 20,
+                            offset: const Offset(0, 10),
                           ),
                         ],
                       ),
-                      const SizedBox(height: 4),
-                      Text(
-                        'Schedule in seconds',
-                        style: TextStyle(
-                          color: Colors.white.withOpacity(0.8),
-                          fontSize: context.scaleFont(12),
-                        ),
+                      child: Row(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          Column(
+                            children: [
+                              Row(
+                                children: [
+                                  Text(
+                                    'Book Pickup',
+                                    style: TextStyle(
+                                      fontSize: context.scaleFont(24),
+                                      fontWeight: FontWeight.bold,
+                                      color: Colors.white,
+                                    ),
+                                  ),
+                                  const SizedBox(width: 8),
+                                  const Icon(
+                                    LucideIcons.arrowRight,
+                                    color: AppTheme.leafGreen,
+                                  ),
+                                ],
+                              ),
+                              const SizedBox(height: 4),
+                              Text(
+                                'Schedule in seconds',
+                                style: TextStyle(
+                                  color: Colors.white.withOpacity(0.8),
+                                  fontSize: context.scaleFont(12),
+                                ),
+                              ),
+                            ],
+                          ),
+                        ],
                       ),
-                    ],
-                  ),
-                ],
-              ),
-            )
-            .animate(
-              onPlay: (controller) => controller.repeat(reverse: true),
-            )
-            .shimmer(duration: 2000.ms, color: Colors.white24),
+                    )
+                    .animate(
+                      onPlay: (controller) => controller.repeat(reverse: true),
+                    )
+                    .shimmer(duration: 2000.ms, color: Colors.white24),
           )
         else
           GestureDetector(
@@ -730,7 +880,9 @@ class _HomeTabState extends State<HomeTab> {
                   Text(
                     'We are currently expanding. Tap to view our active service zones in Kerala.',
                     style: TextStyle(
-                      color: isDark ? Colors.grey.shade400 : Colors.grey.shade600,
+                      color: isDark
+                          ? Colors.grey.shade400
+                          : Colors.grey.shade600,
                       fontSize: 13,
                       height: 1.4,
                     ),
@@ -763,7 +915,9 @@ class _HomeTabState extends State<HomeTab> {
                         'Active',
                         style: TextStyle(
                           fontSize: 11,
-                          color: isDark ? Colors.grey.shade400 : Colors.grey.shade600,
+                          color: isDark
+                              ? Colors.grey.shade400
+                              : Colors.grey.shade600,
                         ),
                       ),
                       const SizedBox(width: 16),
@@ -771,7 +925,9 @@ class _HomeTabState extends State<HomeTab> {
                         width: 8,
                         height: 8,
                         decoration: BoxDecoration(
-                          color: isDark ? const Color(0xFF334155) : Colors.grey.shade300,
+                          color: isDark
+                              ? const Color(0xFF334155)
+                              : Colors.grey.shade300,
                           shape: BoxShape.circle,
                         ),
                       ),
@@ -780,7 +936,9 @@ class _HomeTabState extends State<HomeTab> {
                         'Coming Soon',
                         style: TextStyle(
                           fontSize: 11,
-                          color: isDark ? Colors.grey.shade400 : Colors.grey.shade600,
+                          color: isDark
+                              ? Colors.grey.shade400
+                              : Colors.grey.shade600,
                         ),
                       ),
                     ],
@@ -791,6 +949,55 @@ class _HomeTabState extends State<HomeTab> {
           ),
       ],
     );
+  }
+
+  Future<void> _fetchCurrentLocation(BuildContext context) async {
+    setState(() {
+      _isFetchingLocation = true;
+    });
+    try {
+      final loc = await LocationService.getCurrentLocation();
+      setState(() {
+        _currentAddress = '${loc.city}, ${loc.region} (${loc.zip})';
+      });
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Row(
+              children: [
+                const Icon(Icons.check_circle_rounded, color: Colors.white),
+                const SizedBox(width: 12),
+                Expanded(child: Text('Updated location: $_currentAddress')),
+              ],
+            ),
+            backgroundColor: const Color(0xFF0D9488),
+            behavior: SnackBarBehavior.floating,
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(12),
+            ),
+          ),
+        );
+      }
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Failed to get location: $e'),
+            backgroundColor: Colors.redAccent,
+            behavior: SnackBarBehavior.floating,
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(12),
+            ),
+          ),
+        );
+      }
+    } finally {
+      if (mounted) {
+        setState(() {
+          _isFetchingLocation = false;
+        });
+      }
+    }
   }
 
   Widget _buildLocationBar(BuildContext context, bool isDark) {
@@ -805,7 +1012,9 @@ class _HomeTabState extends State<HomeTab> {
           Container(
             padding: const EdgeInsets.all(8),
             decoration: BoxDecoration(
-              color: isDark ? AppTheme.mintGreen.withOpacity(0.15) : AppTheme.leafGreen.withOpacity(0.1),
+              color: isDark
+                  ? AppTheme.mintGreen.withOpacity(0.15)
+                  : AppTheme.leafGreen.withOpacity(0.1),
               shape: BoxShape.circle,
             ),
             child: Icon(
@@ -824,35 +1033,50 @@ class _HomeTabState extends State<HomeTab> {
                   style: TextStyle(
                     fontSize: 10,
                     fontWeight: FontWeight.bold,
-                    color: isDark ? Colors.grey.shade400 : Colors.grey.shade50,
+                    color: isDark ? Colors.grey.shade400 : Colors.grey.shade600,
                   ),
                 ),
                 const SizedBox(height: 2),
-                Text(
-                  '123 Green Valley Road, Eco Park, City Center',
-                  style: TextStyle(
-                    fontSize: 12,
-                    fontWeight: FontWeight.bold,
-                    color: isDark ? Colors.white : AppTheme.forestGreen,
+                if (_isFetchingLocation)
+                  Padding(
+                    padding: const EdgeInsets.only(top: 4.0),
+                    child: SizedBox(
+                      width: 12,
+                      height: 12,
+                      child: CircularProgressIndicator(
+                        strokeWidth: 2,
+                        valueColor: AlwaysStoppedAnimation<Color>(
+                          isDark ? AppTheme.mintGreen : AppTheme.forestGreen,
+                        ),
+                      ),
+                    ),
+                  )
+                else
+                  Text(
+                    _currentAddress,
+                    style: TextStyle(
+                      fontSize: 12,
+                      fontWeight: FontWeight.bold,
+                      color: isDark ? Colors.white : AppTheme.forestGreen,
+                    ),
+                    overflow: TextOverflow.ellipsis,
                   ),
-                  overflow: TextOverflow.ellipsis,
-                ),
               ],
             ),
           ),
           const SizedBox(width: 8),
           GestureDetector(
-            onTap: () {
-              setState(() {
-                _isServiceAvailable = !_isServiceAvailable;
-              });
-            },
+            onTap: _isFetchingLocation
+                ? null
+                : () => _fetchCurrentLocation(context),
             child: Text(
-              'CHANGE',
+              _isFetchingLocation ? 'FETCHING' : 'CHANGE',
               style: TextStyle(
                 fontSize: 12,
                 fontWeight: FontWeight.bold,
-                color: isDark ? AppTheme.mintGreen : AppTheme.lightGreen,
+                color: _isFetchingLocation
+                    ? Colors.grey
+                    : (isDark ? AppTheme.mintGreen : AppTheme.lightGreen),
               ),
             ),
           ),
@@ -1080,28 +1304,39 @@ class _HomeTabState extends State<HomeTab> {
                     Text(
                       'Get 500 Eco Points for every friend you refer.',
                       style: TextStyle(
-                        color: isDark ? Colors.grey.shade400 : Colors.grey.shade600,
+                        color: isDark
+                            ? Colors.grey.shade400
+                            : Colors.grey.shade600,
                         fontSize: 13,
                       ),
                     ),
                     const SizedBox(height: 16),
                     ElevatedButton(
-                      onPressed: () {},
+                      onPressed: () {
+                        ScaffoldMessenger.of(context).showSnackBar(
+                          const SnackBar(content: Text('Coming Soon!!!')),
+                        );
+                      },
                       style: ElevatedButton.styleFrom(
-                        backgroundColor: isDark ? AppTheme.mintGreen : AppTheme.forestGreen,
-                        foregroundColor: isDark ? const Color(0xFF0F172A) : Colors.white,
+                        backgroundColor: isDark
+                            ? AppTheme.mintGreen
+                            : AppTheme.forestGreen,
+                        foregroundColor: isDark
+                            ? const Color(0xFF0F172A)
+                            : Colors.white,
                         padding: const EdgeInsets.symmetric(
-                          horizontal: 20,
-                          vertical: 12,
+                          horizontal: 12,
+                          vertical: 8,
                         ),
                         shape: RoundedRectangleBorder(
                           borderRadius: BorderRadius.circular(12),
                         ),
                       ),
-                      child: const Text(
+                      child: Text(
                         'SHARE CODE',
                         style: TextStyle(
                           fontWeight: FontWeight.bold,
+                          color: Colors.white,
                           fontSize: 12,
                         ),
                       ),
@@ -1110,20 +1345,22 @@ class _HomeTabState extends State<HomeTab> {
                 ),
               ),
               Container(
-                width: 80,
-                height: 80,
-                decoration: BoxDecoration(
-                  color: (isDark ? AppTheme.mintGreen : AppTheme.forestGreen).withOpacity(0.1),
-                  shape: BoxShape.circle,
-                ),
-                child: Icon(
-                  LucideIcons.gift,
-                  size: 40,
-                  color: isDark ? AppTheme.mintGreen : AppTheme.forestGreen,
-                ),
-              )
-              .animate(onPlay: (c) => c.repeat(reverse: true))
-              .scale(duration: 2.seconds, curve: Curves.easeInOut),
+                    width: 80,
+                    height: 80,
+                    decoration: BoxDecoration(
+                      color:
+                          (isDark ? AppTheme.mintGreen : AppTheme.forestGreen)
+                              .withOpacity(0.1),
+                      shape: BoxShape.circle,
+                    ),
+                    child: Icon(
+                      LucideIcons.gift,
+                      size: 40,
+                      color: isDark ? AppTheme.mintGreen : AppTheme.forestGreen,
+                    ),
+                  )
+                  .animate(onPlay: (c) => c.repeat(reverse: true))
+                  .scale(duration: 2.seconds, curve: Curves.easeInOut),
             ],
           ),
         ),
@@ -1156,7 +1393,9 @@ class _HomeTabState extends State<HomeTab> {
               child: Icon(
                 LucideIcons.info,
                 size: 14,
-                color: isDark ? Colors.white.withOpacity(0.2) : Colors.grey.shade300,
+                color: isDark
+                    ? Colors.white.withOpacity(0.2)
+                    : Colors.grey.shade300,
               ),
             ),
             Center(
@@ -1248,7 +1487,9 @@ class _HomeTabState extends State<HomeTab> {
                           style: TextStyle(
                             fontSize: 16,
                             fontWeight: FontWeight.bold,
-                            color: isDark ? AppTheme.mintGreen : AppTheme.lightGreen,
+                            color: isDark
+                                ? AppTheme.mintGreen
+                                : AppTheme.lightGreen,
                           ),
                         ),
                       ],
@@ -1259,7 +1500,9 @@ class _HomeTabState extends State<HomeTab> {
                   decoration: BoxDecoration(
                     shape: BoxShape.circle,
                     border: Border.all(
-                      color: isDark ? Colors.white.withOpacity(0.1) : Colors.grey.shade200,
+                      color: isDark
+                          ? Colors.white.withOpacity(0.1)
+                          : Colors.grey.shade200,
                     ),
                   ),
                   child: IconButton(
@@ -1306,8 +1549,12 @@ class _HomeTabState extends State<HomeTab> {
                   );
                 },
                 style: ElevatedButton.styleFrom(
-                  backgroundColor: isDark ? AppTheme.mintGreen : AppTheme.forestGreen,
-                  foregroundColor: isDark ? const Color(0xFF0F172A) : Colors.white,
+                  backgroundColor: isDark
+                      ? AppTheme.mintGreen
+                      : AppTheme.forestGreen,
+                  foregroundColor: isDark
+                      ? const Color(0xFF0F172A)
+                      : Colors.white,
                   padding: const EdgeInsets.symmetric(vertical: 20),
                   shape: RoundedRectangleBorder(
                     borderRadius: BorderRadius.circular(16),
@@ -1360,7 +1607,9 @@ class _HomeTabState extends State<HomeTab> {
                   decoration: BoxDecoration(
                     shape: BoxShape.circle,
                     border: Border.all(
-                      color: isDark ? Colors.white.withOpacity(0.1) : Colors.grey.shade200,
+                      color: isDark
+                          ? Colors.white.withOpacity(0.1)
+                          : Colors.grey.shade200,
                     ),
                   ),
                   child: IconButton(
@@ -1405,7 +1654,12 @@ class _HomeTabState extends State<HomeTab> {
     );
   }
 
-  Widget _buildHistoryRow(BuildContext context, String title, String points, String date) {
+  Widget _buildHistoryRow(
+    BuildContext context,
+    String title,
+    String points,
+    String date,
+  ) {
     final isDark = Theme.of(context).brightness == Brightness.dark;
     return Padding(
       padding: const EdgeInsets.only(bottom: 24.0),
@@ -1480,7 +1734,9 @@ class _HomeTabState extends State<HomeTab> {
                   decoration: BoxDecoration(
                     shape: BoxShape.circle,
                     border: Border.all(
-                      color: isDark ? Colors.white.withOpacity(0.1) : Colors.grey.shade200,
+                      color: isDark
+                          ? Colors.white.withOpacity(0.1)
+                          : Colors.grey.shade200,
                     ),
                   ),
                   child: IconButton(
@@ -1502,7 +1758,9 @@ class _HomeTabState extends State<HomeTab> {
                     'ReLoop is a modern sustainability and recycling platform designed to make recycling easy, rewarding, and transparent.\n\nWe connect households and businesses with reliable pickup staff, ensuring your scrap materials (like paper and cardboard) are ethically recycled.\n\nOur mission is to build a greener future while rewarding our community with ECOPOINTS for every contribution.',
                     style: TextStyle(
                       fontSize: 16,
-                      color: isDark ? Colors.grey.shade300 : Colors.grey.shade700,
+                      color: isDark
+                          ? Colors.grey.shade300
+                          : Colors.grey.shade700,
                       height: 1.6,
                     ),
                   ).animate().fadeIn(delay: 200.ms).slideY(begin: 0.1, end: 0),
@@ -1549,7 +1807,9 @@ class _HomeTabState extends State<HomeTab> {
                   decoration: BoxDecoration(
                     shape: BoxShape.circle,
                     border: Border.all(
-                      color: isDark ? Colors.white.withOpacity(0.1) : Colors.grey.shade200,
+                      color: isDark
+                          ? Colors.white.withOpacity(0.1)
+                          : Colors.grey.shade200,
                     ),
                   ),
                   child: IconButton(
@@ -1577,7 +1837,9 @@ class _HomeTabState extends State<HomeTab> {
                       Icon(
                         LucideIcons.clock,
                         size: 20,
-                        color: isDark ? AppTheme.mintGreen : AppTheme.forestGreen,
+                        color: isDark
+                            ? AppTheme.mintGreen
+                            : AppTheme.forestGreen,
                       ),
                       const SizedBox(width: 16),
                       Expanded(
@@ -1599,7 +1861,9 @@ class _HomeTabState extends State<HomeTab> {
                       Icon(
                         LucideIcons.mapPin,
                         size: 20,
-                        color: isDark ? AppTheme.mintGreen : AppTheme.forestGreen,
+                        color: isDark
+                            ? AppTheme.mintGreen
+                            : AppTheme.forestGreen,
                       ),
                       const SizedBox(width: 16),
                       Expanded(
@@ -1659,7 +1923,9 @@ class _HomeTabState extends State<HomeTab> {
                           'Assigned Picker',
                           style: TextStyle(
                             fontSize: 14,
-                            color: isDark ? Colors.grey.shade400 : Colors.grey.shade50,
+                            color: isDark
+                                ? Colors.grey.shade400
+                                : Colors.grey.shade50,
                           ),
                         ),
                       ],
@@ -1677,8 +1943,12 @@ class _HomeTabState extends State<HomeTab> {
                     icon: const Icon(LucideIcons.phone, size: 18),
                     label: const Text('Call'),
                     style: ElevatedButton.styleFrom(
-                      backgroundColor: isDark ? AppTheme.mintGreen : AppTheme.forestGreen,
-                      foregroundColor: isDark ? const Color(0xFF0F172A) : Colors.white,
+                      backgroundColor: isDark
+                          ? AppTheme.mintGreen
+                          : AppTheme.forestGreen,
+                      foregroundColor: isDark
+                          ? const Color(0xFF0F172A)
+                          : Colors.white,
                       padding: const EdgeInsets.symmetric(vertical: 16),
                       shape: RoundedRectangleBorder(
                         borderRadius: BorderRadius.circular(16),
@@ -1693,15 +1963,25 @@ class _HomeTabState extends State<HomeTab> {
                     icon: Icon(
                       LucideIcons.messageCircle,
                       size: 18,
-                      color: isDark ? const Color(0xFF0F172A) : AppTheme.forestGreen,
+                      color: isDark
+                          ? const Color(0xFF0F172A)
+                          : AppTheme.forestGreen,
                     ),
                     label: Text(
                       'WhatsApp',
-                      style: TextStyle(color: isDark ? const Color(0xFF0F172A) : AppTheme.forestGreen),
+                      style: TextStyle(
+                        color: isDark
+                            ? const Color(0xFF0F172A)
+                            : AppTheme.forestGreen,
+                      ),
                     ),
                     style: ElevatedButton.styleFrom(
-                      backgroundColor: isDark ? AppTheme.mintGreen.withOpacity(0.15) : AppTheme.lightGreen.withOpacity(0.1),
-                      foregroundColor: isDark ? AppTheme.mintGreen : AppTheme.forestGreen,
+                      backgroundColor: isDark
+                          ? AppTheme.mintGreen.withOpacity(0.15)
+                          : AppTheme.lightGreen.withOpacity(0.1),
+                      foregroundColor: isDark
+                          ? AppTheme.mintGreen
+                          : AppTheme.forestGreen,
                       elevation: 0,
                       padding: const EdgeInsets.symmetric(vertical: 16),
                       shape: RoundedRectangleBorder(
@@ -1772,16 +2052,22 @@ class _HomeTabState extends State<HomeTab> {
             const SizedBox(height: 16),
             Text(
               'Please let us know why you are canceling this pickup.',
-              style: TextStyle(color: isDark ? Colors.grey.shade300 : Colors.grey.shade600),
+              style: TextStyle(
+                color: isDark ? Colors.grey.shade300 : Colors.grey.shade600,
+              ),
             ),
             const SizedBox(height: 24),
             TextField(
               style: TextStyle(color: isDark ? Colors.white : Colors.black),
               decoration: InputDecoration(
                 hintText: 'Reason for cancellation',
-                hintStyle: TextStyle(color: isDark ? Colors.grey.shade500 : Colors.grey.shade400),
+                hintStyle: TextStyle(
+                  color: isDark ? Colors.grey.shade500 : Colors.grey.shade400,
+                ),
                 filled: true,
-                fillColor: isDark ? const Color(0xFF0F172A) : Colors.grey.shade50,
+                fillColor: isDark
+                    ? const Color(0xFF0F172A)
+                    : Colors.grey.shade50,
                 border: OutlineInputBorder(
                   borderRadius: BorderRadius.circular(16),
                   borderSide: BorderSide.none,
@@ -1798,7 +2084,9 @@ class _HomeTabState extends State<HomeTab> {
                     child: Text(
                       'Back',
                       style: TextStyle(
-                        color: isDark ? AppTheme.mintGreen : AppTheme.forestGreen,
+                        color: isDark
+                            ? AppTheme.mintGreen
+                            : AppTheme.forestGreen,
                         fontSize: 16,
                       ),
                     ),
@@ -1865,7 +2153,11 @@ class _HomeTabState extends State<HomeTab> {
                   (index) => Icon(
                     index < rating ? LucideIcons.star : LucideIcons.starHalf,
                     size: 16,
-                    color: index < rating ? Colors.amber : (isDark ? Colors.white.withOpacity(0.1) : Colors.grey.shade300),
+                    color: index < rating
+                        ? Colors.amber
+                        : (isDark
+                              ? Colors.white.withOpacity(0.1)
+                              : Colors.grey.shade300),
                   ),
                 ),
               ),
@@ -1893,12 +2185,16 @@ class _HomeTabState extends State<HomeTab> {
       padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
       decoration: BoxDecoration(
         color: isActive
-            ? (isDark ? AppTheme.mintGreen.withOpacity(0.2) : AppTheme.leafGreen.withOpacity(0.15))
+            ? (isDark
+                  ? AppTheme.mintGreen.withOpacity(0.2)
+                  : AppTheme.leafGreen.withOpacity(0.15))
             : (isDark ? Colors.white.withOpacity(0.05) : Colors.grey.shade100),
         borderRadius: BorderRadius.circular(20),
         border: Border.all(
           color: isActive
-              ? (isDark ? AppTheme.mintGreen.withOpacity(0.4) : AppTheme.leafGreen.withOpacity(0.4))
+              ? (isDark
+                    ? AppTheme.mintGreen.withOpacity(0.4)
+                    : AppTheme.leafGreen.withOpacity(0.4))
               : (isDark ? Colors.white.withOpacity(0.1) : Colors.grey.shade300),
         ),
       ),

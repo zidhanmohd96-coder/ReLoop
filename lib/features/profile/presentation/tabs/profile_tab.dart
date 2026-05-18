@@ -6,7 +6,15 @@ import 'package:url_launcher/url_launcher.dart';
 import '../../../../theme.dart';
 import '../../../../providers/app_state.dart';
 import '../../../../core/utils/responsive_helper.dart';
-import '../../../../screens/address_management_screen.dart';
+import '../../../../screens/profile/address_management_screen.dart';
+import '../../../../screens/profile/legal_and_terms_screen.dart';
+import '../../../../screens/profile/notification_preferences_screen.dart';
+import '../../../../screens/profile/personal_information_screen.dart';
+import '../../../../screens/profile/pickups_history_screen.dart';
+import '../../../../screens/profile/scrap_prices_screen.dart';
+import '../../../../screens/profile/faq_screen.dart';
+import '../../../../screens/profile/support_screen.dart';
+import '../../../../screens/profile/feedback_screen.dart';
 
 class ProfileTab extends StatefulWidget {
   final VoidCallback? onViewHistory;
@@ -37,9 +45,14 @@ class _ProfileTabState extends State<ProfileTab> {
                     height: 120,
                     decoration: BoxDecoration(
                       shape: BoxShape.circle,
-                      border: Border.all(color: isDark ? const Color(0xFF1E293B) : Colors.white, width: 4),
+                      border: Border.all(
+                        color: isDark ? const Color(0xFF1E293B) : Colors.white,
+                        width: 4,
+                      ),
                       image: const DecorationImage(
-                        image: NetworkImage('https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=400'),
+                        image: NetworkImage(
+                          'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=400',
+                        ),
                         fit: BoxFit.cover,
                       ),
                     ),
@@ -52,9 +65,18 @@ class _ProfileTabState extends State<ProfileTab> {
                       decoration: BoxDecoration(
                         color: AppTheme.mintGreen,
                         shape: BoxShape.circle,
-                        border: Border.all(color: isDark ? const Color(0xFF1E293B) : Colors.white, width: 2),
+                        border: Border.all(
+                          color: isDark
+                              ? const Color(0xFF1E293B)
+                              : Colors.white,
+                          width: 2,
+                        ),
                       ),
-                      child: Icon(LucideIcons.shieldCheck, color: isDark ? const Color(0xFF0F172A) : Colors.white, size: 20),
+                      child: Icon(
+                        LucideIcons.shieldCheck,
+                        color: isDark ? const Color(0xFF0F172A) : Colors.white,
+                        size: 20,
+                      ),
                     ),
                   ),
                 ],
@@ -94,7 +116,12 @@ class _ProfileTabState extends State<ProfileTab> {
                     LucideIcons.user,
                     'Personal Information',
                     isDark,
-                    onTap: () => _showPersonalInformationModal(context),
+                    onTap: () => Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        builder: (_) => const PersonalInformationScreen(),
+                      ),
+                    ),
                   ),
                   _buildMenuRow(
                     context,
@@ -104,7 +131,9 @@ class _ProfileTabState extends State<ProfileTab> {
                     onTap: () {
                       Navigator.push(
                         context,
-                        MaterialPageRoute(builder: (context) => const AddressManagementScreen()),
+                        MaterialPageRoute(
+                          builder: (context) => const AddressManagementScreen(),
+                        ),
                       );
                     },
                   ),
@@ -126,29 +155,55 @@ class _ProfileTabState extends State<ProfileTab> {
                     LucideIcons.package,
                     'Pickups & History',
                     isDark,
-                    onTap: () => _showPickupsHistoryModal(context),
+                    onTap: () => Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        builder: (_) => const PickupsHistoryScreen(),
+                      ),
+                    ),
                   ),
                   _buildMenuRow(
                     context,
                     LucideIcons.tag,
                     'Scrap Prices',
                     isDark,
-                    onTap: () => _showScrapPricesModal(context),
+                    onTap: () => Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        builder: (_) => const ScrapPricesScreen(),
+                      ),
+                    ),
                   ),
-                  _buildMenuRow(context, LucideIcons.ticket, 'Vouchers & Rewards', isDark),
+                  _buildMenuRow(
+                    context,
+                    LucideIcons.ticket,
+                    'Vouchers & Rewards',
+                    isDark,
+                    onTap: () {
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        const SnackBar(content: Text('Coming Soon!!!')),
+                      );
+                    },
+                  ),
                   _buildMenuRow(
                     context,
                     LucideIcons.truck,
                     'Have bulk scrap?',
                     isDark,
-                    onTap: () => _launchWhatsApp('Hi ReLoop, I have bulk scrap for recycling.', '+917736950910'),
+                    onTap: () => _launchWhatsApp(
+                      'Hi ReLoop, I have bulk scrap for recycling.',
+                      '+917736950910',
+                    ),
                   ),
                   _buildMenuRow(
                     context,
                     LucideIcons.helpCircle,
                     'FAQ & How it Works',
                     isDark,
-                    onTap: () => _showFAQModal(context),
+                    onTap: () => Navigator.push(
+                      context,
+                      MaterialPageRoute(builder: (_) => const FaqScreen()),
+                    ),
                   ),
                 ],
               ),
@@ -168,11 +223,16 @@ class _ProfileTabState extends State<ProfileTab> {
                     LucideIcons.headphones,
                     'Help & Support',
                     isDark,
-                    onTap: () => _showSupportModal(
+                    onTap: () => Navigator.push(
                       context,
-                      'Help & Support',
-                      'Our support team is available 24/7 to help you with any issues.\n\nCommon issues:\n• Pickup not arriving\n• Payment not received\n• Account related queries\n• App issues',
-                      'I need help with my account.',
+                      MaterialPageRoute(
+                        builder: (_) => const SupportScreen(
+                          title: 'Help & Support',
+                          description:
+                              'Our support team is available 24/7 to help you with any issues.\n\nCommon issues:\n• Pickup not arriving\n• Payment not received\n• Account related queries\n• App issues',
+                          initialMessage: 'I need help with my account.',
+                        ),
+                      ),
                     ),
                   ),
                   _buildMenuRow(
@@ -180,11 +240,16 @@ class _ProfileTabState extends State<ProfileTab> {
                     LucideIcons.mail,
                     'Contact Us',
                     isDark,
-                    onTap: () => _showSupportModal(
+                    onTap: () => Navigator.push(
                       context,
-                      'Contact Us',
-                      'Reach out to us anytime!\n\nEmail: blabpa301@gmail.com\nWhatsApp: +91 7736950910\n\nOffice Hours: Mon-Sat, 9AM-6PM\nAddress: Kochi, Kerala, India',
-                      'Hi ReLoop, I want to contact you.',
+                      MaterialPageRoute(
+                        builder: (_) => const SupportScreen(
+                          title: 'Contact Us',
+                          description:
+                              'Reach out to us anytime!\n\nEmail: blabpa301@gmail.com\nWhatsApp: +91 7736950910\n\nOffice Hours: Mon-Sat, 9AM-6PM\nAddress: Kochi, Kerala, India',
+                          initialMessage: 'Hi ReLoop, I want to contact you.',
+                        ),
+                      ),
                     ),
                   ),
                   _buildMenuRow(
@@ -192,9 +257,23 @@ class _ProfileTabState extends State<ProfileTab> {
                     LucideIcons.messageSquare,
                     'Feedback',
                     isDark,
-                    onTap: () => _showFeedbackModal(context),
+                    onTap: () => Navigator.push(
+                      context,
+                      MaterialPageRoute(builder: (_) => const FeedbackScreen()),
+                    ),
                   ),
-                  _buildMenuRow(context, LucideIcons.fileText, 'Legal & Terms', isDark),
+                  _buildMenuRow(
+                    context,
+                    LucideIcons.fileText,
+                    'Legal & Terms',
+                    isDark,
+                    onTap: () => Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        builder: (_) => const LegalAndTermsScreen(),
+                      ),
+                    ),
+                  ),
                 ],
               ),
             ).animate().fadeIn(delay: 300.ms).slideY(begin: 0.1, end: 0),
@@ -210,12 +289,19 @@ class _ProfileTabState extends State<ProfileTab> {
                 children: [
                   // Dark Mode Toggle
                   Padding(
-                    padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 24,
+                      vertical: 12,
+                    ),
                     child: Row(
                       children: [
                         Icon(
-                          appState.themeMode == ThemeMode.dark ? LucideIcons.moon : LucideIcons.sun,
-                          color: appState.themeMode == ThemeMode.dark ? Colors.amber : AppTheme.mintGreen,
+                          appState.themeMode == ThemeMode.dark
+                              ? LucideIcons.moon
+                              : LucideIcons.sun,
+                          color: appState.themeMode == ThemeMode.dark
+                              ? Colors.amber
+                              : AppTheme.mintGreen,
                           size: 20,
                         ),
                         const SizedBox(width: 16),
@@ -224,7 +310,9 @@ class _ProfileTabState extends State<ProfileTab> {
                             'Dark Mode',
                             style: TextStyle(
                               fontWeight: FontWeight.w600,
-                              color: isDark ? Colors.white : AppTheme.forestGreen,
+                              color: isDark
+                                  ? Colors.white
+                                  : AppTheme.forestGreen,
                             ),
                           ),
                         ),
@@ -237,8 +325,25 @@ class _ProfileTabState extends State<ProfileTab> {
                       ],
                     ),
                   ),
-                  _buildMenuRow(context, LucideIcons.bell, 'Notification Preferences', isDark),
-                  _buildMenuRow(context, LucideIcons.logOut, 'Log Out', isDark, isDestructive: true),
+                  _buildMenuRow(
+                    context,
+                    LucideIcons.bell,
+                    'Notification Preferences',
+                    isDark,
+                    onTap: () => Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        builder: (_) => const NotificationPreferencesScreen(),
+                      ),
+                    ),
+                  ),
+                  _buildMenuRow(
+                    context,
+                    LucideIcons.logOut,
+                    'Log Out',
+                    isDark,
+                    isDestructive: true,
+                  ),
                 ],
               ),
             ).animate().fadeIn(delay: 400.ms).slideY(begin: 0.1, end: 0),
@@ -279,7 +384,9 @@ class _ProfileTabState extends State<ProfileTab> {
           children: [
             Icon(
               icon,
-              color: isDestructive ? Colors.red.shade400 : (isDark ? AppTheme.mintGreen : AppTheme.leafGreen),
+              color: isDestructive
+                  ? Colors.red.shade400
+                  : (isDark ? AppTheme.mintGreen : AppTheme.leafGreen),
               size: 20,
             ),
             const SizedBox(width: 16),
@@ -288,11 +395,17 @@ class _ProfileTabState extends State<ProfileTab> {
                 title,
                 style: TextStyle(
                   fontWeight: FontWeight.w600,
-                  color: isDestructive ? Colors.red.shade400 : (isDark ? Colors.white : AppTheme.forestGreen),
+                  color: isDestructive
+                      ? Colors.red.shade400
+                      : (isDark ? Colors.white : AppTheme.forestGreen),
                 ),
               ),
             ),
-            Icon(LucideIcons.chevronRight, color: isDark ? Colors.grey.shade700 : Colors.grey.shade300, size: 20),
+            Icon(
+              LucideIcons.chevronRight,
+              color: isDark ? Colors.grey.shade700 : Colors.grey.shade300,
+              size: 20,
+            ),
           ],
         ),
       ),
@@ -301,7 +414,9 @@ class _ProfileTabState extends State<ProfileTab> {
 
   Future<void> _launchWhatsApp(String message, String phone) async {
     final cleanPhone = phone.replaceAll(RegExp(r'\D'), '');
-    final url = Uri.parse('https://wa.me/$cleanPhone?text=${Uri.encodeComponent(message)}');
+    final url = Uri.parse(
+      'https://wa.me/$cleanPhone?text=${Uri.encodeComponent(message)}',
+    );
 
     try {
       if (await canLaunchUrl(url)) {
@@ -309,18 +424,25 @@ class _ProfileTabState extends State<ProfileTab> {
       } else {
         if (!mounted) return;
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('WhatsApp is not installed on this device')),
+          const SnackBar(
+            content: Text('WhatsApp is not installed on this device'),
+          ),
         );
       }
     } catch (e) {
       if (!mounted) return;
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Error launching WhatsApp: $e')),
-      );
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(SnackBar(content: Text('Error launching WhatsApp: $e')));
     }
   }
 
-  void _showSupportModal(BuildContext context, String title, String details, String waMessage) {
+  void _showSupportModal(
+    BuildContext context,
+    String title,
+    String details,
+    String waMessage,
+  ) {
     final isDark = Theme.of(context).brightness == Brightness.dark;
     showModalBottomSheet(
       context: context,
@@ -331,7 +453,10 @@ class _ProfileTabState extends State<ProfileTab> {
         padding: const EdgeInsets.all(32),
         decoration: BoxDecoration(
           color: isDark ? const Color(0xFF1E293B) : Colors.white,
-          borderRadius: const BorderRadius.only(topLeft: Radius.circular(32), topRight: Radius.circular(32)),
+          borderRadius: const BorderRadius.only(
+            topLeft: Radius.circular(32),
+            topRight: Radius.circular(32),
+          ),
         ),
         child: Column(
           children: [
@@ -346,7 +471,13 @@ class _ProfileTabState extends State<ProfileTab> {
                     color: isDark ? Colors.white : AppTheme.forestGreen,
                   ),
                 ),
-                IconButton(icon: Icon(LucideIcons.x, color: isDark ? Colors.white : null), onPressed: () => Navigator.pop(ctx)),
+                IconButton(
+                  icon: Icon(
+                    LucideIcons.x,
+                    color: isDark ? Colors.white : null,
+                  ),
+                  onPressed: () => Navigator.pop(ctx),
+                ),
               ],
             ),
             const SizedBox(height: 24),
@@ -354,7 +485,11 @@ class _ProfileTabState extends State<ProfileTab> {
               child: SingleChildScrollView(
                 child: Text(
                   details,
-                  style: TextStyle(color: isDark ? Colors.grey.shade400 : Colors.grey.shade700, fontSize: 15, height: 1.6),
+                  style: TextStyle(
+                    color: isDark ? Colors.grey.shade400 : Colors.grey.shade700,
+                    fontSize: 15,
+                    height: 1.6,
+                  ),
                 ),
               ),
             ),
@@ -367,17 +502,288 @@ class _ProfileTabState extends State<ProfileTab> {
                   _launchWhatsApp(waMessage, '+917736950910');
                 },
                 icon: const Icon(LucideIcons.messageCircle, size: 18),
-                label: const Text('Chat on WhatsApp', style: TextStyle(fontWeight: FontWeight.bold)),
+                label: const Text(
+                  'Chat on WhatsApp',
+                  style: TextStyle(fontWeight: FontWeight.bold),
+                ),
                 style: ElevatedButton.styleFrom(
                   backgroundColor: const Color(0xFF25D366),
                   foregroundColor: Colors.white,
                   padding: const EdgeInsets.symmetric(vertical: 18),
-                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(20),
+                  ),
                 ),
               ),
             ),
           ],
         ),
+      ),
+    );
+  }
+
+  void _showLegalAndTermsModal(BuildContext context) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    showModalBottomSheet(
+      context: context,
+      backgroundColor: Colors.transparent,
+      isScrollControlled: true,
+      builder: (ctx) => Container(
+        height: MediaQuery.of(ctx).size.height * 0.75,
+        padding: const EdgeInsets.all(32),
+        decoration: BoxDecoration(
+          color: isDark ? const Color(0xFF1E293B) : Colors.white,
+          borderRadius: const BorderRadius.only(
+            topLeft: Radius.circular(32),
+            topRight: Radius.circular(32),
+          ),
+        ),
+        child: Column(
+          children: [
+            Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                Text(
+                  'Legal & Terms',
+                  style: TextStyle(
+                    fontSize: 22,
+                    fontWeight: FontWeight.bold,
+                    color: isDark ? Colors.white : AppTheme.forestGreen,
+                  ),
+                ),
+                IconButton(
+                  icon: Icon(
+                    LucideIcons.x,
+                    color: isDark ? Colors.white : null,
+                  ),
+                  onPressed: () => Navigator.pop(ctx),
+                ),
+              ],
+            ),
+            const SizedBox(height: 20),
+            Expanded(
+              child: ListView(
+                children: [
+                  _buildLegalSection(
+                    '1. Terms of Service',
+                    'By using ReLoop, you agree to recycle items in accordance with local regulations. All prices quoted are based on standard weight calculations verified by our pickup executives.',
+                    isDark,
+                  ),
+                  _buildLegalSection(
+                    '2. Privacy Policy',
+                    'We protect your personal data, including your address, name, and phone number. We never sell your data to third-party advertisers. Data is solely used to orchestrate scrap pickups.',
+                    isDark,
+                  ),
+                  _buildLegalSection(
+                    '3. Zero Waste Commitment',
+                    'ReLoop commits that 100% of collected recyclable scrap is processed through verified pollution-controlled recycling facilities and does not enter local landfills.',
+                    isDark,
+                  ),
+                ],
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildLegalSection(String title, String content, bool isDark) {
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 24),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(
+            title,
+            style: TextStyle(
+              fontSize: 16,
+              fontWeight: FontWeight.bold,
+              color: isDark ? Colors.white : AppTheme.forestGreen,
+            ),
+          ),
+          const SizedBox(height: 8),
+          Text(
+            content,
+            style: TextStyle(
+              fontSize: 14,
+              color: isDark ? Colors.grey.shade400 : Colors.grey.shade700,
+              height: 1.5,
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  void _showNotificationPreferencesModal(BuildContext context) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    bool pushEnabled = true;
+    bool priceAlerts = true;
+    bool promoAlerts = false;
+    bool rewardAlerts = true;
+
+    showModalBottomSheet(
+      context: context,
+      backgroundColor: Colors.transparent,
+      isScrollControlled: true,
+      builder: (ctx) => StatefulBuilder(
+        builder: (ctx, setModalState) => Container(
+          height: MediaQuery.of(ctx).size.height * 0.65,
+          padding: const EdgeInsets.all(32),
+          decoration: BoxDecoration(
+            color: isDark ? const Color(0xFF1E293B) : Colors.white,
+            borderRadius: const BorderRadius.only(
+              topLeft: Radius.circular(32),
+              topRight: Radius.circular(32),
+            ),
+          ),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  Text(
+                    'Notification Prefs',
+                    style: TextStyle(
+                      fontSize: 22,
+                      fontWeight: FontWeight.bold,
+                      color: isDark ? Colors.white : AppTheme.forestGreen,
+                    ),
+                  ),
+                  IconButton(
+                    icon: Icon(
+                      LucideIcons.x,
+                      color: isDark ? Colors.white : null,
+                    ),
+                    onPressed: () => Navigator.pop(ctx),
+                  ),
+                ],
+              ),
+              const SizedBox(height: 8),
+              Text(
+                'Choose the notifications you want to receive',
+                style: TextStyle(
+                  color: isDark ? Colors.grey.shade400 : Colors.grey.shade600,
+                  fontSize: 14,
+                ),
+              ),
+              const SizedBox(height: 24),
+              Expanded(
+                child: ListView(
+                  children: [
+                    _buildSwitchRow(
+                      'Pickup Updates',
+                      'Real-time tracking and pickup scheduling alerts',
+                      pushEnabled,
+                      (v) => setModalState(() => pushEnabled = v),
+                      isDark,
+                    ),
+                    _buildSwitchRow(
+                      'Daily Price Fluctuations',
+                      'Get notified when scrap metal or paper prices rise',
+                      priceAlerts,
+                      (v) => setModalState(() => priceAlerts = v),
+                      isDark,
+                    ),
+                    _buildSwitchRow(
+                      'Special Offers & Promos',
+                      'Be the first to hear about bonus points sundays',
+                      promoAlerts,
+                      (v) => setModalState(() => promoAlerts = v),
+                      isDark,
+                    ),
+                    _buildSwitchRow(
+                      'Eco Milestones & Tips',
+                      'Weekly reports on your saved trees and carbon credits',
+                      rewardAlerts,
+                      (v) => setModalState(() => rewardAlerts = v),
+                      isDark,
+                    ),
+                  ],
+                ),
+              ),
+              const SizedBox(height: 16),
+              SizedBox(
+                width: double.infinity,
+                child: ElevatedButton(
+                  onPressed: () {
+                    Navigator.pop(ctx);
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      SnackBar(
+                        content: const Text(
+                          'Preferences updated successfully!',
+                        ),
+                        // backgroundColor: AppTheme.forestGreen,
+                      ),
+                    );
+                  },
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: isDark
+                        ? AppTheme.mintGreen
+                        : AppTheme.forestGreen,
+                    foregroundColor: isDark
+                        ? const Color(0xFF0F172A)
+                        : Colors.white,
+                    padding: const EdgeInsets.symmetric(vertical: 18),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(20),
+                    ),
+                  ),
+                  child: const Text(
+                    'Save Preferences',
+                    style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16),
+                  ),
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildSwitchRow(
+    String title,
+    String desc,
+    bool val,
+    ValueChanged<bool> onChanged,
+    bool isDark,
+  ) {
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 20),
+      child: Row(
+        children: [
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  title,
+                  style: TextStyle(
+                    fontWeight: FontWeight.bold,
+                    fontSize: 16,
+                    color: isDark ? Colors.white : AppTheme.forestGreen,
+                  ),
+                ),
+                const SizedBox(height: 4),
+                Text(
+                  desc,
+                  style: TextStyle(
+                    fontSize: 12,
+                    color: isDark ? Colors.grey.shade400 : Colors.grey.shade500,
+                  ),
+                ),
+              ],
+            ),
+          ),
+          Switch.adaptive(
+            value: val,
+            onChanged: onChanged,
+            activeColor: AppTheme.mintGreen,
+          ),
+        ],
       ),
     );
   }
@@ -393,7 +799,10 @@ class _ProfileTabState extends State<ProfileTab> {
         padding: const EdgeInsets.all(32),
         decoration: BoxDecoration(
           color: isDark ? const Color(0xFF1E293B) : Colors.white,
-          borderRadius: const BorderRadius.only(topLeft: Radius.circular(32), topRight: Radius.circular(32)),
+          borderRadius: const BorderRadius.only(
+            topLeft: Radius.circular(32),
+            topRight: Radius.circular(32),
+          ),
         ),
         child: Column(
           children: [
@@ -408,19 +817,45 @@ class _ProfileTabState extends State<ProfileTab> {
                     color: isDark ? Colors.white : AppTheme.forestGreen,
                   ),
                 ),
-                IconButton(icon: Icon(LucideIcons.x, color: isDark ? Colors.white : null), onPressed: () => Navigator.pop(ctx)),
+                IconButton(
+                  icon: Icon(
+                    LucideIcons.x,
+                    color: isDark ? Colors.white : null,
+                  ),
+                  onPressed: () => Navigator.pop(ctx),
+                ),
               ],
             ),
             const SizedBox(height: 24),
-            _buildPickupSummaryRow(LucideIcons.package, 'Total Pickups', '12', isDark),
+            _buildPickupSummaryRow(
+              LucideIcons.package,
+              'Total Pickups',
+              '12',
+              isDark,
+            ),
             const SizedBox(height: 12),
-            _buildPickupSummaryRow(LucideIcons.checkCircle, 'Completed', '10', isDark),
+            _buildPickupSummaryRow(
+              LucideIcons.checkCircle,
+              'Completed',
+              '10',
+              isDark,
+            ),
             const SizedBox(height: 12),
             _buildPickupSummaryRow(LucideIcons.clock, 'Upcoming', '1', isDark),
             const SizedBox(height: 12),
-            _buildPickupSummaryRow(LucideIcons.xCircle, 'Cancelled', '1', isDark),
+            _buildPickupSummaryRow(
+              LucideIcons.xCircle,
+              'Cancelled',
+              '1',
+              isDark,
+            ),
             const SizedBox(height: 12),
-            _buildPickupSummaryRow(LucideIcons.indianRupee, 'Total Earned', '₹2,450', isDark),
+            _buildPickupSummaryRow(
+              LucideIcons.indianRupee,
+              'Total Earned',
+              '₹2,450',
+              isDark,
+            ),
             const Spacer(),
             SizedBox(
               width: double.infinity,
@@ -430,12 +865,21 @@ class _ProfileTabState extends State<ProfileTab> {
                   widget.onViewHistory?.call();
                 },
                 style: ElevatedButton.styleFrom(
-                  backgroundColor: isDark ? AppTheme.mintGreen : AppTheme.forestGreen,
-                  foregroundColor: isDark ? const Color(0xFF0F172A) : Colors.white,
+                  backgroundColor: isDark
+                      ? AppTheme.mintGreen
+                      : AppTheme.forestGreen,
+                  foregroundColor: isDark
+                      ? const Color(0xFF0F172A)
+                      : Colors.white,
                   padding: const EdgeInsets.symmetric(vertical: 18),
-                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(20),
+                  ),
                 ),
-                child: const Text('View All in Bookings Tab', style: TextStyle(fontWeight: FontWeight.bold)),
+                child: const Text(
+                  'View All in Bookings Tab',
+                  style: TextStyle(fontWeight: FontWeight.bold),
+                ),
               ),
             ),
           ],
@@ -444,7 +888,12 @@ class _ProfileTabState extends State<ProfileTab> {
     );
   }
 
-  Widget _buildPickupSummaryRow(IconData icon, String label, String value, bool isDark) {
+  Widget _buildPickupSummaryRow(
+    IconData icon,
+    String label,
+    String value,
+    bool isDark,
+  ) {
     return Container(
       padding: const EdgeInsets.all(16),
       decoration: AppTheme.getClayDecoration(
@@ -453,17 +902,28 @@ class _ProfileTabState extends State<ProfileTab> {
       ),
       child: Row(
         children: [
-          Icon(icon, color: isDark ? AppTheme.mintGreen : AppTheme.forestGreen, size: 20),
+          Icon(
+            icon,
+            color: isDark ? AppTheme.mintGreen : AppTheme.forestGreen,
+            size: 20,
+          ),
           const SizedBox(width: 16),
           Expanded(
             child: Text(
               label,
-              style: TextStyle(fontWeight: FontWeight.w600, color: isDark ? Colors.white : AppTheme.forestGreen),
+              style: TextStyle(
+                fontWeight: FontWeight.w600,
+                color: isDark ? Colors.white : AppTheme.forestGreen,
+              ),
             ),
           ),
           Text(
             value,
-            style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16, color: isDark ? AppTheme.mintGreen : AppTheme.lightGreen),
+            style: TextStyle(
+              fontWeight: FontWeight.bold,
+              fontSize: 16,
+              color: isDark ? AppTheme.mintGreen : AppTheme.lightGreen,
+            ),
           ),
         ],
       ),
@@ -480,10 +940,18 @@ class _ProfileTabState extends State<ProfileTab> {
       isScrollControlled: true,
       builder: (ctx) => StatefulBuilder(
         builder: (ctx, setModalState) => Container(
-          padding: EdgeInsets.only(bottom: MediaQuery.of(ctx).viewInsets.bottom, left: 32, right: 32, top: 32),
+          padding: EdgeInsets.only(
+            bottom: MediaQuery.of(ctx).viewInsets.bottom,
+            left: 32,
+            right: 32,
+            top: 32,
+          ),
           decoration: BoxDecoration(
             color: isDark ? const Color(0xFF1E293B) : Colors.white,
-            borderRadius: const BorderRadius.only(topLeft: Radius.circular(32), topRight: Radius.circular(32)),
+            borderRadius: const BorderRadius.only(
+              topLeft: Radius.circular(32),
+              topRight: Radius.circular(32),
+            ),
           ),
           child: SingleChildScrollView(
             child: Column(
@@ -500,13 +968,30 @@ class _ProfileTabState extends State<ProfileTab> {
                         color: isDark ? Colors.white : AppTheme.forestGreen,
                       ),
                     ),
-                    IconButton(icon: Icon(LucideIcons.x, color: isDark ? Colors.white : null), onPressed: () => Navigator.pop(ctx)),
+                    IconButton(
+                      icon: Icon(
+                        LucideIcons.x,
+                        color: isDark ? Colors.white : null,
+                      ),
+                      onPressed: () => Navigator.pop(ctx),
+                    ),
                   ],
                 ),
                 const SizedBox(height: 8),
-                Text('Help us improve your experience', style: TextStyle(color: isDark ? Colors.grey.shade400 : Colors.grey.shade600)),
+                Text(
+                  'Help us improve your experience',
+                  style: TextStyle(
+                    color: isDark ? Colors.grey.shade400 : Colors.grey.shade600,
+                  ),
+                ),
                 const SizedBox(height: 24),
-                Text('Rate your experience', style: TextStyle(fontWeight: FontWeight.bold, color: isDark ? Colors.white : AppTheme.forestGreen)),
+                Text(
+                  'Rate your experience',
+                  style: TextStyle(
+                    fontWeight: FontWeight.bold,
+                    color: isDark ? Colors.white : AppTheme.forestGreen,
+                  ),
+                ),
                 const SizedBox(height: 12),
                 Row(
                   mainAxisAlignment: MainAxisAlignment.center,
@@ -519,7 +1004,11 @@ class _ProfileTabState extends State<ProfileTab> {
                         child: Icon(
                           LucideIcons.star,
                           size: 36,
-                          color: i < selectedRating ? Colors.amber : (isDark ? Colors.grey.shade800 : Colors.grey.shade300),
+                          color: i < selectedRating
+                              ? Colors.amber
+                              : (isDark
+                                    ? Colors.grey.shade800
+                                    : Colors.grey.shade300),
                         ),
                       ),
                     ),
@@ -534,12 +1023,18 @@ class _ProfileTabState extends State<ProfileTab> {
                   child: TextField(
                     controller: feedbackController,
                     maxLines: 4,
-                    style: TextStyle(color: isDark ? Colors.white : Colors.black),
+                    style: TextStyle(
+                      color: isDark ? Colors.white : Colors.black,
+                    ),
                     decoration: InputDecoration(
                       hintText: 'Tell us what you think...',
                       border: InputBorder.none,
                       contentPadding: const EdgeInsets.all(20),
-                      hintStyle: TextStyle(color: isDark ? Colors.grey.shade600 : Colors.grey.shade400),
+                      hintStyle: TextStyle(
+                        color: isDark
+                            ? Colors.grey.shade600
+                            : Colors.grey.shade400,
+                      ),
                     ),
                   ),
                 ),
@@ -548,17 +1043,27 @@ class _ProfileTabState extends State<ProfileTab> {
                   width: double.infinity,
                   child: ElevatedButton.icon(
                     onPressed: () {
-                      final msg = 'ReLoop Feedback\nRating: $selectedRating/5\n\n${feedbackController.text}';
+                      final msg =
+                          'ReLoop Feedback\nRating: $selectedRating/5\n\n${feedbackController.text}';
                       Navigator.pop(ctx);
                       _launchWhatsApp(msg, '+917736950910');
                     },
                     icon: const Icon(LucideIcons.send, size: 18),
-                    label: const Text('Submit Feedback', style: TextStyle(fontWeight: FontWeight.bold)),
+                    label: const Text(
+                      'Submit Feedback',
+                      style: TextStyle(fontWeight: FontWeight.bold),
+                    ),
                     style: ElevatedButton.styleFrom(
-                      backgroundColor: isDark ? AppTheme.mintGreen : AppTheme.forestGreen,
-                      foregroundColor: isDark ? const Color(0xFF0F172A) : Colors.white,
+                      backgroundColor: isDark
+                          ? AppTheme.mintGreen
+                          : AppTheme.forestGreen,
+                      foregroundColor: isDark
+                          ? const Color(0xFF0F172A)
+                          : Colors.white,
                       padding: const EdgeInsets.symmetric(vertical: 18),
-                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(20),
+                      ),
                     ),
                   ),
                 ),
@@ -582,7 +1087,10 @@ class _ProfileTabState extends State<ProfileTab> {
         padding: const EdgeInsets.all(32),
         decoration: BoxDecoration(
           color: isDark ? const Color(0xFF1E293B) : Colors.white,
-          borderRadius: const BorderRadius.only(topLeft: Radius.circular(32), topRight: Radius.circular(32)),
+          borderRadius: const BorderRadius.only(
+            topLeft: Radius.circular(32),
+            topRight: Radius.circular(32),
+          ),
         ),
         child: Column(
           children: [
@@ -597,7 +1105,13 @@ class _ProfileTabState extends State<ProfileTab> {
                     color: isDark ? Colors.white : AppTheme.forestGreen,
                   ),
                 ),
-                IconButton(icon: Icon(LucideIcons.x, color: isDark ? Colors.white : null), onPressed: () => Navigator.pop(ctx)),
+                IconButton(
+                  icon: Icon(
+                    LucideIcons.x,
+                    color: isDark ? Colors.white : null,
+                  ),
+                  onPressed: () => Navigator.pop(ctx),
+                ),
               ],
             ),
             const SizedBox(height: 24),
@@ -634,9 +1148,20 @@ class _ProfileTabState extends State<ProfileTab> {
         children: [
           Text(
             item,
-            style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16, color: isDark ? Colors.white : AppTheme.forestGreen),
+            style: TextStyle(
+              fontWeight: FontWeight.bold,
+              fontSize: 16,
+              color: isDark ? Colors.white : AppTheme.forestGreen,
+            ),
           ),
-          Text(price, style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 16, color: AppTheme.mintGreen)),
+          Text(
+            price,
+            style: const TextStyle(
+              fontWeight: FontWeight.bold,
+              fontSize: 16,
+              color: AppTheme.mintGreen,
+            ),
+          ),
         ],
       ),
     );
@@ -653,7 +1178,10 @@ class _ProfileTabState extends State<ProfileTab> {
         padding: const EdgeInsets.all(32),
         decoration: BoxDecoration(
           color: isDark ? const Color(0xFF1E293B) : Colors.white,
-          borderRadius: const BorderRadius.only(topLeft: Radius.circular(32), topRight: Radius.circular(32)),
+          borderRadius: const BorderRadius.only(
+            topLeft: Radius.circular(32),
+            topRight: Radius.circular(32),
+          ),
         ),
         child: Column(
           children: [
@@ -668,7 +1196,13 @@ class _ProfileTabState extends State<ProfileTab> {
                     color: isDark ? Colors.white : AppTheme.forestGreen,
                   ),
                 ),
-                IconButton(icon: Icon(LucideIcons.x, color: isDark ? Colors.white : null), onPressed: () => Navigator.pop(ctx)),
+                IconButton(
+                  icon: Icon(
+                    LucideIcons.x,
+                    color: isDark ? Colors.white : null,
+                  ),
+                  onPressed: () => Navigator.pop(ctx),
+                ),
               ],
             ),
             const SizedBox(height: 24),
@@ -722,10 +1256,20 @@ class _ProfileTabState extends State<ProfileTab> {
         children: [
           Text(
             question,
-            style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16, color: isDark ? Colors.white : AppTheme.forestGreen),
+            style: TextStyle(
+              fontWeight: FontWeight.bold,
+              fontSize: 16,
+              color: isDark ? Colors.white : AppTheme.forestGreen,
+            ),
           ),
           const SizedBox(height: 8),
-          Text(answer, style: TextStyle(color: isDark ? Colors.grey.shade400 : Colors.grey.shade700, height: 1.5)),
+          Text(
+            answer,
+            style: TextStyle(
+              color: isDark ? Colors.grey.shade400 : Colors.grey.shade700,
+              height: 1.5,
+            ),
+          ),
         ],
       ),
     );
@@ -738,10 +1282,18 @@ class _ProfileTabState extends State<ProfileTab> {
       backgroundColor: Colors.transparent,
       isScrollControlled: true,
       builder: (ctx) => Container(
-        padding: EdgeInsets.only(bottom: MediaQuery.of(ctx).viewInsets.bottom, left: 32, right: 32, top: 32),
+        padding: EdgeInsets.only(
+          bottom: MediaQuery.of(ctx).viewInsets.bottom,
+          left: 32,
+          right: 32,
+          top: 32,
+        ),
         decoration: BoxDecoration(
           color: isDark ? const Color(0xFF1E293B) : Colors.white,
-          borderRadius: const BorderRadius.only(topLeft: Radius.circular(32), topRight: Radius.circular(32)),
+          borderRadius: const BorderRadius.only(
+            topLeft: Radius.circular(32),
+            topRight: Radius.circular(32),
+          ),
         ),
         child: SingleChildScrollView(
           child: Column(
@@ -758,7 +1310,13 @@ class _ProfileTabState extends State<ProfileTab> {
                       color: isDark ? Colors.white : AppTheme.forestGreen,
                     ),
                   ),
-                  IconButton(icon: Icon(LucideIcons.x, color: isDark ? Colors.white : null), onPressed: () => Navigator.pop(ctx)),
+                  IconButton(
+                    icon: Icon(
+                      LucideIcons.x,
+                      color: isDark ? Colors.white : null,
+                    ),
+                    onPressed: () => Navigator.pop(ctx),
+                  ),
                 ],
               ),
               const SizedBox(height: 24),
@@ -767,14 +1325,22 @@ class _ProfileTabState extends State<ProfileTab> {
                 style: TextStyle(color: isDark ? Colors.white : Colors.black),
                 decoration: InputDecoration(
                   labelText: 'Full Name',
-                  labelStyle: TextStyle(color: isDark ? Colors.grey.shade500 : null),
+                  labelStyle: TextStyle(
+                    color: isDark ? Colors.grey.shade500 : null,
+                  ),
                   enabledBorder: OutlineInputBorder(
                     borderRadius: BorderRadius.circular(16),
-                    borderSide: BorderSide(color: isDark ? Colors.grey.shade800 : Colors.grey.shade300),
+                    borderSide: BorderSide(
+                      color: isDark
+                          ? Colors.grey.shade800
+                          : Colors.grey.shade300,
+                    ),
                   ),
                   focusedBorder: OutlineInputBorder(
                     borderRadius: BorderRadius.circular(16),
-                    borderSide: BorderSide(color: isDark ? AppTheme.mintGreen : AppTheme.forestGreen),
+                    borderSide: BorderSide(
+                      color: isDark ? AppTheme.mintGreen : AppTheme.forestGreen,
+                    ),
                   ),
                 ),
               ),
@@ -785,14 +1351,22 @@ class _ProfileTabState extends State<ProfileTab> {
                 style: TextStyle(color: isDark ? Colors.white : Colors.black),
                 decoration: InputDecoration(
                   labelText: 'Phone Number',
-                  labelStyle: TextStyle(color: isDark ? Colors.grey.shade500 : null),
+                  labelStyle: TextStyle(
+                    color: isDark ? Colors.grey.shade500 : null,
+                  ),
                   enabledBorder: OutlineInputBorder(
                     borderRadius: BorderRadius.circular(16),
-                    borderSide: BorderSide(color: isDark ? Colors.grey.shade800 : Colors.grey.shade300),
+                    borderSide: BorderSide(
+                      color: isDark
+                          ? Colors.grey.shade800
+                          : Colors.grey.shade300,
+                    ),
                   ),
                   focusedBorder: OutlineInputBorder(
                     borderRadius: BorderRadius.circular(16),
-                    borderSide: BorderSide(color: isDark ? AppTheme.mintGreen : AppTheme.forestGreen),
+                    borderSide: BorderSide(
+                      color: isDark ? AppTheme.mintGreen : AppTheme.forestGreen,
+                    ),
                   ),
                 ),
               ),
@@ -802,12 +1376,21 @@ class _ProfileTabState extends State<ProfileTab> {
                 child: ElevatedButton(
                   onPressed: () => Navigator.pop(ctx),
                   style: ElevatedButton.styleFrom(
-                    backgroundColor: isDark ? AppTheme.mintGreen : AppTheme.forestGreen,
-                    foregroundColor: isDark ? const Color(0xFF0F172A) : Colors.white,
+                    backgroundColor: isDark
+                        ? AppTheme.mintGreen
+                        : AppTheme.forestGreen,
+                    foregroundColor: isDark
+                        ? const Color(0xFF0F172A)
+                        : Colors.white,
                     padding: const EdgeInsets.symmetric(vertical: 16),
-                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(16),
+                    ),
                   ),
-                  child: const Text('Save Changes', style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
+                  child: const Text(
+                    'Save Changes',
+                    style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+                  ),
                 ),
               ),
               const SizedBox(height: 32),
