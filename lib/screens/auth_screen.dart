@@ -3,6 +3,7 @@ import 'package:flutter_animate/flutter_animate.dart';
 import 'package:lucide_icons/lucide_icons.dart';
 import '../theme.dart';
 import 'location_permission_screen.dart';
+import 'phone_entry_screen.dart';
 import 'otp_verification_screen.dart';
 
 class AuthScreen extends StatefulWidget {
@@ -42,12 +43,11 @@ class _AuthScreenState extends State<AuthScreen> {
 
   void _navigateToOtp() {
     final phone = _phoneController.text.trim();
-    final displayPhone = phone.isEmpty ? '+91 77369 50910' : phone;
 
     Navigator.push(
       context,
       PageRouteBuilder(
-        pageBuilder: (context, a1, a2) => OtpVerificationScreen(phoneNumber: displayPhone),
+        pageBuilder: (context, a1, a2) => PhoneEntryScreen(initialPhoneNumber: phone),
         transitionsBuilder: (context, a1, a2, child) =>
             FadeTransition(opacity: a1, child: child),
         transitionDuration: const Duration(milliseconds: 600),

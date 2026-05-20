@@ -1,5 +1,6 @@
 import 'dart:convert';
 import 'package:http/http.dart' as http;
+import 'package:geolocator/geolocator.dart';
 
 class UserLocation {
   final double latitude;
@@ -41,6 +42,66 @@ class UserLocation {
 class LocationService {
   static Future<UserLocation> getCurrentLocation() async {
     try {
+      // 1. Try to request Geolocator permissions & get position
+      bool serviceEnabled = await Geolocator.isLocationServiceEnabled();
+      if (serviceEnabled) {
+        LocationPermission permission = await Geolocator.checkPermission();
+        if (permission == LocationPermission.denied) {
+          permission = await Geolocator.requestPermission();
+        }
+
+        if (permission == LocationPermission.whileInUse ||
+            permission == LocationPermission.always) {
+          // Get the exact current position
+          final position = await Geolocator.getCurrentPosition(
+            desiredAccuracy: LocationAccuracy.high,
+            timeLimit: const Duration(seconds: 5),
+          );
+
+          // 2. Reverse geocode using OpenStreetMap Nominatim API (Free & No Key required)
+          // Nominatim requires a User-Agent header to comply with usage policy
+          final nominatimUrl = Uri.parse(
+            'https://nominatim.openstreetmap.org/reverse?format=json&lat=${position.latitude}&lon=${position.longitude}&zoom=18&addressdetails=1',
+          );
+          final response = await http.get(
+            nominatimUrl,
+            headers: {'User-Agent': 'ReLoopApp/1.0 (contact: support@reloop.com)'},
+          ).timeout(const Duration(seconds: 4));
+
+          if (response.statusCode == 200) {
+            final data = json.decode(response.body);
+            final address = data['address'] as Map<String, dynamic>?;
+            if (address != null) {
+              final city = address['city'] ??
+                  address['town'] ??
+                  address['village'] ??
+                  address['suburb'] ??
+                  address['county'] ??
+                  'Cochin';
+              final region = address['state'] ?? 'Kerala';
+              final country = address['country'] ?? 'India';
+              final zip = address['postcode'] ?? '682030';
+
+              return UserLocation(
+                latitude: position.latitude,
+                longitude: position.longitude,
+                city: city.toString(),
+                region: region.toString(),
+                country: country.toString(),
+                zip: zip.toString(),
+                query: 'GPS',
+              );
+            }
+          }
+        }
+      }
+    } catch (e) {
+      // Geolocator/Nominatim failed or permission denied, fall back to IP Geolocation
+      print('Exact location error, falling back to IP: $e');
+    }
+
+    // 3. Fallback to free IP location
+    try {
       final url = Uri.parse('http://ip-api.com/json');
       final response = await http.get(url).timeout(const Duration(seconds: 4));
       if (response.statusCode == 200) {
@@ -57,10 +118,9 @@ class LocationService {
           );
         }
       }
-    } catch (_) {
-      // Gracefully handle timeout, no internet, or platform constraints
-    }
+    } catch (_) {}
+
+    // 4. Ultimate fallback to Default Kerala Location
     return UserLocation.keralaDefault();
   }
 }
-
