@@ -3,9 +3,9 @@ import 'package:flutter_map/flutter_map.dart';
 import 'package:latlong2/latlong.dart';
 import 'package:lucide_icons/lucide_icons.dart';
 import 'package:provider/provider.dart';
-import '../models/booking.dart';
-import '../providers/app_state.dart';
-import '../theme.dart';
+import '../../models/booking.dart';
+import '../../providers/app_state.dart';
+import '../../theme.dart';
 
 class LiveTrackingScreen extends StatelessWidget {
   final String bookingId;

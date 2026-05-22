@@ -67,7 +67,9 @@ class _ProfileTabState extends State<ProfileTab> {
                     child: Container(
                       padding: const EdgeInsets.all(4),
                       decoration: BoxDecoration(
-                        color: appState.isSubscribed ? const Color(0xFFF59E0B) : AppTheme.mintGreen,
+                        color: appState.isSubscribed
+                            ? const Color(0xFFF59E0B)
+                            : AppTheme.mintGreen,
                         shape: BoxShape.circle,
                         border: Border.all(
                           color: isDark
@@ -77,7 +79,9 @@ class _ProfileTabState extends State<ProfileTab> {
                         ),
                       ),
                       child: Icon(
-                        appState.isSubscribed ? LucideIcons.gem : LucideIcons.shieldCheck,
+                        appState.isSubscribed
+                            ? LucideIcons.gem
+                            : LucideIcons.shieldCheck,
                         color: isDark ? const Color(0xFF0F172A) : Colors.white,
                         size: 20,
                       ),
@@ -96,15 +100,15 @@ class _ProfileTabState extends State<ProfileTab> {
                 ),
               ),
             ),
-            Center(
-              child: Text(
-                appState.isSubscribed ? 'Premium: ${appState.currentSubscriptionPlan}' : 'Eco Enthusiast Since 2026',
-                style: TextStyle(
-                  color: appState.isSubscribed ? const Color(0xFFF59E0B) : AppTheme.mintGreen,
-                  fontWeight: FontWeight.w600,
-                ),
-              ),
-            ),
+            // Center(
+            //   child: Text(
+            //     appState.isSubscribed ? 'Premium: ${appState.currentSubscriptionPlan}' : 'Eco Enthusiast Since 2026',
+            //     style: TextStyle(
+            //       color: appState.isSubscribed ? const Color(0xFFF59E0B) : AppTheme.mintGreen,
+            //       fontWeight: FontWeight.w600,
+            //     ),
+            //   ),
+            // ),
             const SizedBox(height: 32),
 
             _buildSectionHeader('Account', isDark),
@@ -127,18 +131,18 @@ class _ProfileTabState extends State<ProfileTab> {
                       ),
                     ),
                   ),
-                  _buildMenuRow(
-                    context,
-                    LucideIcons.gem,
-                    'Subscription & Plans',
-                    isDark,
-                    onTap: () => Navigator.push(
-                      context,
-                      MaterialPageRoute(
-                        builder: (_) => const SubscriptionScreen(),
-                      ),
-                    ),
-                  ),
+                  // _buildMenuRow(
+                  //   context,
+                  //   LucideIcons.gem,
+                  //   'Subscription & Plans',
+                  //   isDark,
+                  //   onTap: () => Navigator.push(
+                  //     context,
+                  //     MaterialPageRoute(
+                  //       builder: (_) => const SubscriptionScreen(),
+                  //     ),
+                  //   ),
+                  // ),
                   _buildMenuRow(
                     context,
                     LucideIcons.bell,

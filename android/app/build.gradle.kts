@@ -7,7 +7,7 @@ plugins {
 
 android {
     namespace = "com.reloop.reloop"
-    compileSdk = flutter.compileSdkVersion
+    compileSdk = 36
     ndkVersion = flutter.ndkVersion
 
     compileOptions {

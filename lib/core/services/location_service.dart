@@ -23,6 +23,9 @@ class UserLocation {
   });
 
   String get formattedAddress {
+    if (query.isNotEmpty && query != 'GPS' && query != '127.0.0.1' && query.contains(',')) {
+      return query;
+    }
     if (city.isEmpty) return 'Eco Green Valley, Eco Park, Cochin';
     return '$zip, $city, $region, $country';
   }
@@ -143,5 +146,127 @@ class LocationService {
 
     // 4. Ultimate fallback to Default Kerala Location
     return UserLocation.keralaDefault();
+  }
+
+  static Future<UserLocation> getAddressFromLatLng(double latitude, double longitude) async {
+    try {
+      final nominatimUrl = Uri.parse(
+        'https://nominatim.openstreetmap.org/reverse?format=json&lat=$latitude&lon=$longitude&zoom=18&addressdetails=1',
+      );
+      final response = await http.get(
+        nominatimUrl,
+        headers: {'User-Agent': 'ReLoopApp/1.0 (contact: support@reloop.com)'},
+      ).timeout(const Duration(seconds: 4));
+
+      if (response.statusCode == 200) {
+        final data = json.decode(response.body);
+        final address = data['address'] as Map<String, dynamic>?;
+        if (address != null) {
+          final city = address['city'] ??
+              address['town'] ??
+              address['village'] ??
+              address['suburb'] ??
+              address['county'] ??
+              '';
+          final region = address['state'] ?? '';
+          final country = address['country'] ?? '';
+          final zip = address['postcode'] ?? '';
+          final displayName = data['display_name'] ?? '';
+
+          return UserLocation(
+            latitude: latitude,
+            longitude: longitude,
+            city: city.toString(),
+            region: region.toString(),
+            country: country.toString(),
+            zip: zip.toString(),
+            query: displayName.toString(),
+          );
+        }
+      }
+    } catch (_) {}
+
+    return UserLocation(
+      latitude: latitude,
+      longitude: longitude,
+      city: '',
+      region: '',
+      country: '',
+      zip: '',
+      query: '$latitude, $longitude',
+    );
+  }
+
+  static Future<Map<String, String>> getDetailedAddressFromLatLng(double latitude, double longitude) async {
+    try {
+      final nominatimUrl = Uri.parse(
+        'https://nominatim.openstreetmap.org/reverse?format=json&lat=$latitude&lon=$longitude&zoom=18&addressdetails=1',
+      );
+      final response = await http.get(
+        nominatimUrl,
+        headers: {'User-Agent': 'ReLoopApp/1.0 (contact: support@reloop.com)'},
+      ).timeout(const Duration(seconds: 4));
+
+      if (response.statusCode == 200) {
+        final data = json.decode(response.body);
+        final address = data['address'] as Map<String, dynamic>?;
+        if (address != null) {
+          final houseNumber = address['house_number']?.toString() ?? '';
+          final road = address['road']?.toString() ?? '';
+          final building = address['building']?.toString() ?? '';
+          final amenity = address['amenity']?.toString() ?? '';
+          final suburb = address['suburb']?.toString() ?? '';
+          final neighbourhood = address['neighbourhood']?.toString() ?? '';
+          final city = (address['city'] ?? address['town'] ?? address['village'] ?? address['suburb'] ?? address['county'] ?? '').toString();
+          final region = address['state']?.toString() ?? '';
+          final country = address['country']?.toString() ?? '';
+          final zip = address['postcode']?.toString() ?? '';
+
+          String houseName = '';
+          if (building.isNotEmpty) {
+            houseName = building;
+          } else if (amenity.isNotEmpty) {
+            houseName = amenity;
+          }
+          
+          if (houseNumber.isNotEmpty) {
+            houseName = houseName.isNotEmpty ? '$houseName, $houseNumber' : houseNumber;
+          }
+          if (road.isNotEmpty) {
+            houseName = houseName.isNotEmpty ? '$houseName, $road' : road;
+          }
+
+          String area = '';
+          if (suburb.isNotEmpty) {
+            area = suburb;
+          } else if (neighbourhood.isNotEmpty) {
+            area = neighbourhood;
+          } else {
+            area = city;
+          }
+
+          String landmark = '';
+          if (neighbourhood.isNotEmpty && neighbourhood != area) {
+            landmark = neighbourhood;
+          } else if (amenity.isNotEmpty && amenity != houseName) {
+            landmark = amenity;
+          }
+
+          return {
+            'houseName': houseName,
+            'area': area,
+            'city': city,
+            'region': region,
+            'country': country,
+            'pincode': zip,
+            'landmark': landmark,
+            'latitude': latitude.toString(),
+            'longitude': longitude.toString(),
+            'displayName': data['display_name']?.toString() ?? '',
+          };
+        }
+      }
+    } catch (_) {}
+    return {};
   }
 }

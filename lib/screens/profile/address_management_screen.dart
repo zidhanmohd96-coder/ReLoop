@@ -515,6 +515,14 @@ class _AddressManagementScreenState extends State<AddressManagementScreen> {
     final phoneCtrl = TextEditingController(text: editing?.mobileNumber ?? '');
     String selectedLabel = editing?.label ?? 'Home';
 
+    String? modalError;
+    bool isLoadingLocation = false;
+    double? currentLat = editing?.latitude;
+    double? currentLng = editing?.longitude;
+    String? currentDisplayAddress = (editing != null && editing.latitude != 0 && editing.latitude != null)
+        ? '${editing.area}, ${editing.city}'
+        : null;
+
     showModalBottomSheet(
       context: context,
       backgroundColor: Colors.transparent,
@@ -569,89 +577,241 @@ class _AddressManagementScreenState extends State<AddressManagementScreen> {
                   ),
                 ],
               ),
-              const SizedBox(height: 16),
+              const SizedBox(height: 12),
+
+              // Modal level error banner
+              if (modalError != null) ...[
+                Container(
+                  margin: const EdgeInsets.only(bottom: 16),
+                  padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                  decoration: BoxDecoration(
+                    color: isDark
+                        ? Colors.red.shade900.withValues(alpha: 0.2)
+                        : Colors.red.shade50,
+                    borderRadius: BorderRadius.circular(16),
+                    border: Border.all(
+                      color: isDark
+                          ? Colors.red.shade800.withValues(alpha: 0.5)
+                          : Colors.red.shade200,
+                      width: 1.5,
+                    ),
+                  ),
+                  child: Row(
+                    children: [
+                      Icon(
+                        LucideIcons.alertTriangle,
+                        color: isDark ? Colors.red.shade400 : Colors.red.shade600,
+                        size: 20,
+                      ),
+                      const SizedBox(width: 12),
+                      Expanded(
+                        child: Text(
+                          modalError!,
+                          style: TextStyle(
+                            color: isDark ? Colors.red.shade200 : Colors.red.shade800,
+                            fontWeight: FontWeight.bold,
+                            fontSize: 13,
+                          ),
+                        ),
+                      ),
+                      IconButton(
+                        icon: Icon(
+                          LucideIcons.x,
+                          color: isDark ? Colors.red.shade400 : Colors.red.shade600,
+                          size: 16,
+                        ),
+                        padding: EdgeInsets.zero,
+                        constraints: const BoxConstraints(),
+                        onPressed: () => setModalState(() => modalError = null),
+                      ),
+                    ],
+                  ),
+                ).animate().shake(duration: 400.ms),
+              ],
+
               Expanded(
                 child: ListView(
                   children: [
-                    // Use current location
+                    // Use current location button
                     GestureDetector(
-                      onTap: () async {
-                        ScaffoldMessenger.of(context).showSnackBar(
-                          const SnackBar(
-                            content: Row(
-                              children: [
-                                SizedBox(
-                                  width: 20,
-                                  height: 20,
-                                  child: CircularProgressIndicator(
-                                    strokeWidth: 2,
-                                    color: Colors.white,
-                                  ),
-                                ),
-                                SizedBox(width: 16),
-                                Text('Fetching current location...'),
-                              ],
-                            ),
-                            duration: Duration(seconds: 1),
-                          ),
-                        );
+                      onTap: isLoadingLocation
+                          ? null
+                          : () async {
+                              setModalState(() {
+                                isLoadingLocation = true;
+                                modalError = null;
+                              });
 
-                        final loc = await LocationService.getCurrentLocation();
+                              try {
+                                final loc = await LocationService.getCurrentLocation();
+                                final details = await LocationService.getDetailedAddressFromLatLng(
+                                  loc.latitude,
+                                  loc.longitude,
+                                );
 
-                        setModalState(() {
-                          houseCtrl.text = 'Flat 4B, Eco Vista Residency';
-                          areaCtrl.text = 'Cochin Eco Park';
-                          cityCtrl.text = loc.city;
-                          pincodeCtrl.text = loc.zip;
-                          landmarkCtrl.text =
-                              '${loc.region} (${loc.latitude.toStringAsFixed(3)}, ${loc.longitude.toStringAsFixed(3)})';
-                        });
+                                setModalState(() {
+                                  currentLat = loc.latitude;
+                                  currentLng = loc.longitude;
 
-                        if (context.mounted) {
-                          ScaffoldMessenger.of(context).showSnackBar(
-                            const SnackBar(
-                              content: Text(
-                                'Successfully loaded live location!',
-                              ),
-                              backgroundColor: Color(0xFF0D9488),
-                            ),
-                          );
-                        }
-                      },
-                      child: Container(
-                        padding: const EdgeInsets.all(14),
+                                  if (details.isNotEmpty) {
+                                    houseCtrl.text = details['houseName'] ?? '';
+                                    areaCtrl.text = details['area'] ?? '';
+                                    cityCtrl.text = details['city'] ?? loc.city;
+                                    pincodeCtrl.text = details['pincode'] ?? loc.zip;
+                                    landmarkCtrl.text = details['landmark'] ?? '';
+                                    currentDisplayAddress = details['displayName'] ?? loc.formattedAddress;
+                                  } else {
+                                    cityCtrl.text = loc.city;
+                                    pincodeCtrl.text = loc.zip;
+                                    landmarkCtrl.text = loc.region;
+                                    currentDisplayAddress = loc.formattedAddress;
+                                  }
+
+                                  isLoadingLocation = false;
+                                });
+                              } catch (e) {
+                                setModalState(() {
+                                  modalError = 'Could not fetch location: $e';
+                                  isLoadingLocation = false;
+                                });
+                              }
+                            },
+                      child: AnimatedContainer(
+                        duration: const Duration(milliseconds: 200),
+                        padding: const EdgeInsets.symmetric(vertical: 16),
                         decoration: BoxDecoration(
-                          gradient: const LinearGradient(
-                            colors: [Color(0xFF0D9488), Color(0xFF10B981)],
-                          ),
+                          gradient: isLoadingLocation
+                              ? null
+                              : const LinearGradient(
+                                  colors: [Color(0xFF0D9488), Color(0xFF10B981)],
+                                ),
+                          color: isLoadingLocation
+                              ? (isDark ? Colors.grey[800] : Colors.grey[300])
+                              : null,
                           borderRadius: BorderRadius.circular(16),
+                          boxShadow: isLoadingLocation
+                              ? []
+                              : [
+                                  BoxShadow(
+                                    color: const Color(0xFF0D9488).withValues(alpha: 0.25),
+                                    blurRadius: 12,
+                                    offset: const Offset(0, 4),
+                                  ),
+                                ],
                         ),
                         child: Row(
+                          mainAxisAlignment: MainAxisAlignment.center,
                           children: [
-                            const Icon(
-                              LucideIcons.navigation,
-                              color: Colors.white,
-                              size: 20,
-                            ),
-                            const SizedBox(width: 12),
-                            const Expanded(
-                              child: Text(
-                                'Use Current Location',
-                                style: TextStyle(
-                                  fontWeight: FontWeight.bold,
-                                  color: Colors.white,
+                            if (isLoadingLocation)
+                              SizedBox(
+                                width: 20,
+                                height: 20,
+                                child: CircularProgressIndicator(
+                                  strokeWidth: 2.5,
+                                  color: isDark ? Colors.teal[400] : const Color(0xFF0D9488),
                                 ),
+                              )
+                            else
+                              const Icon(
+                                LucideIcons.navigation,
+                                color: Colors.white,
+                                size: 18,
                               ),
-                            ),
-                            Icon(
-                              LucideIcons.chevronRight,
-                              color: Colors.white.withOpacity(0.7),
-                              size: 20,
+                            const SizedBox(width: 12),
+                            Text(
+                              isLoadingLocation ? 'Locating...' : 'Use Current Location',
+                              style: TextStyle(
+                                fontWeight: FontWeight.bold,
+                                color: isLoadingLocation
+                                    ? (isDark ? Colors.grey[400] : Colors.grey[650])
+                                    : Colors.white,
+                                fontSize: 14,
+                              ),
                             ),
                           ],
                         ),
                       ),
                     ),
+
+                    // Current location feedback card
+                    if (currentDisplayAddress != null && currentLat != null && currentLng != null) ...[
+                      const SizedBox(height: 12),
+                      Container(
+                        padding: const EdgeInsets.all(16),
+                        decoration: BoxDecoration(
+                          color: isDark
+                              ? const Color(0xFF0F172A)
+                              : const Color(0xFFF0FDFA),
+                          borderRadius: BorderRadius.circular(16),
+                          border: Border.all(
+                            color: isDark
+                                ? Colors.teal.shade900.withValues(alpha: 0.5)
+                                : const Color(0xFFCCFBF1),
+                            width: 1.5,
+                          ),
+                        ),
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Row(
+                              children: [
+                                Container(
+                                  padding: const EdgeInsets.all(6),
+                                  decoration: BoxDecoration(
+                                    color: const Color(0xFF0D9488).withValues(alpha: 0.1),
+                                    shape: BoxShape.circle,
+                                  ),
+                                  child: const Icon(
+                                    LucideIcons.check,
+                                    color: Color(0xFF0D9488),
+                                    size: 14,
+                                  ),
+                                ),
+                                const SizedBox(width: 8),
+                                const Text(
+                                  'GPS LOCATION PINNED',
+                                  style: TextStyle(
+                                    fontSize: 10,
+                                    fontWeight: FontWeight.bold,
+                                    color: Color(0xFF0D9488),
+                                    letterSpacing: 0.8,
+                                  ),
+                                ),
+                              ],
+                            ),
+                            const SizedBox(height: 8),
+                            Text(
+                              currentDisplayAddress!,
+                              style: TextStyle(
+                                fontSize: 13,
+                                color: isDark ? Colors.grey[300] : Colors.grey[700],
+                                height: 1.4,
+                              ),
+                            ),
+                            const SizedBox(height: 8),
+                            Row(
+                              children: [
+                                Icon(
+                                  LucideIcons.map,
+                                  size: 12,
+                                  color: isDark ? Colors.grey[500] : Colors.grey[400],
+                                ),
+                                const SizedBox(width: 4),
+                                Text(
+                                  'Coordinates: ${currentLat!.toStringAsFixed(5)}, ${currentLng!.toStringAsFixed(5)}',
+                                  style: TextStyle(
+                                    fontSize: 11,
+                                    color: isDark ? Colors.grey[400] : Colors.grey[500],
+                                    fontFamily: 'monospace',
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ],
+                        ),
+                      ).animate().fadeIn(duration: 300.ms).slideY(begin: 0.1, end: 0),
+                    ],
+
                     const SizedBox(height: 20),
 
                     // Label picker
@@ -682,9 +842,9 @@ class _AddressManagementScreenState extends State<AddressManagementScreen> {
                               padding: const EdgeInsets.symmetric(vertical: 12),
                               decoration: BoxDecoration(
                                 color: isSelected
-                                    ? const Color(0xFF0D9488).withOpacity(0.1)
+                                    ? const Color(0xFF0D9488).withValues(alpha: 0.1)
                                     : (isDark
-                                          ? Colors.white.withOpacity(0.04)
+                                          ? Colors.white.withValues(alpha: 0.04)
                                           : Colors.grey[50]),
                                 borderRadius: BorderRadius.circular(12),
                                 border: Border.all(
@@ -817,33 +977,71 @@ class _AddressManagementScreenState extends State<AddressManagementScreen> {
                       width: double.infinity,
                       child: ElevatedButton(
                         onPressed: () {
+                          // Form Validation
+                          if (nameCtrl.text.trim().isEmpty) {
+                            setModalState(() {
+                              modalError = 'Please enter your full name';
+                            });
+                            return;
+                          }
+                          if (phoneCtrl.text.trim().isEmpty) {
+                            setModalState(() {
+                              modalError = 'Please enter your mobile number';
+                            });
+                            return;
+                          }
+                          if (phoneCtrl.text.trim().length < 10) {
+                            setModalState(() {
+                              modalError = 'Mobile number must be at least 10 digits';
+                            });
+                            return;
+                          }
+                          if (houseCtrl.text.trim().isEmpty) {
+                            setModalState(() {
+                              modalError = 'Please enter your house or flat name/number';
+                            });
+                            return;
+                          }
+                          if (areaCtrl.text.trim().isEmpty) {
+                            setModalState(() {
+                              modalError = 'Please enter your area or locality';
+                            });
+                            return;
+                          }
+                          if (cityCtrl.text.trim().isEmpty) {
+                            setModalState(() {
+                              modalError = 'Please enter your city';
+                            });
+                            return;
+                          }
+                          if (pincodeCtrl.text.trim().isEmpty) {
+                            setModalState(() {
+                              modalError = 'Please enter your pincode';
+                            });
+                            return;
+                          }
+                          if (pincodeCtrl.text.trim().length < 6) {
+                            setModalState(() {
+                              modalError = 'Pincode must be at least 6 digits';
+                            });
+                            return;
+                          }
+
                           final appState = Provider.of<AppState>(
                             context,
                             listen: false,
                           );
                           final newAddress = Address(
                             id: editing?.id,
-                            fullName: nameCtrl.text.isEmpty
-                                ? 'User'
-                                : nameCtrl.text,
-                            mobileNumber: phoneCtrl.text.isEmpty
-                                ? '9876543210'
-                                : phoneCtrl.text,
-                            houseName: houseCtrl.text.isEmpty
-                                ? 'My Place'
-                                : houseCtrl.text,
-                            area: areaCtrl.text.isEmpty
-                                ? 'Area'
-                                : areaCtrl.text,
+                            fullName: nameCtrl.text,
+                            mobileNumber: phoneCtrl.text,
+                            houseName: houseCtrl.text,
+                            area: areaCtrl.text,
                             landmark: landmarkCtrl.text,
-                            city: cityCtrl.text.isEmpty
-                                ? 'City'
-                                : cityCtrl.text,
-                            pincode: pincodeCtrl.text.isEmpty
-                                ? '000000'
-                                : pincodeCtrl.text,
-                            latitude: 0,
-                            longitude: 0,
+                            city: cityCtrl.text,
+                            pincode: pincodeCtrl.text,
+                            latitude: currentLat ?? 0,
+                            longitude: currentLng ?? 0,
                             label: selectedLabel,
                             isDefault:
                                 editing?.isDefault ??

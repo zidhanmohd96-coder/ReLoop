@@ -3,7 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:lucide_icons/lucide_icons.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 import '../theme.dart';
-import 'location_permission_screen.dart';
+import 'location/location_permission_screen.dart';
 
 class OtpVerificationScreen extends StatefulWidget {
   final String phoneNumber;
@@ -14,7 +14,10 @@ class OtpVerificationScreen extends StatefulWidget {
 }
 
 class _OtpVerificationScreenState extends State<OtpVerificationScreen> {
-  final List<TextEditingController> _controllers = List.generate(4, (_) => TextEditingController());
+  final List<TextEditingController> _controllers = List.generate(
+    4,
+    (_) => TextEditingController(),
+  );
   final List<FocusNode> _focusNodes = List.generate(4, (_) => FocusNode());
   int _timerSeconds = 30;
   Timer? _countdownTimer;
@@ -110,38 +113,53 @@ class _OtpVerificationScreenState extends State<OtpVerificationScreen> {
                 const SizedBox(height: 20),
                 // Back Button
                 GestureDetector(
-                  onTap: () => Navigator.pop(context),
-                  child: Container(
-                    padding: const EdgeInsets.all(12),
-                    decoration: AppTheme.getClayDecoration(
-                      color: isDark ? const Color(0xFF1E293B) : Colors.white,
-                      borderRadius: 16,
-                    ),
-                    child: Icon(
-                      LucideIcons.arrowLeft,
-                      color: isDark ? AppTheme.mintGreen : AppTheme.forestGreen,
-                      size: 20,
-                    ),
-                  ),
-                ).animate().fadeIn(duration: 400.ms).slideX(begin: -0.2, end: 0),
+                      onTap: () => Navigator.pop(context),
+                      child: Container(
+                        padding: const EdgeInsets.all(12),
+                        decoration: AppTheme.getClayDecoration(
+                          color: isDark
+                              ? const Color(0xFF1E293B)
+                              : Colors.white,
+                          borderRadius: 16,
+                        ),
+                        child: Icon(
+                          LucideIcons.arrowLeft,
+                          color: isDark
+                              ? AppTheme.mintGreen
+                              : AppTheme.forestGreen,
+                          size: 20,
+                        ),
+                      ),
+                    )
+                    .animate()
+                    .fadeIn(duration: 400.ms)
+                    .slideX(begin: -0.2, end: 0),
 
                 const SizedBox(height: 48),
 
                 // Hero Icon
                 Center(
-                  child: Container(
-                    width: 80,
-                    height: 80,
-                    decoration: AppTheme.getClayDecoration(
-                      color: isDark ? const Color(0xFF1E293B) : Colors.white,
-                      borderRadius: 24,
-                    ),
-                    child: Icon(
-                      LucideIcons.shieldAlert,
-                      color: isDark ? AppTheme.mintGreen : AppTheme.forestGreen,
-                      size: 36,
-                    ),
-                  ).animate().scale(curve: Curves.easeOutBack, duration: 600.ms),
+                  child:
+                      Container(
+                        width: 80,
+                        height: 80,
+                        decoration: AppTheme.getClayDecoration(
+                          color: isDark
+                              ? const Color(0xFF1E293B)
+                              : Colors.white,
+                          borderRadius: 24,
+                        ),
+                        child: Icon(
+                          LucideIcons.shieldAlert,
+                          color: isDark
+                              ? AppTheme.mintGreen
+                              : AppTheme.forestGreen,
+                          size: 36,
+                        ),
+                      ).animate().scale(
+                        curve: Curves.easeOutBack,
+                        duration: 600.ms,
+                      ),
                 ),
 
                 const SizedBox(height: 40),
@@ -163,7 +181,9 @@ class _OtpVerificationScreenState extends State<OtpVerificationScreen> {
                   text: TextSpan(
                     text: 'Enter the 4-digit code sent to ',
                     style: TextStyle(
-                      color: isDark ? Colors.grey.shade400 : Colors.grey.shade600,
+                      color: isDark
+                          ? Colors.grey.shade400
+                          : Colors.grey.shade600,
                       fontSize: 15,
                     ),
                     children: [
@@ -185,42 +205,49 @@ class _OtpVerificationScreenState extends State<OtpVerificationScreen> {
                   mainAxisAlignment: MainAxisAlignment.spaceEvenly,
                   children: List.generate(4, (index) {
                     return SizedBox(
-                      width: 64,
-                      height: 64,
-                      child: Container(
-                        decoration: AppTheme.getClayDecoration(
-                          color: isDark ? const Color(0xFF1E293B) : Colors.white,
-                          borderRadius: 16,
-                        ),
-                        child: TextField(
-                          controller: _controllers[index],
-                          focusNode: _focusNodes[index],
-                          keyboardType: TextInputType.number,
-                          textAlign: TextAlign.center,
-                          maxLength: 1,
-                          style: TextStyle(
-                            fontSize: 24,
-                            fontWeight: FontWeight.bold,
-                            color: isDark ? Colors.white : AppTheme.forestGreen,
+                          width: 64,
+                          height: 64,
+                          child: Container(
+                            decoration: AppTheme.getClayDecoration(
+                              color: isDark
+                                  ? const Color(0xFF1E293B)
+                                  : Colors.white,
+                              borderRadius: 16,
+                            ),
+                            child: TextField(
+                              controller: _controllers[index],
+                              focusNode: _focusNodes[index],
+                              keyboardType: TextInputType.number,
+                              textAlign: TextAlign.center,
+                              maxLength: 1,
+                              style: TextStyle(
+                                fontSize: 24,
+                                fontWeight: FontWeight.bold,
+                                color: isDark
+                                    ? Colors.white
+                                    : AppTheme.forestGreen,
+                              ),
+                              decoration: const InputDecoration(
+                                counterText: '',
+                                border: InputBorder.none,
+                              ),
+                              onChanged: (value) {
+                                if (value.isNotEmpty && index < 3) {
+                                  _focusNodes[index + 1].requestFocus();
+                                }
+                                if (value.isEmpty && index > 0) {
+                                  _focusNodes[index - 1].requestFocus();
+                                }
+                                if (index == 3 && value.isNotEmpty) {
+                                  _focusNodes[index].unfocus();
+                                }
+                              },
+                            ),
                           ),
-                          decoration: const InputDecoration(
-                            counterText: '',
-                            border: InputBorder.none,
-                          ),
-                          onChanged: (value) {
-                            if (value.isNotEmpty && index < 3) {
-                              _focusNodes[index + 1].requestFocus();
-                            }
-                            if (value.isEmpty && index > 0) {
-                              _focusNodes[index - 1].requestFocus();
-                            }
-                            if (index == 3 && value.isNotEmpty) {
-                              _focusNodes[index].unfocus();
-                            }
-                          },
-                        ),
-                      ),
-                    ).animate().fadeIn(delay: (index * 80).ms).slideY(begin: 0.1, end: 0);
+                        )
+                        .animate()
+                        .fadeIn(delay: (index * 80).ms)
+                        .slideY(begin: 0.1, end: 0);
                   }),
                 ),
 
@@ -232,7 +259,9 @@ class _OtpVerificationScreenState extends State<OtpVerificationScreen> {
                       ? Text(
                           'Resend code in ${_timerSeconds}s',
                           style: TextStyle(
-                            color: isDark ? Colors.grey.shade500 : Colors.grey.shade600,
+                            color: isDark
+                                ? Colors.grey.shade500
+                                : Colors.grey.shade600,
                             fontWeight: FontWeight.w600,
                           ),
                         )
@@ -244,7 +273,9 @@ class _OtpVerificationScreenState extends State<OtpVerificationScreen> {
                             style: TextStyle(fontWeight: FontWeight.bold),
                           ),
                           style: TextButton.styleFrom(
-                            foregroundColor: isDark ? AppTheme.mintGreen : AppTheme.forestGreen,
+                            foregroundColor: isDark
+                                ? AppTheme.mintGreen
+                                : AppTheme.forestGreen,
                           ),
                         ),
                 ).animate().fadeIn(delay: 200.ms),
@@ -253,37 +284,50 @@ class _OtpVerificationScreenState extends State<OtpVerificationScreen> {
 
                 // Submit Button
                 SizedBox(
-                  width: double.infinity,
-                  child: ElevatedButton(
-                    onPressed: _isLoading ? null : _verifyOtp,
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: isDark ? AppTheme.mintGreen : AppTheme.forestGreen,
-                      foregroundColor: isDark ? const Color(0xFF0F172A) : Colors.white,
-                      padding: const EdgeInsets.symmetric(vertical: 20),
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(24),
-                      ),
-                      elevation: 8,
-                      shadowColor: (isDark ? AppTheme.mintGreen : AppTheme.forestGreen).withOpacity(0.4),
-                    ),
-                    child: _isLoading
-                        ? SizedBox(
-                            width: 24,
-                            height: 24,
-                            child: CircularProgressIndicator(
-                              color: isDark ? const Color(0xFF0F172A) : Colors.white,
-                              strokeWidth: 2.5,
-                            ),
-                          )
-                        : const Text(
-                            'Verify & Continue',
-                            style: TextStyle(
-                              fontSize: 18,
-                              fontWeight: FontWeight.bold,
-                            ),
+                      width: double.infinity,
+                      child: ElevatedButton(
+                        onPressed: _isLoading ? null : _verifyOtp,
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: isDark
+                              ? AppTheme.mintGreen
+                              : AppTheme.forestGreen,
+                          foregroundColor: isDark
+                              ? const Color(0xFF0F172A)
+                              : Colors.white,
+                          padding: const EdgeInsets.symmetric(vertical: 20),
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(24),
                           ),
-                  ),
-                ).animate().fadeIn(delay: 300.ms).scale(curve: Curves.easeOutBack),
+                          elevation: 8,
+                          shadowColor:
+                              (isDark
+                                      ? AppTheme.mintGreen
+                                      : AppTheme.forestGreen)
+                                  .withOpacity(0.4),
+                        ),
+                        child: _isLoading
+                            ? SizedBox(
+                                width: 24,
+                                height: 24,
+                                child: CircularProgressIndicator(
+                                  color: isDark
+                                      ? const Color(0xFF0F172A)
+                                      : Colors.white,
+                                  strokeWidth: 2.5,
+                                ),
+                              )
+                            : const Text(
+                                'Verify & Continue',
+                                style: TextStyle(
+                                  fontSize: 18,
+                                  fontWeight: FontWeight.bold,
+                                ),
+                              ),
+                      ),
+                    )
+                    .animate()
+                    .fadeIn(delay: 300.ms)
+                    .scale(curve: Curves.easeOutBack),
               ],
             ),
           ),
