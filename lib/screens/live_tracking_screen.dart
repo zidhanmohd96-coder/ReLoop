@@ -31,7 +31,7 @@ class LiveTrackingScreen extends StatelessWidget {
               ),
             ),
             Text(
-              '#${bookingId.substring(0, 6).toUpperCase()}',
+              '#${bookingId.substring(0, bookingId.length < 6 ? bookingId.length : 6).toUpperCase()}',
               style: TextStyle(
                 color: Colors.grey.shade500,
                 fontSize: 12,

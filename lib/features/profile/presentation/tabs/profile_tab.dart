@@ -15,6 +15,8 @@ import '../../../../screens/profile/scrap_prices_screen.dart';
 import '../../../../screens/profile/faq_screen.dart';
 import '../../../../screens/profile/support_screen.dart';
 import '../../../../screens/profile/feedback_screen.dart';
+import '../../../../screens/profile/subscription_screen.dart';
+import '../../../../screens/profile/notification_history_screen.dart';
 
 class ProfileTab extends StatefulWidget {
   final VoidCallback? onViewHistory;
@@ -46,7 +48,9 @@ class _ProfileTabState extends State<ProfileTab> {
                     decoration: BoxDecoration(
                       shape: BoxShape.circle,
                       border: Border.all(
-                        color: isDark ? const Color(0xFF1E293B) : Colors.white,
+                        color: appState.isSubscribed
+                            ? const Color(0xFFF59E0B)
+                            : (isDark ? const Color(0xFF1E293B) : Colors.white),
                         width: 4,
                       ),
                       image: const DecorationImage(
@@ -63,7 +67,7 @@ class _ProfileTabState extends State<ProfileTab> {
                     child: Container(
                       padding: const EdgeInsets.all(4),
                       decoration: BoxDecoration(
-                        color: AppTheme.mintGreen,
+                        color: appState.isSubscribed ? const Color(0xFFF59E0B) : AppTheme.mintGreen,
                         shape: BoxShape.circle,
                         border: Border.all(
                           color: isDark
@@ -73,7 +77,7 @@ class _ProfileTabState extends State<ProfileTab> {
                         ),
                       ),
                       child: Icon(
-                        LucideIcons.shieldCheck,
+                        appState.isSubscribed ? LucideIcons.gem : LucideIcons.shieldCheck,
                         color: isDark ? const Color(0xFF0F172A) : Colors.white,
                         size: 20,
                       ),
@@ -94,9 +98,9 @@ class _ProfileTabState extends State<ProfileTab> {
             ),
             Center(
               child: Text(
-                'Eco Enthusiast Since 2026',
+                appState.isSubscribed ? 'Premium: ${appState.currentSubscriptionPlan}' : 'Eco Enthusiast Since 2026',
                 style: TextStyle(
-                  color: AppTheme.mintGreen,
+                  color: appState.isSubscribed ? const Color(0xFFF59E0B) : AppTheme.mintGreen,
                   fontWeight: FontWeight.w600,
                 ),
               ),
@@ -120,6 +124,30 @@ class _ProfileTabState extends State<ProfileTab> {
                       context,
                       MaterialPageRoute(
                         builder: (_) => const PersonalInformationScreen(),
+                      ),
+                    ),
+                  ),
+                  _buildMenuRow(
+                    context,
+                    LucideIcons.gem,
+                    'Subscription & Plans',
+                    isDark,
+                    onTap: () => Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        builder: (_) => const SubscriptionScreen(),
+                      ),
+                    ),
+                  ),
+                  _buildMenuRow(
+                    context,
+                    LucideIcons.bell,
+                    'Notification History',
+                    isDark,
+                    onTap: () => Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        builder: (_) => const NotificationHistoryScreen(),
                       ),
                     ),
                   ),

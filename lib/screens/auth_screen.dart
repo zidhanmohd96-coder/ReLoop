@@ -4,7 +4,6 @@ import 'package:lucide_icons/lucide_icons.dart';
 import '../theme.dart';
 import 'location_permission_screen.dart';
 import 'phone_entry_screen.dart';
-import 'otp_verification_screen.dart';
 
 class AuthScreen extends StatefulWidget {
   const AuthScreen({super.key});
@@ -42,12 +41,10 @@ class _AuthScreenState extends State<AuthScreen> {
   }
 
   void _navigateToOtp() {
-    final phone = _phoneController.text.trim();
-
     Navigator.push(
       context,
       PageRouteBuilder(
-        pageBuilder: (context, a1, a2) => PhoneEntryScreen(initialPhoneNumber: phone),
+        pageBuilder: (context, a1, a2) => const PhoneEntryScreen(initialPhoneNumber: ''),
         transitionsBuilder: (context, a1, a2, child) =>
             FadeTransition(opacity: a1, child: child),
         transitionDuration: const Duration(milliseconds: 600),

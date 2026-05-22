@@ -5,6 +5,7 @@ import 'package:provider/provider.dart';
 import '../../../../theme.dart';
 import '../../../../providers/app_state.dart';
 import '../../../../core/utils/responsive_helper.dart';
+import '../../../../models/booking.dart';
 
 class BookingsTab extends StatelessWidget {
   const BookingsTab({super.key});
@@ -12,291 +13,337 @@ class BookingsTab extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final isDark = Theme.of(context).brightness == Brightness.dark;
-    final screenWidth = MediaQuery.of(context).size.width;
     final hPad = context.scalePadding(24.0);
 
-    return DefaultTabController(
-      length: 3,
-      child: SafeArea(
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Padding(
-              padding: EdgeInsets.all(hPad),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    'Pickups',
-                    style: TextStyle(
-                      fontSize: 32,
-                      fontWeight: FontWeight.bold,
-                      color: isDark ? Colors.white : AppTheme.forestGreen,
-                    ),
-                  ),
-                  Text(
-                    'YOUR RECYCLING JOURNEY',
-                    style: TextStyle(
-                      color: AppTheme.mintGreen,
-                      fontSize: 12,
-                      fontWeight: FontWeight.bold,
-                      letterSpacing: 1,
-                    ),
-                  ),
-                ],
-              ),
-            ),
-            Container(
-              margin: EdgeInsets.symmetric(horizontal: hPad),
-              decoration: BoxDecoration(
-                color: isDark ? const Color(0xFF1E293B) : Colors.grey.shade200,
-                borderRadius: BorderRadius.circular(32),
-              ),
-              child: TabBar(
-                indicator: BoxDecoration(
-                  color: isDark ? AppTheme.mintGreen : AppTheme.forestGreen,
-                  borderRadius: BorderRadius.circular(32),
-                ),
-                labelColor: isDark ? const Color(0xFF0F172A) : Colors.white,
-                unselectedLabelColor: isDark ? Colors.grey.shade400 : Colors.grey.shade600,
-                indicatorSize: TabBarIndicatorSize.tab,
-                dividerColor: Colors.transparent,
-                labelStyle: const TextStyle(fontWeight: FontWeight.bold),
-                tabs: const [
-                  Tab(text: 'Upcoming'),
-                  Tab(text: 'Completed'),
-                  Tab(text: 'Cancelled'),
-                ],
-              ),
-            ),
-            Expanded(
-              child: TabBarView(
-                children: [
-                  // Upcoming Tab
-                  ListView(
-                    padding: EdgeInsets.fromLTRB(hPad, hPad, hPad, 120),
-                    children: [
-                      _buildBookingCard(
-                        context: context,
-                        items: 'office_paper',
-                        status: 'Scheduled',
-                        statusColor: Colors.orange.shade400,
-                        schedule: 'Scheduled for Wed, 14 May',
-                        location: 'Home',
-                        earned: '₹0',
-                        points: 'Pending',
-                        icon: LucideIcons.clock,
-                        isDark: isDark,
-                      ),
-                    ],
-                  ),
-                  // Completed Tab
-                  ListView(
-                    padding: EdgeInsets.fromLTRB(hPad, hPad, hPad, 120),
-                    children: [
-                      _buildBookingCard(
-                        context: context,
-                        items: 'newspaper, cardboard, books',
-                        status: 'Completed',
-                        statusColor: AppTheme.mintGreen,
-                        schedule: 'Completed on Fri, 10 May',
-                        location: 'Office',
-                        earned: '₹320',
-                        points: '+230 POINTS',
-                        icon: LucideIcons.checkCircle,
-                        isDark: isDark,
-                      ),
-                    ],
-                  ),
-                  // Cancelled Tab
-                  ListView(
-                    padding: EdgeInsets.fromLTRB(hPad, hPad, hPad, 120),
-                    children: [
-                      _buildBookingCard(
-                        context: context,
-                        items: 'Plastic bottles',
-                        status: 'Cancelled',
-                        statusColor: Colors.red.shade400,
-                        schedule: 'Cancelled on Mon, 08 May',
-                        location: 'Home',
-                        earned: '₹0',
-                        points: '0 POINTS',
-                        icon: LucideIcons.xCircle,
-                        isDark: isDark,
-                      ),
-                    ],
-                  ),
-                ],
-              ),
-            ),
-          ],
-        ),
-      ),
-    );
-  }
+    return Consumer<AppState>(
+      builder: (context, appState, _) {
+        final allBookings = appState.bookings;
 
-  Widget _buildBookingCard({
-    required BuildContext context,
-    required String items,
-    required String status,
-    required Color statusColor,
-    required String schedule,
-    required String location,
-    required String earned,
-    required String points,
-    required IconData icon,
-    required bool isDark,
-  }) {
-    return GestureDetector(
-      onTap: () => _showBookingFullDetails(context),
-      child: Container(
-        padding: const EdgeInsets.all(24),
-        decoration: AppTheme.getClayDecoration(
-          color: isDark ? const Color(0xFF1E293B) : Colors.white,
-          borderRadius: 32,
-        ),
-        child: Column(
-          children: [
-            Row(
+        // Categorize bookings
+        final upcomingBookings = allBookings.where((b) =>
+            b.status != BookingStatus.completed &&
+            b.status != BookingStatus.cancelled).toList();
+
+        final completedBookings = allBookings.where((b) =>
+            b.status == BookingStatus.completed).toList();
+
+        final cancelledBookings = allBookings.where((b) =>
+            b.status == BookingStatus.cancelled).toList();
+
+        return DefaultTabController(
+          length: 3,
+          child: SafeArea(
+            child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Container(
-                  padding: const EdgeInsets.all(12),
-                  decoration: BoxDecoration(
-                    color: isDark ? AppTheme.mintGreen.withOpacity(0.15) : AppTheme.forestGreen,
-                    borderRadius: BorderRadius.circular(16),
-                  ),
-                  child: Icon(icon, color: isDark ? AppTheme.mintGreen : Colors.white, size: 24),
-                ),
-                const SizedBox(width: 12),
-                Expanded(
+                Padding(
+                  padding: EdgeInsets.all(hPad),
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       Text(
-                        '#QXAU7C',
+                        'Pickups',
                         style: TextStyle(
-                          color: isDark ? Colors.grey.shade500 : Colors.grey.shade400,
-                          fontSize: 10,
+                          fontSize: 32,
                           fontWeight: FontWeight.bold,
-                        ),
-                      ),
-                      const SizedBox(height: 4),
-                      Text(
-                        items,
-                        style: TextStyle(
-                          fontWeight: FontWeight.bold,
-                          fontSize: 16,
                           color: isDark ? Colors.white : AppTheme.forestGreen,
                         ),
-                        maxLines: 2,
-                        overflow: TextOverflow.ellipsis,
+                      ),
+                      Text(
+                        'YOUR RECYCLING JOURNEY',
+                        style: TextStyle(
+                          color: AppTheme.mintGreen,
+                          fontSize: 12,
+                          fontWeight: FontWeight.bold,
+                          letterSpacing: 1,
+                        ),
                       ),
                     ],
                   ),
                 ),
-                const SizedBox(width: 8),
-                Flexible(
-                  flex: 0,
-                  child: Container(
-                    padding: const EdgeInsets.symmetric(
-                      horizontal: 10,
-                      vertical: 6,
+                Container(
+                  margin: EdgeInsets.symmetric(horizontal: hPad),
+                  decoration: BoxDecoration(
+                    color: isDark ? const Color(0xFF1E293B) : Colors.grey.shade200,
+                    borderRadius: BorderRadius.circular(32),
+                  ),
+                  child: TabBar(
+                    indicator: BoxDecoration(
+                      color: isDark ? AppTheme.mintGreen : AppTheme.forestGreen,
+                      borderRadius: BorderRadius.circular(32),
                     ),
-                    decoration: BoxDecoration(
-                      color: statusColor.withOpacity(isDark ? 0.2 : 1.0),
-                      borderRadius: BorderRadius.circular(16),
-                      border: isDark ? Border.all(color: statusColor.withOpacity(0.5)) : null,
-                    ),
-                    child: Text(
-                      status,
-                      style: TextStyle(
-                        color: isDark ? statusColor : Colors.white,
-                        fontSize: 12,
-                        fontWeight: FontWeight.bold,
-                      ),
-                      overflow: TextOverflow.ellipsis,
-                    ),
+                    labelColor: isDark ? const Color(0xFF0F172A) : Colors.white,
+                    unselectedLabelColor: isDark ? Colors.grey.shade400 : Colors.grey.shade600,
+                    indicatorSize: TabBarIndicatorSize.tab,
+                    dividerColor: Colors.transparent,
+                    labelStyle: const TextStyle(fontWeight: FontWeight.bold),
+                    tabs: const [
+                      Tab(text: 'Upcoming'),
+                      Tab(text: 'Completed'),
+                      Tab(text: 'Cancelled'),
+                    ],
                   ),
                 ),
-              ],
-            ),
-            const SizedBox(height: 24),
-            Row(
-              children: [
-                Icon(
-                  LucideIcons.clock,
-                  size: 16,
-                  color: isDark ? AppTheme.mintGreen : AppTheme.lightGreen,
-                ),
-                const SizedBox(width: 8),
                 Expanded(
-                  child: Text(
-                    schedule,
-                    style: TextStyle(color: isDark ? Colors.grey.shade400 : Colors.grey.shade600, fontSize: 14),
-                    overflow: TextOverflow.ellipsis,
+                  child: TabBarView(
+                    children: [
+                      // Upcoming Tab
+                      _buildBookingsList(context, upcomingBookings, 'No upcoming pickups', isDark, hPad),
+                      // Completed Tab
+                      _buildBookingsList(context, completedBookings, 'No completed pickups yet', isDark, hPad),
+                      // Cancelled Tab
+                      _buildBookingsList(context, cancelledBookings, 'No cancelled pickups', isDark, hPad),
+                    ],
                   ),
                 ),
               ],
             ),
-            const SizedBox(height: 8),
-            Row(
-              children: [
-                Icon(
-                  LucideIcons.mapPin,
-                  size: 16,
-                  color: isDark ? AppTheme.mintGreen : AppTheme.lightGreen,
-                ),
-                const SizedBox(width: 8),
-                Expanded(
-                  child: Text(
-                    location,
-                    style: TextStyle(color: isDark ? Colors.grey.shade400 : Colors.grey.shade600, fontSize: 14),
-                    overflow: TextOverflow.ellipsis,
-                  ),
-                ),
-              ],
+          ),
+        );
+      },
+    );
+  }
+
+  Widget _buildBookingsList(
+    BuildContext context,
+    List<Booking> list,
+    String emptyMessage,
+    bool isDark,
+    double hPad,
+  ) {
+    if (list.isEmpty) {
+      return Center(
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Icon(
+              LucideIcons.calendarX,
+              size: 48,
+              color: isDark ? Colors.grey.shade600 : Colors.grey.shade400,
             ),
-            const SizedBox(height: 24),
-            Divider(height: 1, color: isDark ? Colors.white.withOpacity(0.1) : null),
-            const SizedBox(height: 24),
-            Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              children: [
-                Row(
-                  children: [
-                    Icon(
-                      LucideIcons.trendingUp,
-                      size: 16,
-                      color: isDark ? AppTheme.mintGreen : AppTheme.lightGreen,
-                    ),
-                    const SizedBox(width: 8),
-                    Text(
-                      'Earned $earned',
-                      style: TextStyle(
-                        fontWeight: FontWeight.bold,
-                        color: isDark ? Colors.white : AppTheme.forestGreen,
-                      ),
-                    ),
-                  ],
-                ),
-                Text(
-                  points,
-                  style: TextStyle(
-                    fontWeight: FontWeight.bold,
-                    color: isDark ? AppTheme.mintGreen : AppTheme.lightGreen,
-                  ),
-                ),
-              ],
+            const SizedBox(height: 16),
+            Text(
+              emptyMessage,
+              style: TextStyle(
+                color: isDark ? Colors.grey.shade400 : Colors.grey.shade600,
+                fontSize: 16,
+                fontWeight: FontWeight.w600,
+              ),
             ),
           ],
         ),
-      ),
-    ).animate().fadeIn(duration: 400.ms).slideY(begin: 0.1, end: 0);
+      );
+    }
+
+    return ListView.builder(
+      padding: EdgeInsets.fromLTRB(hPad, hPad, hPad, 120),
+      itemCount: list.length,
+      itemBuilder: (context, index) {
+        final booking = list[index];
+
+        Color statusColor = Colors.orange.shade400;
+        IconData statusIcon = LucideIcons.clock;
+
+        switch (booking.status) {
+          case BookingStatus.pending:
+            statusColor = Colors.amber.shade600;
+            statusIcon = LucideIcons.clock;
+            break;
+          case BookingStatus.assigned:
+            statusColor = Colors.blue.shade400;
+            statusIcon = LucideIcons.userCheck;
+            break;
+          case BookingStatus.onTheWay:
+            statusColor = Colors.indigo.shade400;
+            statusIcon = LucideIcons.truck;
+            break;
+          case BookingStatus.pickupStarted:
+            statusColor = AppTheme.mintGreen;
+            statusIcon = LucideIcons.activity;
+            break;
+          case BookingStatus.completed:
+            statusColor = AppTheme.mintGreen;
+            statusIcon = LucideIcons.checkCircle;
+            break;
+          case BookingStatus.cancelled:
+            statusColor = Colors.red.shade400;
+            statusIcon = LucideIcons.xCircle;
+            break;
+        }
+
+        final displayId = booking.id.length < 6 
+            ? booking.id.toUpperCase() 
+            : booking.id.substring(0, 6).toUpperCase();
+
+        return Container(
+          margin: const EdgeInsets.only(bottom: 20),
+          child: GestureDetector(
+            onTap: () => _showBookingFullDetails(context, booking),
+            child: Container(
+              padding: const EdgeInsets.all(24),
+              decoration: AppTheme.getClayDecoration(
+                color: isDark ? const Color(0xFF1E293B) : Colors.white,
+                borderRadius: 32,
+              ),
+              child: Column(
+                children: [
+                  Row(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Container(
+                        padding: const EdgeInsets.all(12),
+                        decoration: BoxDecoration(
+                          color: isDark ? statusColor.withValues(alpha: 0.15) : statusColor,
+                          borderRadius: BorderRadius.circular(16),
+                        ),
+                        child: Icon(
+                          statusIcon,
+                          color: isDark ? statusColor : Colors.white,
+                          size: 24,
+                        ),
+                      ),
+                      const SizedBox(width: 12),
+                      Expanded(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(
+                              '#$displayId',
+                              style: TextStyle(
+                                color: isDark ? Colors.grey.shade500 : Colors.grey.shade400,
+                                fontSize: 10,
+                                fontWeight: FontWeight.bold,
+                              ),
+                            ),
+                            const SizedBox(height: 4),
+                            Text(
+                              booking.scrapType,
+                              style: TextStyle(
+                                fontWeight: FontWeight.bold,
+                                fontSize: 16,
+                                color: isDark ? Colors.white : AppTheme.forestGreen,
+                              ),
+                              maxLines: 2,
+                              overflow: TextOverflow.ellipsis,
+                            ),
+                          ],
+                        ),
+                      ),
+                      const SizedBox(width: 8),
+                      Container(
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 10,
+                          vertical: 6,
+                        ),
+                        decoration: BoxDecoration(
+                          color: statusColor.withValues(alpha: isDark ? 0.2 : 1.0),
+                          borderRadius: BorderRadius.circular(16),
+                          border: isDark ? Border.all(color: statusColor.withValues(alpha: 0.5)) : null,
+                        ),
+                        child: Text(
+                          booking.status.name.toUpperCase(),
+                          style: TextStyle(
+                            color: isDark ? statusColor : Colors.white,
+                            fontSize: 10,
+                            fontWeight: FontWeight.bold,
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: 24),
+                  Row(
+                    children: [
+                      Icon(
+                        LucideIcons.calendar,
+                        size: 16,
+                        color: isDark ? AppTheme.mintGreen : AppTheme.lightGreen,
+                      ),
+                      const SizedBox(width: 8),
+                      Expanded(
+                        child: Text(
+                          '${booking.scheduledDate} • ${booking.scheduledSlot}',
+                          style: TextStyle(
+                            color: isDark ? Colors.grey.shade400 : Colors.grey.shade600,
+                            fontSize: 14,
+                          ),
+                          overflow: TextOverflow.ellipsis,
+                        ),
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: 8),
+                  Row(
+                    children: [
+                      Icon(
+                        LucideIcons.mapPin,
+                        size: 16,
+                        color: isDark ? AppTheme.mintGreen : AppTheme.lightGreen,
+                      ),
+                      const SizedBox(width: 8),
+                      Expanded(
+                        child: Text(
+                          booking.address.addressLine,
+                          style: TextStyle(
+                            color: isDark ? Colors.grey.shade400 : Colors.grey.shade600,
+                            fontSize: 14,
+                          ),
+                          overflow: TextOverflow.ellipsis,
+                        ),
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: 24),
+                  Divider(height: 1, color: isDark ? Colors.white.withValues(alpha: 0.1) : null),
+                  const SizedBox(height: 24),
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      Row(
+                        children: [
+                          Icon(
+                            LucideIcons.trendingUp,
+                            size: 16,
+                            color: isDark ? AppTheme.mintGreen : AppTheme.lightGreen,
+                          ),
+                          const SizedBox(width: 8),
+                          Text(
+                            booking.status == BookingStatus.completed
+                                ? 'Earned ₹${booking.totalPayoutAmount.toStringAsFixed(0)}'
+                                : 'Est. Pay ₹${booking.estimatedPayout.toStringAsFixed(0)}',
+                            style: TextStyle(
+                              fontWeight: FontWeight.bold,
+                              color: isDark ? Colors.white : AppTheme.forestGreen,
+                            ),
+                          ),
+                        ],
+                      ),
+                      Text(
+                        booking.status == BookingStatus.completed
+                            ? '+${booking.pointsEarned} POINTS'
+                            : 'Pending Points',
+                        style: TextStyle(
+                          fontWeight: FontWeight.bold,
+                          color: isDark ? AppTheme.mintGreen : AppTheme.lightGreen,
+                        ),
+                      ),
+                    ],
+                  ),
+                ],
+              ),
+            ),
+          ),
+        ).animate().fadeIn(duration: 400.ms).slideY(begin: 0.1, end: 0);
+      },
+    );
   }
 
-  void _showBookingFullDetails(BuildContext context) {
+  void _showBookingFullDetails(BuildContext context, Booking booking) {
     final isDark = Theme.of(context).brightness == Brightness.dark;
+    final displayId = booking.id.length < 6 
+        ? booking.id.toUpperCase() 
+        : booking.id.substring(0, 6).toUpperCase();
+
     showModalBottomSheet(
       context: context,
       backgroundColor: Colors.transparent,
@@ -328,7 +375,7 @@ class BookingsTab extends StatelessWidget {
                 Container(
                   decoration: BoxDecoration(
                     shape: BoxShape.circle,
-                    border: Border.all(color: isDark ? Colors.white.withOpacity(0.1) : Colors.grey.shade200),
+                    border: Border.all(color: isDark ? Colors.white.withValues(alpha: 0.1) : Colors.grey.shade200),
                   ),
                   child: IconButton(
                     icon: Icon(
@@ -353,7 +400,7 @@ class BookingsTab extends StatelessWidget {
                   ),
                 ),
                 Text(
-                  '#QXAU7C',
+                  '#$displayId',
                   style: TextStyle(
                     fontWeight: FontWeight.bold,
                     color: isDark ? AppTheme.mintGreen : AppTheme.forestGreen,
@@ -362,28 +409,37 @@ class BookingsTab extends StatelessWidget {
               ],
             ),
             const SizedBox(height: 16),
-            Divider(color: isDark ? Colors.white.withOpacity(0.1) : null),
+            Divider(color: isDark ? Colors.white.withValues(alpha: 0.1) : null),
             const SizedBox(height: 16),
             _buildDetailRow(
               LucideIcons.calendar,
               'Date & Time',
-              'Fri, 10 May • 11:30 AM',
+              '${booking.scheduledDate} • ${booking.scheduledSlot}',
               isDark,
             ),
             const SizedBox(height: 16),
             _buildDetailRow(
               LucideIcons.mapPin,
               'Location',
-              'Office, 4th Floor, Tech Park',
+              '${booking.address.label}: ${booking.address.addressLine}',
               isDark,
             ),
             const SizedBox(height: 16),
-            _buildDetailRow(LucideIcons.user, 'Collected By', 'Rajesh Kumar', isDark),
+            _buildDetailRow(
+              LucideIcons.user,
+              'Assigned Driver',
+              booking.assignedPicker != null 
+                  ? '${booking.assignedPicker!.name} (${booking.assignedPicker!.vehicleNumber})'
+                  : 'Awaiting Driver Assignment',
+              isDark,
+            ),
             const SizedBox(height: 16),
-            Divider(color: isDark ? Colors.white.withOpacity(0.1) : null),
+            Divider(color: isDark ? Colors.white.withValues(alpha: 0.1) : null),
             const SizedBox(height: 16),
             Text(
-              'Scrap Details',
+              booking.status == BookingStatus.completed 
+                  ? 'Collected Scrap Quantities' 
+                  : 'Estimated Scrap Details',
               style: TextStyle(
                 fontWeight: FontWeight.bold,
                 fontSize: 16,
@@ -391,27 +447,30 @@ class BookingsTab extends StatelessWidget {
               ),
             ),
             const SizedBox(height: 16),
-            _buildDetailRow(
-              LucideIcons.fileText,
-              'Newspaper',
-              '12 kg × ₹15/kg = ₹180',
-              isDark,
-            ),
-            const SizedBox(height: 8),
-            _buildDetailRow(
-              LucideIcons.package,
-              'Cardboard',
-              '14 kg × ₹10/kg = ₹140',
-              isDark,
-            ),
+            
+            if (booking.status == BookingStatus.completed) ...[
+              if (booking.actualWeightNewspaper > 0)
+                _buildDetailRow(LucideIcons.fileText, 'Newspaper', '${booking.actualWeightNewspaper} kg', isDark),
+              if (booking.actualWeightCardboard > 0)
+                _buildDetailRow(LucideIcons.package, 'Cardboard', '${booking.actualWeightCardboard} kg', isDark),
+              if (booking.actualWeightBooks > 0)
+                _buildDetailRow(LucideIcons.bookOpen, 'Books', '${booking.actualWeightBooks} kg', isDark),
+              if (booking.actualWeightOfficePaper > 0)
+                _buildDetailRow(LucideIcons.fileText, 'Office Paper', '${booking.actualWeightOfficePaper} kg', isDark),
+            ] else ...[
+              _buildDetailRow(LucideIcons.tag, 'Scrap Type', booking.scrapType, isDark),
+              const SizedBox(height: 8),
+              _buildDetailRow(LucideIcons.info, 'Estimated Weight', '${booking.estimatedWeight} kg', isDark),
+            ],
+
             const SizedBox(height: 16),
-            Divider(color: isDark ? Colors.white.withOpacity(0.1) : null),
+            Divider(color: isDark ? Colors.white.withValues(alpha: 0.1) : null),
             const SizedBox(height: 16),
             Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
                 Text(
-                  'Total Earnings',
+                  booking.status == BookingStatus.completed ? 'Total Payout' : 'Estimated Payout',
                   style: TextStyle(
                     fontWeight: FontWeight.bold,
                     fontSize: 18,
@@ -419,7 +478,9 @@ class BookingsTab extends StatelessWidget {
                   ),
                 ),
                 Text(
-                  '₹320',
+                  booking.status == BookingStatus.completed 
+                      ? '₹${booking.totalPayoutAmount.toStringAsFixed(0)}' 
+                      : '₹${booking.estimatedPayout.toStringAsFixed(0)}',
                   style: TextStyle(
                     fontWeight: FontWeight.bold,
                     fontSize: 24,
@@ -433,15 +494,15 @@ class BookingsTab extends StatelessWidget {
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
                 Text(
-                  'Eco Points Added',
+                  'Eco Points',
                   style: TextStyle(
                     fontWeight: FontWeight.bold,
                     color: AppTheme.mintGreen,
                   ),
                 ),
-                const Text(
-                  '+230',
-                  style: TextStyle(
+                Text(
+                  booking.status == BookingStatus.completed ? '+${booking.pointsEarned}' : 'Pending',
+                  style: const TextStyle(
                     fontWeight: FontWeight.bold,
                     color: AppTheme.mintGreen,
                   ),
@@ -456,35 +517,38 @@ class BookingsTab extends StatelessWidget {
   }
 
   Widget _buildDetailRow(IconData icon, String label, String value, bool isDark) {
-    return Row(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Icon(icon, size: 20, color: isDark ? Colors.grey.shade500 : Colors.grey.shade400),
-        const SizedBox(width: 12),
-        Expanded(
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Text(
-                label,
-                style: TextStyle(
-                  color: isDark ? Colors.grey.shade400 : Colors.grey.shade500,
-                  fontSize: 12,
-                  fontWeight: FontWeight.bold,
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 12.0),
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Icon(icon, size: 20, color: isDark ? Colors.grey.shade500 : Colors.grey.shade400),
+          const SizedBox(width: 12),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  label,
+                  style: TextStyle(
+                    color: isDark ? Colors.grey.shade400 : Colors.grey.shade500,
+                    fontSize: 12,
+                    fontWeight: FontWeight.bold,
+                  ),
                 ),
-              ),
-              const SizedBox(height: 4),
-              Text(
-                value,
-                style: TextStyle(
-                  color: isDark ? Colors.white : AppTheme.forestGreen,
-                  fontWeight: FontWeight.w600,
+                const SizedBox(height: 4),
+                Text(
+                  value,
+                  style: TextStyle(
+                    color: isDark ? Colors.white : AppTheme.forestGreen,
+                    fontWeight: FontWeight.w600,
+                  ),
                 ),
-              ),
-            ],
+              ],
+            ),
           ),
-        ),
-      ],
+        ],
+      ),
     );
   }
 }

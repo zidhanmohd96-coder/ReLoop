@@ -57,4 +57,42 @@ class Address {
       label: label ?? this.label,
     );
   }
+
+  factory Address.fromJson(Map<String, dynamic> json) {
+    return Address(
+      id: json['id'] as String?,
+      fullName: json['fullName'] as String? ?? '',
+      mobileNumber: json['mobileNumber'] as String? ?? '',
+      houseName: json['houseName'] as String? ?? '',
+      area: json['area'] as String? ?? '',
+      landmark: json['landmark'] as String? ?? '',
+      city: json['city'] as String? ?? '',
+      pincode: json['pincode'] as String? ?? '',
+      latitude: (json['latitude'] as num?)?.toDouble() ?? 0.0,
+      longitude: (json['longitude'] as num?)?.toDouble() ?? 0.0,
+      isDefault: json['isDefault'] as bool? ?? false,
+      label: json['label'] as String? ?? 'Home',
+    );
+  }
+
+  Map<String, dynamic> toJson() {
+    return {
+      'id': id,
+      'fullName': fullName,
+      'mobileNumber': mobileNumber,
+      'houseName': houseName,
+      'area': area,
+      'landmark': landmark,
+      'city': city,
+      'pincode': pincode,
+      'latitude': latitude,
+      'longitude': longitude,
+      'isDefault': isDefault,
+      'label': label,
+    };
+  }
+
+  String get addressLine {
+    return '$houseName, $area, $city - $pincode';
+  }
 }

@@ -70,14 +70,9 @@ class _AddressManagementScreenState extends State<AddressManagementScreen> {
                   vertical: 8,
                 ),
                 child: Container(
-                  decoration: BoxDecoration(
+                  decoration: AppTheme.getClayDecoration(
                     color: isDark ? const Color(0xFF1E293B) : Colors.white,
-                    borderRadius: BorderRadius.circular(16),
-                    border: Border.all(
-                      color: isDark
-                          ? Colors.white.withOpacity(0.05)
-                          : Colors.grey[200]!,
-                    ),
+                    borderRadius: 16,
                   ),
                   child: TextField(
                     controller: _searchController,
@@ -252,24 +247,16 @@ class _AddressManagementScreenState extends State<AddressManagementScreen> {
       child: Container(
         margin: const EdgeInsets.only(bottom: 16),
         padding: const EdgeInsets.all(20),
-        decoration: BoxDecoration(
+        decoration: AppTheme.getClayDecoration(
           color: isDark ? const Color(0xFF1E293B) : Colors.white,
-          borderRadius: BorderRadius.circular(24),
+          borderRadius: 24,
+        ).copyWith(
           border: Border.all(
             color: address.isDefault
-                ? const Color(0xFF0D9488).withOpacity(0.5)
-                : (isDark ? Colors.white.withOpacity(0.05) : Colors.grey[200]!),
-            width: address.isDefault ? 1.5 : 1.0,
+                ? const Color(0xFF0D9488).withValues(alpha: 0.5)
+                : (isDark ? Colors.white.withValues(alpha: 0.1) : Colors.white.withValues(alpha: 0.8)),
+            width: address.isDefault ? 2.0 : 1.5,
           ),
-          boxShadow: isDark
-              ? []
-              : [
-                  BoxShadow(
-                    color: Colors.black.withOpacity(0.03),
-                    blurRadius: 12,
-                    offset: const Offset(0, 4),
-                  ),
-                ],
         ),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
@@ -281,9 +268,9 @@ class _AddressManagementScreenState extends State<AddressManagementScreen> {
                   padding: const EdgeInsets.all(10),
                   decoration: BoxDecoration(
                     color: address.isDefault
-                        ? const Color(0xFF0D9488).withOpacity(0.1)
+                        ? const Color(0xFF0D9488).withValues(alpha: 0.1)
                         : (isDark
-                              ? Colors.white.withOpacity(0.04)
+                              ? Colors.white.withValues(alpha: 0.04)
                               : Colors.grey[50]!),
                     borderRadius: BorderRadius.circular(14),
                   ),

@@ -33,6 +33,18 @@ class _HomeTabState extends State<HomeTab> {
     super.initState();
     _offersPageController = PageController();
     _startOffersTimer();
+    _loadLocationOnStartup();
+  }
+
+  Future<void> _loadLocationOnStartup() async {
+    try {
+      final loc = await LocationService.getCurrentLocation();
+      if (mounted) {
+        setState(() {
+          _currentAddress = '${loc.city}, ${loc.region} (${loc.zip})';
+        });
+      }
+    } catch (_) {}
   }
 
   void _startOffersTimer() {
@@ -252,45 +264,53 @@ class _HomeTabState extends State<HomeTab> {
     return Row(
       mainAxisAlignment: MainAxisAlignment.spaceBetween,
       children: [
-        Row(
-          children: [
-            Container(
-              padding: const EdgeInsets.all(12),
-              decoration: AppTheme.getClayDecoration(
-                color: AppTheme.forestGreen,
-              ),
-              child: const Icon(
-                LucideIcons.treeDeciduous,
-                color: Colors.white,
-                size: 24,
-              ),
-            ),
-            const SizedBox(width: 12),
-            Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  'ReLoop',
-                  style: Theme.of(context).textTheme.titleLarge?.copyWith(
-                    fontSize: context.scaleFont(24),
-                    fontWeight: FontWeight.bold,
-                    color: isDark ? Colors.white : AppTheme.forestGreen,
-                  ),
+        Expanded(
+          child: Row(
+            children: [
+              Container(
+                padding: const EdgeInsets.all(12),
+                decoration: AppTheme.getClayDecoration(
+                  color: AppTheme.forestGreen,
                 ),
-                Text(
-                  'PREMIUM RECYCLING',
-                  style: TextStyle(
-                    color: isDark ? AppTheme.mintGreen : AppTheme.lightGreen,
-                    fontSize: context.scaleFont(10),
-                    fontWeight: FontWeight.bold,
-                    letterSpacing: 1,
-                  ),
+                child: const Icon(
+                  LucideIcons.treeDeciduous,
+                  color: Colors.white,
+                  size: 24,
                 ),
-              ],
-            ),
-          ],
+              ),
+              const SizedBox(width: 12),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      'ReLoop',
+                      style: Theme.of(context).textTheme.titleLarge?.copyWith(
+                        fontSize: context.scaleFont(24),
+                        fontWeight: FontWeight.bold,
+                        color: isDark ? Colors.white : AppTheme.forestGreen,
+                      ),
+                      overflow: TextOverflow.ellipsis,
+                    ),
+                    Text(
+                      'PREMIUM RECYCLING',
+                      style: TextStyle(
+                        color: isDark ? AppTheme.mintGreen : AppTheme.lightGreen,
+                        fontSize: context.scaleFont(10),
+                        fontWeight: FontWeight.bold,
+                        letterSpacing: 1,
+                      ),
+                      overflow: TextOverflow.ellipsis,
+                    ),
+                  ],
+                ),
+              ),
+            ],
+          ),
         ),
+        const SizedBox(width: 16),
         Row(
+          mainAxisSize: MainAxisSize.min,
           children: [
             Stack(
               clipBehavior: Clip.none,
@@ -360,8 +380,8 @@ class _HomeTabState extends State<HomeTab> {
                   width: 40,
                   height: 40,
                   color: isDark
-                      ? AppTheme.mintGreen.withOpacity(0.2)
-                      : AppTheme.forestGreen.withOpacity(0.1),
+                      ? AppTheme.mintGreen.withValues(alpha: 0.2)
+                      : AppTheme.forestGreen.withValues(alpha: 0.1),
                   child: Icon(
                     LucideIcons.user,
                     size: 20,

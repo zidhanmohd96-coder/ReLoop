@@ -1,6 +1,7 @@
 import 'dart:convert';
 import 'package:http/http.dart' as http;
 import 'package:geolocator/geolocator.dart';
+import 'package:flutter/foundation.dart' show kIsWeb;
 
 class UserLocation {
   final double latitude;
@@ -41,8 +42,31 @@ class UserLocation {
 
 class LocationService {
   static Future<UserLocation> getCurrentLocation() async {
+    if (kIsWeb) {
+      // 1. Bypass Geolocator to prevent Platform._version errors on Web/Chrome
+      try {
+        final url = Uri.parse('http://ip-api.com/json');
+        final response = await http.get(url).timeout(const Duration(seconds: 4));
+        if (response.statusCode == 200) {
+          final data = json.decode(response.body);
+          if (data['status'] == 'success') {
+            return UserLocation(
+              latitude: (data['lat'] as num).toDouble(),
+              longitude: (data['lon'] as num).toDouble(),
+              city: data['city'] ?? 'Cochin',
+              region: data['regionName'] ?? 'Kerala',
+              country: data['country'] ?? 'India',
+              zip: data['zip'] ?? '682030',
+              query: data['query'] ?? '',
+            );
+          }
+        }
+      } catch (_) {}
+      return UserLocation.keralaDefault();
+    }
+
     try {
-      // 1. Try to request Geolocator permissions & get position
+      // 2. Mobile/Native - Geolocator permissions & get position
       bool serviceEnabled = await Geolocator.isLocationServiceEnabled();
       if (serviceEnabled) {
         LocationPermission permission = await Geolocator.checkPermission();
@@ -52,14 +76,12 @@ class LocationService {
 
         if (permission == LocationPermission.whileInUse ||
             permission == LocationPermission.always) {
-          // Get the exact current position
           final position = await Geolocator.getCurrentPosition(
             desiredAccuracy: LocationAccuracy.high,
             timeLimit: const Duration(seconds: 5),
           );
 
-          // 2. Reverse geocode using OpenStreetMap Nominatim API (Free & No Key required)
-          // Nominatim requires a User-Agent header to comply with usage policy
+          // Reverse geocode using OpenStreetMap Nominatim API (Free & No Key required)
           final nominatimUrl = Uri.parse(
             'https://nominatim.openstreetmap.org/reverse?format=json&lat=${position.latitude}&lon=${position.longitude}&zoom=18&addressdetails=1',
           );
@@ -96,8 +118,7 @@ class LocationService {
         }
       }
     } catch (e) {
-      // Geolocator/Nominatim failed or permission denied, fall back to IP Geolocation
-      print('Exact location error, falling back to IP: $e');
+      // Fall back to IP Geolocation on error
     }
 
     // 3. Fallback to free IP location

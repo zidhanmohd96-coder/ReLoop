@@ -34,4 +34,31 @@ class AppNotification {
       isRead: isRead ?? this.isRead,
     );
   }
+
+  factory AppNotification.fromJson(Map<String, dynamic> json) {
+    return AppNotification(
+      id: json['id'] as String? ?? '',
+      title: json['title'] as String? ?? '',
+      message: json['message'] as String? ?? '',
+      timestamp: json['timestamp'] != null 
+          ? DateTime.parse(json['timestamp'] as String) 
+          : DateTime.now(),
+      type: NotificationType.values.firstWhere(
+        (e) => e.toString().split('.').last == (json['type'] as String? ?? 'info'),
+        orElse: () => NotificationType.info,
+      ),
+      isRead: json['isRead'] as bool? ?? false,
+    );
+  }
+
+  Map<String, dynamic> toJson() {
+    return {
+      'id': id,
+      'title': title,
+      'message': message,
+      'timestamp': timestamp.toIso8601String(),
+      'type': type.toString().split('.').last,
+      'isRead': isRead,
+    };
+  }
 }

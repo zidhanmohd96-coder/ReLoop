@@ -34,7 +34,6 @@ class PickupsHistoryScreen extends StatelessWidget {
 
           final completedCount = bookings.where((b) => b.status == BookingStatus.completed).length;
           final upcomingCount = bookings.where((b) => b.status == BookingStatus.pending || b.status == BookingStatus.assigned).length;
-          final cancelledCount = bookings.where((b) => b.status == BookingStatus.cancelled).length;
 
           return SingleChildScrollView(
             child: Padding(

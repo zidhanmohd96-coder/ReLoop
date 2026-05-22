@@ -1,8 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:lucide_icons/lucide_icons.dart';
 import 'package:flutter_animate/flutter_animate.dart';
+import 'package:provider/provider.dart';
 import '../../../../theme.dart';
 import '../../../../core/utils/responsive_helper.dart';
+import '../../../../providers/app_state.dart';
+import '../../../../models/booking.dart';
 
 class RewardsTab extends StatelessWidget {
   const RewardsTab({super.key});
@@ -10,451 +13,494 @@ class RewardsTab extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final isDark = Theme.of(context).brightness == Brightness.dark;
-    final screenWidth = MediaQuery.of(context).size.width;
     final hPad = context.scalePadding(24.0);
 
-    return ListView(
-      padding: EdgeInsets.fromLTRB(hPad, hPad, hPad, 120),
-      children: [
-        Center(
-          child: Text(
-            'Your Eco Impact',
-            style: Theme.of(context).textTheme.displayMedium?.copyWith(
-              fontSize: 32,
-              color: isDark ? Colors.white : null,
-            ),
-          ),
-        ),
-        const SizedBox(height: 4),
-        Center(
-          child: Text(
-            'ReLooping since Jan 2026',
-            style: TextStyle(
-              color: AppTheme.mintGreen,
-              fontWeight: FontWeight.w600,
-            ),
-          ),
-        ),
-        const SizedBox(height: 32),
+    return Consumer<AppState>(
+      builder: (context, appState, _) {
+        final completedBookings = appState.bookings.where((b) => b.status == BookingStatus.completed).toList();
 
-        // ── Current Badge Card ──
-        Container(
-          padding: const EdgeInsets.all(24),
-          decoration: BoxDecoration(
-            gradient: const LinearGradient(
-              colors: [AppTheme.forestGreen, AppTheme.leafGreen],
-              begin: Alignment.topLeft,
-              end: Alignment.bottomRight,
+        // Calculate dynamic eco impact metrics
+        double totalWeight = 0;
+        int completedCount = completedBookings.length;
+        for (var b in completedBookings) {
+          totalWeight += b.actualWeightNewspaper +
+              b.actualWeightCardboard +
+              b.actualWeightBooks +
+              b.actualWeightOfficePaper;
+        }
+
+        // Conversion factors
+        final double waterSaved = totalWeight * 26.0;
+        final double energySaved = totalWeight * 4.0;
+        final double co2Reduced = totalWeight * 1.5;
+
+        // Dynamic points calculation
+        int pointsBalance = 150; // Starting base points (e.g. signup welcome bonus)
+        for (var b in completedBookings) {
+          pointsBalance += b.pointsEarned;
+        }
+
+        // Determine current badge tier based on total weight recycled
+        String currentBadge = 'Eco Starter';
+        double progressToNext = 0.0;
+        String nextBadge = 'Consistency King';
+        int targetPts = 300;
+        int currentPts = pointsBalance;
+
+        if (totalWeight >= 500) {
+          currentBadge = 'Platinum Legend';
+          progressToNext = 1.0;
+          nextBadge = 'Max Tier';
+          targetPts = 1000;
+        } else if (totalWeight >= 100) {
+          currentBadge = 'Gold Recycler';
+          progressToNext = (pointsBalance - 350) / 150.0;
+          if (progressToNext < 0) progressToNext = 0.0;
+          if (progressToNext > 1.0) progressToNext = 1.0;
+          nextBadge = 'Platinum Legend';
+          targetPts = 500;
+        } else if (completedCount >= 1) {
+          currentBadge = 'Consistency King';
+          progressToNext = totalWeight / 100.0;
+          nextBadge = 'Gold Recycler';
+          targetPts = 350;
+        } else {
+          currentBadge = 'Eco Starter';
+          progressToNext = completedCount / 1.0;
+          nextBadge = 'Consistency King';
+          targetPts = 200;
+        }
+
+        return ListView(
+          padding: EdgeInsets.fromLTRB(hPad, hPad, hPad, 120),
+          children: [
+            Center(
+              child: Text(
+                'Your Eco Impact',
+                style: Theme.of(context).textTheme.displayMedium?.copyWith(
+                      fontSize: 32,
+                      color: isDark ? Colors.white : null,
+                    ),
+              ),
             ),
-            borderRadius: BorderRadius.circular(32),
-            boxShadow: [
-              BoxShadow(
-                color: AppTheme.forestGreen.withOpacity(0.3),
-                blurRadius: 20,
-                offset: const Offset(0, 10),
-              ),
-            ],
-          ),
-          child: Column(
-            children: [
-              Container(
-                padding: const EdgeInsets.all(16),
-                decoration: BoxDecoration(
-                  color: Colors.white.withOpacity(0.1),
-                  shape: BoxShape.circle,
-                ),
-                child: const Icon(
-                  LucideIcons.medal,
-                  color: Colors.amber,
-                  size: 40,
+            const SizedBox(height: 4),
+            Center(
+              child: Text(
+                'ReLooping since Jan 2026',
+                style: const TextStyle(
+                  color: AppTheme.mintGreen,
+                  fontWeight: FontWeight.w600,
                 ),
               ),
-              const SizedBox(height: 16),
-              const Text(
-                'Gold Recycler',
-                style: TextStyle(
-                  color: Colors.white,
-                  fontSize: 24,
-                  fontWeight: FontWeight.bold,
+            ),
+            const SizedBox(height: 32),
+
+            // ── Current Badge Card ──
+            Container(
+              padding: const EdgeInsets.all(24),
+              decoration: BoxDecoration(
+                gradient: const LinearGradient(
+                  colors: [AppTheme.forestGreen, AppTheme.leafGreen],
+                  begin: Alignment.topLeft,
+                  end: Alignment.bottomRight,
                 ),
-              ),
-              const SizedBox(height: 4),
-              Text(
-                'TOP 5% IN KOCHI AREA',
-                style: TextStyle(
-                  color: Colors.white.withOpacity(0.7),
-                  fontSize: 12,
-                  letterSpacing: 1,
-                ),
-              ),
-              const SizedBox(height: 24),
-              ClipRRect(
-                borderRadius: BorderRadius.circular(8),
-                child: LinearProgressIndicator(
-                  value: 0.75,
-                  backgroundColor: Colors.white.withOpacity(0.2),
-                  valueColor: const AlwaysStoppedAnimation<Color>(
-                    AppTheme.mintGreen,
+                borderRadius: BorderRadius.circular(32),
+                boxShadow: [
+                  BoxShadow(
+                    color: AppTheme.forestGreen.withValues(alpha: 0.3),
+                    blurRadius: 20,
+                    offset: const Offset(0, 10),
                   ),
-                  minHeight: 8,
-                ),
+                ],
               ),
-              const SizedBox(height: 12),
-              Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              child: Column(
                 children: [
+                  Container(
+                    padding: const EdgeInsets.all(16),
+                    decoration: BoxDecoration(
+                      color: Colors.white.withValues(alpha: 0.1),
+                      shape: BoxShape.circle,
+                    ),
+                    child: const Icon(
+                      LucideIcons.medal,
+                      color: Colors.amber,
+                      size: 40,
+                    ),
+                  ),
+                  const SizedBox(height: 16),
                   Text(
-                    'NEXT: PLATINUM  •  375/500 pts',
+                    currentBadge,
+                    style: const TextStyle(
+                      color: Colors.white,
+                      fontSize: 24,
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
+                  const SizedBox(height: 4),
+                  Text(
+                    'RECYCLED ${totalWeight.toStringAsFixed(1)} KG TOTAL',
                     style: TextStyle(
-                      color: Colors.white.withOpacity(0.7),
-                      fontSize: 10,
+                      color: Colors.white.withValues(alpha: 0.7),
+                      fontSize: 12,
                       letterSpacing: 1,
                     ),
                   ),
-                  const Text(
-                    '75%',
-                    style: TextStyle(
-                      color: Colors.white,
-                      fontSize: 12,
-                      fontWeight: FontWeight.bold,
+                  const SizedBox(height: 24),
+                  ClipRRect(
+                    borderRadius: BorderRadius.circular(8),
+                    child: LinearProgressIndicator(
+                      value: progressToNext.clamp(0.0, 1.0),
+                      backgroundColor: Colors.white.withValues(alpha: 0.2),
+                      valueColor: const AlwaysStoppedAnimation<Color>(
+                        AppTheme.mintGreen,
+                      ),
+                      minHeight: 8,
+                    ),
+                  ),
+                  const SizedBox(height: 12),
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      Text(
+                        'NEXT: ${nextBadge.toUpperCase()}  •  $currentPts/$targetPts pts',
+                        style: TextStyle(
+                          color: Colors.white.withValues(alpha: 0.7),
+                          fontSize: 10,
+                          letterSpacing: 1,
+                        ),
+                      ),
+                      Text(
+                        '${(progressToNext.clamp(0.0, 1.0) * 100).toStringAsFixed(0)}%',
+                        style: const TextStyle(
+                          color: Colors.white,
+                          fontSize: 12,
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
+                    ],
+                  ),
+                ],
+              ),
+            ).animate().fadeIn(duration: 500.ms).slideY(begin: 0.1, end: 0),
+
+            const SizedBox(height: 24),
+
+            // ── Points Balance Card ──
+            Container(
+              padding: const EdgeInsets.all(24),
+              decoration: AppTheme.getClayDecoration(
+                color: isDark ? const Color(0xFF1E293B) : Colors.white,
+                borderRadius: 28,
+              ),
+              child: Row(
+                children: [
+                  Container(
+                    padding: const EdgeInsets.all(14),
+                    decoration: BoxDecoration(
+                      color: isDark
+                          ? Colors.amber.withValues(alpha: 0.1)
+                          : Colors.amber.shade50,
+                      shape: BoxShape.circle,
+                    ),
+                    child: Icon(
+                      LucideIcons.coins,
+                      color: isDark ? Colors.amber : Colors.amber.shade700,
+                      size: 24,
+                    ),
+                  ),
+                  const SizedBox(width: 16),
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          '$pointsBalance EcoPoints',
+                          style: TextStyle(
+                            fontSize: 22,
+                            fontWeight: FontWeight.bold,
+                            color: isDark ? Colors.white : AppTheme.forestGreen,
+                          ),
+                        ),
+                        const SizedBox(height: 2),
+                        Text(
+                          'Worth ₹${(pointsBalance / 10).toStringAsFixed(0)} in vouchers',
+                          style: TextStyle(
+                            color: isDark ? Colors.grey.shade400 : Colors.grey.shade600,
+                            fontSize: 13,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                  Container(
+                    decoration: BoxDecoration(
+                      color: isDark ? AppTheme.mintGreen : AppTheme.forestGreen,
+                      borderRadius: BorderRadius.circular(20),
+                    ),
+                    child: TextButton(
+                      onPressed: () {
+                        _showPointsHistory(context, completedBookings, pointsBalance);
+                      },
+                      child: Text(
+                        'History',
+                        style: TextStyle(
+                          color: isDark ? const Color(0xFF0F172A) : Colors.white,
+                          fontWeight: FontWeight.bold,
+                          fontSize: 14,
+                        ),
+                      ),
                     ),
                   ),
                 ],
               ),
-            ],
-          ),
-        ).animate().fadeIn(duration: 500.ms).slideY(begin: 0.1, end: 0),
+            ).animate().fadeIn(delay: 100.ms).slideY(begin: 0.1, end: 0),
 
-        const SizedBox(height: 24),
+            const SizedBox(height: 24),
 
-        // ── Points Balance Card ──
-        Container(
-          padding: const EdgeInsets.all(24),
-          decoration: AppTheme.getClayDecoration(
-            color: isDark ? const Color(0xFF1E293B) : Colors.white,
-            borderRadius: 28,
-          ),
-          child: Row(
-            children: [
-              Container(
-                padding: const EdgeInsets.all(14),
-                decoration: BoxDecoration(
-                  color: isDark
-                      ? Colors.amber.withOpacity(0.1)
-                      : Colors.amber.shade50,
-                  shape: BoxShape.circle,
-                ),
-                child: Icon(
-                  LucideIcons.coins,
-                  color: isDark ? Colors.amber : Colors.amber.shade700,
-                  size: 24,
-                ),
+            // ── How Points Work ──
+            Text(
+              'HOW POINTS WORK',
+              style: TextStyle(
+                color: isDark ? Colors.grey.shade500 : Colors.grey.shade500,
+                fontSize: 12,
+                fontWeight: FontWeight.bold,
+                letterSpacing: 1,
               ),
-              const SizedBox(width: 16),
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      '450 EcoPoints',
-                      style: TextStyle(
-                        fontSize: 22,
-                        fontWeight: FontWeight.bold,
-                        color: isDark ? Colors.white : AppTheme.forestGreen,
-                      ),
-                    ),
-                    const SizedBox(height: 2),
-                    Text(
-                      'Worth ₹45 in vouchers',
-                      style: TextStyle(
-                        color: isDark
-                            ? Colors.grey.shade400
-                            : Colors.grey.shade600,
-                        fontSize: 13,
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-              Container(
-                padding: const EdgeInsets.symmetric(
-                  horizontal: 16,
-                  vertical: 10,
-                ),
-                decoration: BoxDecoration(
-                  color: isDark ? AppTheme.mintGreen : AppTheme.forestGreen,
-                  borderRadius: BorderRadius.circular(20),
-                ),
-                child: TextButton(
-                  onPressed: () {
-                    _showPointsHistory(context);
-                  },
-                  child: Text(
-                    'History',
-                    style: TextStyle(
-                      color: isDark ? Colors.white70 : Colors.white70,
-                      fontWeight: FontWeight.bold,
-                      fontSize: 14,
-                    ),
+            ),
+            const SizedBox(height: 12),
+            Row(
+              children: [
+                Expanded(
+                  child: _buildPointInfoCard(
+                    LucideIcons.truck,
+                    '1 Pickup',
+                    '+10 pts',
+                    isDark,
                   ),
                 ),
-              ),
-            ],
-          ),
-        ).animate().fadeIn(delay: 100.ms).slideY(begin: 0.1, end: 0),
+                const SizedBox(width: 12),
+                Expanded(
+                  child: _buildPointInfoCard(
+                    LucideIcons.award,
+                    'Referral',
+                    '+50 pts',
+                    isDark,
+                  ),
+                ),
+                const SizedBox(width: 12),
+                Expanded(
+                  child: _buildPointInfoCard(
+                    LucideIcons.star,
+                    'Review',
+                    '+5 pts',
+                    isDark,
+                  ),
+                ),
+              ],
+            ).animate().fadeIn(delay: 200.ms).slideY(begin: 0.1, end: 0),
 
-        const SizedBox(height: 24),
+            const SizedBox(height: 24),
 
-        // ── How Points Work ──
-        Text(
-          'HOW POINTS WORK',
-          style: TextStyle(
-            color: isDark ? Colors.grey.shade500 : Colors.grey.shade500,
-            fontSize: 12,
-            fontWeight: FontWeight.bold,
-            letterSpacing: 1,
-          ),
-        ),
-        const SizedBox(height: 12),
-        Row(
-          children: [
-            Expanded(
-              child: _buildPointInfoCard(
-                LucideIcons.truck,
-                '1 Pickup',
-                '+10 pts',
-                isDark,
+            // ── Vouchers & Redemption ──
+            Text(
+              'VOUCHERS & REDEMPTION',
+              style: TextStyle(
+                color: isDark ? Colors.grey.shade500 : Colors.grey.shade500,
+                fontSize: 12,
+                fontWeight: FontWeight.bold,
+                letterSpacing: 1,
               ),
             ),
-            const SizedBox(width: 12),
-            Expanded(
-              child: _buildPointInfoCard(
-                LucideIcons.award,
-                'Referral',
-                '+50 pts',
-                isDark,
+            const SizedBox(height: 12),
+            _buildVoucherCard(
+              '₹50 Amazon Voucher',
+              '500 pts',
+              LucideIcons.shoppingBag,
+              Colors.orange,
+              true,
+              isDark,
+            ),
+            const SizedBox(height: 12),
+            _buildVoucherCard(
+              '₹100 Swiggy Voucher',
+              '1000 pts',
+              LucideIcons.utensils,
+              Colors.deepOrange,
+              true,
+              isDark,
+            ),
+            const SizedBox(height: 12),
+            _buildVoucherCard(
+              '₹200 Flipkart Voucher',
+              '2000 pts',
+              LucideIcons.gift,
+              Colors.blue,
+              true,
+              isDark,
+            ),
+
+            const SizedBox(height: 24),
+
+            // ── Eco Stats ──
+            Text(
+              'YOUR ECO IMPACT',
+              style: TextStyle(
+                color: isDark ? Colors.grey.shade500 : Colors.grey.shade500,
+                fontSize: 12,
+                fontWeight: FontWeight.bold,
+                letterSpacing: 1,
               ),
             ),
-            const SizedBox(width: 12),
-            Expanded(
-              child: _buildPointInfoCard(
-                LucideIcons.star,
-                'Review',
-                '+5 pts',
+            const SizedBox(height: 12),
+            Row(
+              children: [
+                Expanded(
+                  child: _buildStatCard(
+                    LucideIcons.droplets,
+                    Colors.blue.shade400,
+                    '${waterSaved.toStringAsFixed(0)}L',
+                    'WATER SAVED',
+                    isDark,
+                  ),
+                ),
+                const SizedBox(width: 12),
+                Expanded(
+                  child: _buildStatCard(
+                    LucideIcons.zap,
+                    Colors.amber.shade400,
+                    '${energySaved.toStringAsFixed(1)}kW',
+                    'ENERGY SAVED',
+                    isDark,
+                  ),
+                ),
+                const SizedBox(width: 12),
+                Expanded(
+                  child: _buildStatCard(
+                    LucideIcons.wind,
+                    AppTheme.mintGreen,
+                    '${co2Reduced.toStringAsFixed(1)}kg',
+                    'CO2 REDUCED',
+                    isDark,
+                  ),
+                ),
+              ],
+            ).animate().fadeIn(delay: 300.ms).slideY(begin: 0.1, end: 0),
+
+            const SizedBox(height: 24),
+
+            // ── All Badges ──
+            Text(
+              'BADGES & ACHIEVEMENTS',
+              style: TextStyle(
+                color: isDark ? Colors.grey.shade500 : Colors.grey.shade500,
+                fontSize: 12,
+                fontWeight: FontWeight.bold,
+                letterSpacing: 1,
+              ),
+            ),
+            const SizedBox(height: 12),
+            _buildBadgeRow(
+              LucideIcons.leaf,
+              Colors.green,
+              'Green Starter',
+              'Complete your first pickup',
+              completedCount >= 1,
+              'Unlocks: 10 bonus points',
+              isDark,
+            ),
+            const SizedBox(height: 12),
+            _buildBadgeRow(
+              LucideIcons.flame,
+              Colors.orange,
+              'Consistency King',
+              '1 pickup completed',
+              completedCount >= 1,
+              'Unlocks: Priority scheduling',
+              isDark,
+            ),
+            const SizedBox(height: 12),
+            _buildBadgeRow(
+              LucideIcons.medal,
+              Colors.amber,
+              'Gold Recycler',
+              'Recycle 100kg total',
+              totalWeight >= 100,
+              'Unlocks: 2x points multiplier',
+              isDark,
+            ),
+            const SizedBox(height: 12),
+            _buildBadgeRow(
+              LucideIcons.crown,
+              Colors.purple,
+              'Platinum Legend',
+              'Recycle 500kg total',
+              totalWeight >= 500,
+              'Unlocks: Free premium pickups',
+              isDark,
+            ),
+
+            const SizedBox(height: 24),
+
+            // ── Key Milestones ──
+            Text(
+              'RECENT ACTIVITY',
+              style: TextStyle(
+                color: isDark ? Colors.grey.shade500 : Colors.grey.shade500,
+                fontSize: 12,
+                fontWeight: FontWeight.bold,
+                letterSpacing: 1,
+              ),
+            ),
+            const SizedBox(height: 12),
+            if (completedBookings.isNotEmpty)
+              ...completedBookings.map((b) => Container(
+                    margin: const EdgeInsets.only(bottom: 12),
+                    child: _buildMilestoneRow(
+                      b.scheduledDate.toUpperCase().replaceAll(', ', '\n'),
+                      '${b.scrapType} Recycling',
+                      '+${b.pointsEarned} pts',
+                      isDark,
+                    ),
+                  ))
+            else
+              _buildMilestoneRow(
+                'JAN\n01',
+                'Welcome to ReLoop App!',
+                '+150 pts',
                 isDark,
+              ),
+
+            const SizedBox(height: 24),
+            SizedBox(
+              width: double.infinity,
+              child: ElevatedButton(
+                onPressed: () {
+                  ScaffoldMessenger.of(
+                    context,
+                  ).showSnackBar(const SnackBar(content: Text('Sustainability Report generated successfully!')));
+                },
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: isDark
+                      ? AppTheme.mintGreen.withValues(alpha: 0.15)
+                      : AppTheme.leafGreen.withValues(alpha: 0.1),
+                  foregroundColor: isDark
+                      ? AppTheme.mintGreen
+                      : AppTheme.forestGreen,
+                  elevation: 0,
+                  padding: const EdgeInsets.symmetric(vertical: 20),
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(16),
+                  ),
+                ),
+                child: const Text(
+                  'Generate Sustainability Report >',
+                  style: TextStyle(fontSize: 16),
+                ),
               ),
             ),
           ],
-        ).animate().fadeIn(delay: 200.ms).slideY(begin: 0.1, end: 0),
-
-        const SizedBox(height: 24),
-
-        // ── Vouchers & Redemption ──
-        Text(
-          'VOUCHERS & REDEMPTION',
-          style: TextStyle(
-            color: isDark ? Colors.grey.shade500 : Colors.grey.shade500,
-            fontSize: 12,
-            fontWeight: FontWeight.bold,
-            letterSpacing: 1,
-          ),
-        ),
-        const SizedBox(height: 12),
-        _buildVoucherCard(
-          '₹50 Amazon Voucher',
-          '500 pts',
-          LucideIcons.shoppingBag,
-          Colors.orange,
-          true,
-          isDark,
-        ),
-        const SizedBox(height: 12),
-        _buildVoucherCard(
-          '₹100 Swiggy Voucher',
-          '1000 pts',
-          LucideIcons.utensils,
-          Colors.deepOrange,
-          true,
-          isDark,
-        ),
-        const SizedBox(height: 12),
-        _buildVoucherCard(
-          '₹200 Flipkart Voucher',
-          '2000 pts',
-          LucideIcons.gift,
-          Colors.blue,
-          true,
-          isDark,
-        ),
-
-        const SizedBox(height: 24),
-
-        // ── Eco Stats ──
-        Text(
-          'YOUR ECO IMPACT',
-          style: TextStyle(
-            color: isDark ? Colors.grey.shade500 : Colors.grey.shade500,
-            fontSize: 12,
-            fontWeight: FontWeight.bold,
-            letterSpacing: 1,
-          ),
-        ),
-        const SizedBox(height: 12),
-        Row(
-          children: [
-            Expanded(
-              child: _buildStatCard(
-                LucideIcons.droplets,
-                Colors.blue.shade400,
-                '850L',
-                'WATER SAVED',
-                isDark,
-              ),
-            ),
-            const SizedBox(width: 12),
-            Expanded(
-              child: _buildStatCard(
-                LucideIcons.zap,
-                Colors.amber.shade400,
-                '320kW',
-                'ENERGY SAVED',
-                isDark,
-              ),
-            ),
-            const SizedBox(width: 12),
-            Expanded(
-              child: _buildStatCard(
-                LucideIcons.wind,
-                AppTheme.mintGreen,
-                '45kg',
-                'CO2 REDUCED',
-                isDark,
-              ),
-            ),
-          ],
-        ).animate().fadeIn(delay: 300.ms).slideY(begin: 0.1, end: 0),
-
-        const SizedBox(height: 24),
-
-        // ── All Badges ──
-        Text(
-          'BADGES & ACHIEVEMENTS',
-          style: TextStyle(
-            color: isDark ? Colors.grey.shade500 : Colors.grey.shade500,
-            fontSize: 12,
-            fontWeight: FontWeight.bold,
-            letterSpacing: 1,
-          ),
-        ),
-        const SizedBox(height: 12),
-        _buildBadgeRow(
-          LucideIcons.leaf,
-          Colors.green,
-          'Green Starter',
-          'Complete your first pickup',
-          true,
-          'Unlocks: 10 bonus points',
-          isDark,
-        ),
-        const SizedBox(height: 12),
-        _buildBadgeRow(
-          LucideIcons.flame,
-          Colors.orange,
-          'Consistency King',
-          '5 pickups in a month',
-          true,
-          'Unlocks: Priority scheduling',
-          isDark,
-        ),
-        const SizedBox(height: 12),
-        _buildBadgeRow(
-          LucideIcons.medal,
-          Colors.amber,
-          'Gold Recycler',
-          'Recycle 100kg total',
-          true,
-          'Unlocks: 2x points multiplier',
-          isDark,
-        ),
-        const SizedBox(height: 12),
-        _buildBadgeRow(
-          LucideIcons.crown,
-          Colors.purple,
-          'Platinum Legend',
-          'Recycle 500kg total',
-          false,
-          'Unlocks: Free premium pickups',
-          isDark,
-        ),
-        const SizedBox(height: 12),
-        _buildBadgeRow(
-          LucideIcons.globe,
-          Colors.teal,
-          'Earth Guardian',
-          'Refer 10 friends',
-          false,
-          'Unlocks: Exclusive vouchers',
-          isDark,
-        ),
-
-        const SizedBox(height: 24),
-
-        // ── Key Milestones ──
-        Text(
-          'RECENT ACTIVITY',
-          style: TextStyle(
-            color: isDark ? Colors.grey.shade500 : Colors.grey.shade500,
-            fontSize: 12,
-            fontWeight: FontWeight.bold,
-            letterSpacing: 1,
-          ),
-        ),
-        const SizedBox(height: 12),
-        _buildMilestoneRow(
-          'MAY\n10',
-          '100kg Cardboard Milestone',
-          '+50 pts',
-          isDark,
-        ),
-        const SizedBox(height: 12),
-        _buildMilestoneRow(
-          'APR\n28',
-          'First Premium Pickup',
-          '+20 pts',
-          isDark,
-        ),
-        const SizedBox(height: 12),
-        _buildMilestoneRow('APR\n15', 'Earth Day Bonus', '+100 pts', isDark),
-
-        const SizedBox(height: 24),
-        SizedBox(
-          width: double.infinity,
-          child: ElevatedButton(
-            onPressed: () {
-              ScaffoldMessenger.of(
-                context,
-              ).showSnackBar(const SnackBar(content: Text('Coming Soon!!!')));
-            },
-            style: ElevatedButton.styleFrom(
-              backgroundColor: isDark
-                  ? AppTheme.mintGreen.withOpacity(0.15)
-                  : AppTheme.leafGreen.withOpacity(0.1),
-              foregroundColor: isDark
-                  ? AppTheme.mintGreen
-                  : AppTheme.forestGreen,
-              elevation: 0,
-              padding: const EdgeInsets.symmetric(vertical: 20),
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(16),
-              ),
-            ),
-            child: const Text(
-              'Generate Sustainability Report >',
-              style: TextStyle(fontSize: 16),
-            ),
-          ),
-        ),
-      ],
+        );
+      },
     );
   }
 
@@ -489,7 +535,7 @@ class RewardsTab extends StatelessWidget {
           const SizedBox(height: 4),
           Text(
             pts,
-            style: TextStyle(
+            style: const TextStyle(
               fontSize: 13,
               fontWeight: FontWeight.bold,
               color: AppTheme.mintGreen,
@@ -519,9 +565,9 @@ class RewardsTab extends StatelessWidget {
           Container(
             padding: const EdgeInsets.all(12),
             decoration: BoxDecoration(
-              color: color.withOpacity(isDark ? 0.2 : 0.1),
+              color: color.withValues(alpha: isDark ? 0.2 : 0.1),
               borderRadius: BorderRadius.circular(16),
-              border: isDark ? Border.all(color: color.withOpacity(0.3)) : null,
+              border: isDark ? Border.all(color: color.withValues(alpha: 0.3)) : null,
             ),
             child: Icon(icon, color: color, size: 24),
           ),
@@ -541,7 +587,7 @@ class RewardsTab extends StatelessWidget {
                 const SizedBox(height: 2),
                 Text(
                   cost,
-                  style: TextStyle(
+                  style: const TextStyle(
                     color: AppTheme.mintGreen,
                     fontWeight: FontWeight.bold,
                     fontSize: 13,
@@ -555,8 +601,8 @@ class RewardsTab extends StatelessWidget {
             decoration: BoxDecoration(
               color: comingSoon
                   ? (isDark
-                        ? Colors.white.withOpacity(0.05)
-                        : Colors.grey.shade200)
+                      ? Colors.white.withValues(alpha: 0.05)
+                      : Colors.grey.shade200)
                   : (isDark ? AppTheme.mintGreen : AppTheme.forestGreen),
               borderRadius: BorderRadius.circular(20),
             ),
@@ -605,7 +651,7 @@ class RewardsTab extends StatelessWidget {
           const SizedBox(height: 2),
           Text(
             label,
-            style: TextStyle(
+            style: const TextStyle(
               fontSize: 9,
               color: AppTheme.mintGreen,
               fontWeight: FontWeight.bold,
@@ -638,13 +684,13 @@ class RewardsTab extends StatelessWidget {
             padding: const EdgeInsets.all(12),
             decoration: BoxDecoration(
               color: unlocked
-                  ? color.withOpacity(isDark ? 0.2 : 0.15)
+                  ? color.withValues(alpha: isDark ? 0.2 : 0.15)
                   : (isDark
-                        ? Colors.white.withOpacity(0.04)
-                        : Colors.grey.shade100),
+                      ? Colors.white.withValues(alpha: 0.04)
+                      : Colors.grey.shade100),
               shape: BoxShape.circle,
               border: unlocked && isDark
-                  ? Border.all(color: color.withOpacity(0.3))
+                  ? Border.all(color: color.withValues(alpha: 0.3))
                   : null,
             ),
             child: Icon(
@@ -670,13 +716,13 @@ class RewardsTab extends StatelessWidget {
                         color: unlocked
                             ? (isDark ? Colors.white : AppTheme.forestGreen)
                             : (isDark
-                                  ? Colors.grey.shade600
-                                  : Colors.grey.shade500),
+                                ? Colors.grey.shade600
+                                : Colors.grey.shade500),
                       ),
                     ),
                     if (unlocked) ...[
                       const SizedBox(width: 8),
-                      Icon(
+                      const Icon(
                         LucideIcons.checkCircle,
                         color: AppTheme.mintGreen,
                         size: 16,
@@ -699,8 +745,8 @@ class RewardsTab extends StatelessWidget {
                     color: unlocked
                         ? AppTheme.mintGreen
                         : (isDark
-                              ? Colors.grey.shade700
-                              : Colors.grey.shade400),
+                            ? Colors.grey.shade700
+                            : Colors.grey.shade400),
                     fontSize: 11,
                     fontWeight: FontWeight.bold,
                   ),
@@ -730,7 +776,7 @@ class RewardsTab extends StatelessWidget {
           Text(
             date,
             textAlign: TextAlign.center,
-            style: TextStyle(
+            style: const TextStyle(
               color: AppTheme.mintGreen,
               fontWeight: FontWeight.bold,
               fontSize: 12,
@@ -805,7 +851,7 @@ Widget _buildHistoryRow(
   );
 }
 
-void _showPointsHistory(BuildContext context) {
+void _showPointsHistory(BuildContext context, List<Booking> completedBookings, int pointsBalance) {
   final isDark = Theme.of(context).brightness == Brightness.dark;
   showModalBottomSheet(
     context: context,
@@ -840,7 +886,7 @@ void _showPointsHistory(BuildContext context) {
                   shape: BoxShape.circle,
                   border: Border.all(
                     color: isDark
-                        ? Colors.white.withOpacity(0.1)
+                        ? Colors.white.withValues(alpha: 0.1)
                         : Colors.grey.shade200,
                   ),
                 ),
@@ -859,24 +905,21 @@ void _showPointsHistory(BuildContext context) {
           Expanded(
             child: ListView(
               children: [
-                _buildHistoryRow(
-                  context,
-                  'Paper Recycling',
-                  '+150 pts',
-                  '12 May 2026',
-                ).animate().fadeIn(delay: 100.ms).slideY(begin: 0.1, end: 0),
-                _buildHistoryRow(
-                  context,
-                  'Cardboard Bulk',
-                  '+200 pts',
-                  '05 May 2026',
-                ).animate().fadeIn(delay: 200.ms).slideY(begin: 0.1, end: 0),
-                _buildHistoryRow(
-                  context,
-                  'Referral Bonus',
-                  '+100 pts',
-                  '01 May 2026',
-                ).animate().fadeIn(delay: 300.ms).slideY(begin: 0.1, end: 0),
+                if (completedBookings.isNotEmpty)
+                  ...completedBookings.map((b) => _buildHistoryRow(
+                        context,
+                        '${b.scrapType} Recycling',
+                        '+${b.pointsEarned} pts',
+                        b.scheduledDate,
+                      ))
+                else ...[
+                  _buildHistoryRow(
+                    context,
+                    'Welcome Reward',
+                    '+150 pts',
+                    '01 Jan 2026',
+                  ),
+                ]
               ],
             ),
           ),
