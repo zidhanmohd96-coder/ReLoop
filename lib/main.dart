@@ -1,12 +1,13 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:provider/provider.dart';
+import 'package:firebase_core/firebase_core.dart';
 import 'providers/app_state.dart';
 import 'theme.dart';
 
 import 'screens/splash_screen.dart';
 
-void main() {
+void main() async {
   WidgetsFlutterBinding.ensureInitialized();
   SystemChrome.setSystemUIOverlayStyle(
     const SystemUiOverlayStyle(
@@ -14,6 +15,11 @@ void main() {
       statusBarIconBrightness: Brightness.dark,
     ),
   );
+  try {
+    await Firebase.initializeApp();
+  } catch (e) {
+    debugPrint('Firebase not initialized: $e');
+  }
   runApp(
     MultiProvider(
       providers: [ChangeNotifierProvider(create: (_) => AppState())],

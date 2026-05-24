@@ -17,6 +17,8 @@ import '../../../../screens/profile/support_screen.dart';
 import '../../../../screens/profile/feedback_screen.dart';
 import '../../../../screens/profile/subscription_screen.dart';
 import '../../../../screens/profile/notification_history_screen.dart';
+import '../../../../screens/auth_screen.dart';
+
 
 class ProfileTab extends StatefulWidget {
   final VoidCallback? onViewHistory;
@@ -93,7 +95,7 @@ class _ProfileTabState extends State<ProfileTab> {
             const SizedBox(height: 16),
             Center(
               child: Text(
-                'zimu',
+                appState.userName,
                 style: Theme.of(context).textTheme.displayMedium?.copyWith(
                   fontSize: 28,
                   color: isDark ? Colors.white : null,
@@ -375,6 +377,38 @@ class _ProfileTabState extends State<ProfileTab> {
                     'Log Out',
                     isDark,
                     isDestructive: true,
+                    onTap: () async {
+                      final confirmed = await showDialog<bool>(
+                        context: context,
+                        builder: (ctx) => AlertDialog(
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(24),
+                          ),
+                          title: const Text('Log Out'),
+                          content: const Text('Are you sure you want to log out of your account?'),
+                          actions: [
+                            TextButton(
+                              onPressed: () => Navigator.pop(ctx, false),
+                              child: const Text('Cancel', style: TextStyle(color: Colors.grey)),
+                            ),
+                            TextButton(
+                              onPressed: () => Navigator.pop(ctx, true),
+                              child: const Text('Log Out', style: TextStyle(color: Colors.red, fontWeight: FontWeight.bold)),
+                            ),
+                          ],
+                        ),
+                      );
+                      if (confirmed == true) {
+                        await appState.signOut();
+                        if (context.mounted) {
+                          Navigator.pushAndRemoveUntil(
+                            context,
+                            MaterialPageRoute(builder: (_) => const AuthScreen()),
+                            (route) => false,
+                          );
+                        }
+                      }
+                    },
                   ),
                 ],
               ),

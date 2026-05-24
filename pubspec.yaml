@@ -45,6 +45,9 @@ dependencies:
   http: 
   geolocator: 
   google_maps_flutter: 
+  firebase_core: 
+  cloud_firestore: 
+  firebase_auth: 
 
 
 dev_dependencies:

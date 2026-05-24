@@ -2,12 +2,24 @@ import 'dart:async';
 import 'dart:convert';
 import 'dart:io';
 import 'package:flutter/material.dart';
+import 'package:firebase_core/firebase_core.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 import '../models/address.dart';
 import '../models/booking.dart';
 import '../models/picker.dart';
 import '../models/notification.dart';
 
 class AppState extends ChangeNotifier {
+  // Check if Firebase was initialized successfully
+  bool get isFirebaseEnabled {
+    try {
+      return Firebase.apps.isNotEmpty;
+    } catch (_) {
+      return false;
+    }
+  }
+
   List<Address> _addresses = [
     Address(
       id: 'addr_default_1',
@@ -35,6 +47,7 @@ class AppState extends ChangeNotifier {
   List<Map<String, dynamic>> _coverageZones = [];
   List<Map<String, dynamic>> _offers = [];
   List<Map<String, dynamic>> _activeSubscriptions = [];
+  String _userName = 'User';
 
   // ── Notifications State ──
   final List<AppNotification> _notifications = [
@@ -56,6 +69,15 @@ class AppState extends ChangeNotifier {
 
   Timer? _syncTimer;
 
+  // Real-time Firestore subscriptions
+  StreamSubscription? _pricesSub;
+  StreamSubscription? _zonesSub;
+  StreamSubscription? _offersSub;
+  StreamSubscription? _bookingsSub;
+  StreamSubscription? _userSub;
+  StreamSubscription? _notifSub;
+  StreamSubscription? _authSub;
+
   AppState() {
     startSync();
   }
@@ -67,14 +89,212 @@ class AppState extends ChangeNotifier {
   }
 
   void startSync() {
+    if (isFirebaseEnabled) {
+      _startFirebaseSync();
+    } else {
+      _startMockSync();
+    }
+  }
+
+  void stopSync() {
+    _syncTimer?.cancel();
+    _pricesSub?.cancel();
+    _zonesSub?.cancel();
+    _offersSub?.cancel();
+    _bookingsSub?.cancel();
+    _userSub?.cancel();
+    _notifSub?.cancel();
+    _authSub?.cancel();
+  }
+
+  void _startMockSync() {
     _loadFromDb();
     _syncTimer = Timer.periodic(const Duration(seconds: 3), (timer) {
       _loadFromDb();
     });
   }
 
-  void stopSync() {
-    _syncTimer?.cancel();
+  void _startFirebaseSync() {
+    // Shared configurations initialization
+    _initFirestoreDefaults();
+
+    // Listen to global configurations
+    _pricesSub = FirebaseFirestore.instance.collection('scrap_prices').doc('rates').snapshots().listen((snapshot) {
+      if (snapshot.exists && snapshot.data() != null) {
+        _scrapPrices = Map<String, double>.from(
+          snapshot.data()!.map((k, v) => MapEntry(k, (v as num).toDouble())),
+        );
+        notifyListeners();
+      }
+    });
+
+    _zonesSub = FirebaseFirestore.instance.collection('coverage_zones').snapshots().listen((snapshot) {
+      _coverageZones = snapshot.docs.map((doc) => doc.data()).toList();
+      notifyListeners();
+    });
+
+    _offersSub = FirebaseFirestore.instance.collection('offers').snapshots().listen((snapshot) {
+      _offers = snapshot.docs.map((doc) => doc.data()).toList();
+      notifyListeners();
+    });
+
+    // Listen to Auth changes
+    _authSub = FirebaseAuth.instance.authStateChanges().listen((user) {
+      if (user != null) {
+        _listenToUserData(user.uid);
+      } else {
+        _clearUserData();
+      }
+    });
+  }
+
+  void _initFirestoreDefaults() {
+    FirebaseFirestore.instance.collection('scrap_prices').doc('rates').get().then((doc) {
+      if (!doc.exists) {
+        FirebaseFirestore.instance.collection('scrap_prices').doc('rates').set({
+          'Newspaper': 17.0,
+          'Cardboard': 10.0,
+          'Office Paper': 14.0,
+          'Books': 16.0,
+        });
+      }
+    });
+
+    FirebaseFirestore.instance.collection('coverage_zones').get().then((snap) {
+      if (snap.docs.isEmpty) {
+        final defaultZones = [
+          {"name": "Kochi", "status": "Fully operational", "active": true, "x": 0.55, "y": 0.58},
+          {"name": "Thrissur", "status": "Fully operational", "active": true, "x": 0.48, "y": 0.44},
+          {"name": "Calicut", "status": "Launching Q3 2026", "active": false, "x": 0.40, "y": 0.26},
+          {"name": "Trivandrum", "status": "Launching Q4 2026", "active": false, "x": 0.45, "y": 0.85},
+          {"name": "Kannur", "status": "Launching Q1 2027", "active": false, "x": 0.55, "y": 0.10}
+        ];
+        for (var z in defaultZones) {
+          FirebaseFirestore.instance.collection('coverage_zones').doc(z['name'] as String).set(z);
+        }
+      }
+    });
+
+    FirebaseFirestore.instance.collection('offers').get().then((snap) {
+      if (snap.docs.isEmpty) {
+        final defaultOffers = [
+          {
+            "title": "Super Sunday",
+            "desc": "Extra 2₹/kg on all paper items this Sunday!",
+            "colorHex": "0xFF1D4ED8",
+            "iconName": "sparkles",
+            "modalTitle": "Super Sunday Special Boost",
+            "modalDesc": "Get an extra ₹2 per kilogram on all newspaper, office paper, and cardboard recycled this Sunday only. Applies automatically to all pickups scheduled for Sunday.",
+            "iconColorHex": "0xFFF59E0B"
+          },
+          {
+            "title": "Eco Warrior",
+            "desc": "Refer a friend and get 500 bonus points.",
+            "colorHex": "0xFFD97706",
+            "iconName": "users",
+            "modalTitle": "Referral Rewards",
+            "modalDesc": "Spread the green word! Share your referral link with a friend. Once they complete their first scrap pickup, both of you will receive 500 EcoPoints instantly.",
+            "iconColorHex": "0xFFF97316"
+          },
+          {
+            "title": "Cardboard King",
+            "desc": "Special rates for bulk cardboard (50kg+).",
+            "colorHex": "0xFF047857",
+            "iconName": "crown",
+            "modalTitle": "Bulk Cardboard Rates",
+            "modalDesc": "Do you run a business or have packaging boxes in bulk? Schedule a bulk cardboard collection (50kg+) to unlock custom commercial rates and a free pickup vehicle.",
+            "iconColorHex": "0xFFF59E0B"
+          }
+        ];
+        for (var o in defaultOffers) {
+          FirebaseFirestore.instance.collection('offers').add(o);
+        }
+      }
+    });
+  }
+
+  void _listenToUserData(String uid) {
+    _userSub?.cancel();
+    _userSub = FirebaseFirestore.instance.collection('users').doc(uid).snapshots().listen((snapshot) {
+      if (snapshot.exists && snapshot.data() != null) {
+        final data = snapshot.data()!;
+        _userName = data['fullName'] as String? ?? 'User';
+        
+        // Addresses
+        if (data['addresses'] != null) {
+          final List rawAddrs = data['addresses'] as List;
+          _addresses = rawAddrs.map((a) => Address.fromJson(Map<String, dynamic>.from(a as Map))).toList();
+        } else {
+          _addresses = [];
+        }
+
+        // Active Subscription
+        if (data['activeSubscription'] != null) {
+          _activeSubscriptions = [Map<String, dynamic>.from(data['activeSubscription'] as Map)];
+        } else {
+          _activeSubscriptions = [];
+        }
+        
+        notifyListeners();
+      }
+    });
+
+    _notifSub?.cancel();
+    _notifSub = FirebaseFirestore.instance
+        .collection('users')
+        .doc(uid)
+        .collection('notifications')
+        .orderBy('timestamp', descending: true)
+        .snapshots()
+        .listen((snapshot) {
+      _notifications.clear();
+      for (var doc in snapshot.docs) {
+        _notifications.add(AppNotification.fromJson(doc.data()));
+      }
+      notifyListeners();
+    });
+
+    _bookingsSub?.cancel();
+    _bookingsSub = FirebaseFirestore.instance
+        .collection('bookings')
+        .where('userId', isEqualTo: uid)
+        .snapshots()
+        .listen((snapshot) {
+      _bookings.clear();
+      
+      // Resolve drivers from Firestore collection
+      FirebaseFirestore.instance.collection('pickers').get().then((pickerSnap) {
+        final pickersList = pickerSnap.docs.map((d) => d.data()).toList();
+        
+        for (var doc in snapshot.docs) {
+          var booking = Booking.fromJson(doc.data());
+          if (booking.assignedPickerId != null) {
+            final matching = pickersList.firstWhere(
+              (p) => p['id'] == booking.assignedPickerId,
+              orElse: () => null,
+            );
+            if (matching != null) {
+              booking = booking.copyWith(
+                assignedPicker: Picker.fromJson(matching),
+              );
+            }
+          }
+          _bookings.add(booking);
+        }
+        notifyListeners();
+      });
+    });
+  }
+
+  void _clearUserData() {
+    _userSub?.cancel();
+    _bookingsSub?.cancel();
+    _notifSub?.cancel();
+    _addresses = [];
+    _bookings.clear();
+    _activeSubscriptions = [];
+    _userName = 'User';
+    notifyListeners();
   }
 
   void _loadFromDb() {
@@ -231,58 +451,129 @@ class AppState extends ChangeNotifier {
   List<Map<String, dynamic>> get offers => _offers;
   List<Map<String, dynamic>> get activeSubscriptions => _activeSubscriptions;
 
+  String get currentUserId {
+    if (isFirebaseEnabled) {
+      return FirebaseAuth.instance.currentUser?.uid ?? 'zimu';
+    }
+    return 'zimu';
+  }
+
+  String get userName {
+    if (isFirebaseEnabled) {
+      return _userName;
+    }
+    return 'zimu';
+  }
+
   // Subscription helpers
-  bool get isSubscribed => _activeSubscriptions.any((s) => s['userId'] == 'zimu' && s['status'] == 'Active');
+  bool get isSubscribed => _activeSubscriptions.any((s) => s['userId'] == currentUserId && s['status'] == 'Active');
   String get currentSubscriptionPlan => isSubscribed 
-      ? _activeSubscriptions.firstWhere((s) => s['userId'] == 'zimu' && s['status'] == 'Active')['planType'] as String 
+      ? _activeSubscriptions.firstWhere((s) => s['userId'] == currentUserId && s['status'] == 'Active')['planType'] as String 
       : 'None';
 
   void subscribeToPlan(String planType, double price) {
-    _activeSubscriptions.removeWhere((s) => s['userId'] == 'zimu');
-    
-    _activeSubscriptions.add({
-      'id': 'sub_${DateTime.now().millisecondsSinceEpoch}',
-      'userId': 'zimu',
-      'planType': planType,
-      'price': price,
-      'startDate': DateTime.now().toIso8601String(),
-      'status': 'Active'
-    });
+    if (isFirebaseEnabled) {
+      final uid = currentUserId;
+      final subMap = {
+        'id': 'sub_${DateTime.now().millisecondsSinceEpoch}',
+        'userId': uid,
+        'planType': planType,
+        'price': price,
+        'startDate': DateTime.now().toIso8601String(),
+        'status': 'Active'
+      };
+      FirebaseFirestore.instance.collection('users').doc(uid).set({
+        'activeSubscription': subMap,
+      }, SetOptions(merge: true));
+      
+      addNotification(
+        title: 'Subscription Activated!',
+        message: 'You have successfully subscribed to the $planType plan (₹${price.toStringAsFixed(0)}/mo).',
+        type: NotificationType.success,
+      );
+    } else {
+      _activeSubscriptions.removeWhere((s) => s['userId'] == 'zimu');
+      _activeSubscriptions.add({
+        'id': 'sub_${DateTime.now().millisecondsSinceEpoch}',
+        'userId': 'zimu',
+        'planType': planType,
+        'price': price,
+        'startDate': DateTime.now().toIso8601String(),
+        'status': 'Active'
+      });
+      _saveToDb();
+      notifyListeners();
 
-    _saveToDb();
-    notifyListeners();
-
-    addNotification(
-      title: 'Subscription Activated!',
-      message: 'You have successfully subscribed to the $planType plan (₹${price.toStringAsFixed(0)}/mo).',
-      type: NotificationType.success,
-    );
+      addNotification(
+        title: 'Subscription Activated!',
+        message: 'You have successfully subscribed to the $planType plan (₹${price.toStringAsFixed(0)}/mo).',
+        type: NotificationType.success,
+      );
+    }
   }
 
   void cancelSubscription() {
-    _activeSubscriptions.removeWhere((s) => s['userId'] == 'zimu');
-    _saveToDb();
-    notifyListeners();
+    if (isFirebaseEnabled) {
+      final uid = currentUserId;
+      FirebaseFirestore.instance.collection('users').doc(uid).update({
+        'activeSubscription': FieldValue.delete(),
+      });
+      addNotification(
+        title: 'Subscription Cancelled',
+        message: 'Your active subscription has been cancelled.',
+        type: NotificationType.warning,
+      );
+    } else {
+      _activeSubscriptions.removeWhere((s) => s['userId'] == 'zimu');
+      _saveToDb();
+      notifyListeners();
 
-    addNotification(
-      title: 'Subscription Cancelled',
-      message: 'Your active subscription has been cancelled.',
-      type: NotificationType.warning,
-    );
+      addNotification(
+        title: 'Subscription Cancelled',
+        message: 'Your active subscription has been cancelled.',
+        type: NotificationType.warning,
+      );
+    }
   }
 
   void markAllNotificationsAsRead() {
-    for (var n in _notifications) {
-      n.isRead = true;
+    if (isFirebaseEnabled && FirebaseAuth.instance.currentUser != null) {
+      final uid = FirebaseAuth.instance.currentUser!.uid;
+      FirebaseFirestore.instance
+          .collection('users')
+          .doc(uid)
+          .collection('notifications')
+          .get()
+          .then((snapshot) {
+        final batch = FirebaseFirestore.instance.batch();
+        for (var doc in snapshot.docs) {
+          batch.update(doc.reference, {'isRead': true});
+        }
+        batch.commit();
+      });
+    } else {
+      for (var n in _notifications) {
+        n.isRead = true;
+      }
+      notifyListeners();
     }
-    notifyListeners();
   }
 
   void markNotificationAsRead(String id) {
-    final index = _notifications.indexWhere((n) => n.id == id);
-    if (index != -1) {
-      _notifications[index].isRead = true;
-      notifyListeners();
+    if (isFirebaseEnabled && FirebaseAuth.instance.currentUser != null) {
+      final uid = FirebaseAuth.instance.currentUser!.uid;
+      FirebaseFirestore.instance
+          .collection('users')
+          .doc(uid)
+          .collection('notifications')
+          .doc(id)
+          .update({'isRead': true});
+    } else {
+      final index = _notifications.indexWhere((n) => n.id == id);
+      if (index != -1) {
+        _notifications[index].isRead = true;
+        notifyListeners();
+      }
     }
   }
 
@@ -291,20 +582,29 @@ class AppState extends ChangeNotifier {
     required String message,
     required NotificationType type,
   }) {
-    _notifications.insert(
-      0,
-      AppNotification(
-        id: DateTime.now().toIso8601String(),
-        title: title,
-        message: message,
-        timestamp: DateTime.now(),
-        type: type,
-      ),
+    final notification = AppNotification(
+      id: DateTime.now().millisecondsSinceEpoch.toString(),
+      title: title,
+      message: message,
+      timestamp: DateTime.now(),
+      type: type,
     );
-    notifyListeners();
+
+    if (isFirebaseEnabled && FirebaseAuth.instance.currentUser != null) {
+      final uid = FirebaseAuth.instance.currentUser!.uid;
+      FirebaseFirestore.instance
+          .collection('users')
+          .doc(uid)
+          .collection('notifications')
+          .doc(notification.id)
+          .set(notification.toJson());
+    } else {
+      _notifications.insert(0, notification);
+      notifyListeners();
+    }
   }
 
-  // ── Dark Mode ──
+  // ── Dark/Light Mode ──
   ThemeMode _themeMode = ThemeMode.light;
   ThemeMode get themeMode => _themeMode;
   bool get isDarkMode => _themeMode == ThemeMode.dark;
@@ -321,41 +621,145 @@ class AppState extends ChangeNotifier {
   }
 
   void addAddress(Address address) {
-    if (address.isDefault) {
-      _addresses = _addresses.map((a) => a.copyWith(isDefault: false)).toList();
-    }
-    _addresses.add(address);
-    _saveToDb();
-    notifyListeners();
-  }
-
-  void updateAddress(Address address) {
-    if (address.isDefault) {
-      _addresses = _addresses.map((a) => a.copyWith(isDefault: false)).toList();
-    }
-    final index = _addresses.indexWhere((a) => a.id == address.id);
-    if (index != -1) {
-      _addresses[index] = address;
+    if (isFirebaseEnabled) {
+      final uid = currentUserId;
+      List<Address> newAddrs = List.from(_addresses);
+      if (address.isDefault) {
+        newAddrs = newAddrs.map((a) => a.copyWith(isDefault: false)).toList();
+      }
+      newAddrs.add(address);
+      
+      FirebaseFirestore.instance.collection('users').doc(uid).set({
+        'addresses': newAddrs.map((a) => a.toJson()).toList(),
+      }, SetOptions(merge: true));
+    } else {
+      if (address.isDefault) {
+        _addresses = _addresses.map((a) => a.copyWith(isDefault: false)).toList();
+      }
+      _addresses.add(address);
       _saveToDb();
       notifyListeners();
     }
   }
 
+  void updateAddress(Address address) {
+    if (isFirebaseEnabled) {
+      final uid = currentUserId;
+      List<Address> newAddrs = List.from(_addresses);
+      if (address.isDefault) {
+        newAddrs = newAddrs.map((a) => a.copyWith(isDefault: false)).toList();
+      }
+      final index = newAddrs.indexWhere((a) => a.id == address.id);
+      if (index != -1) {
+        newAddrs[index] = address;
+      }
+      FirebaseFirestore.instance.collection('users').doc(uid).set({
+        'addresses': newAddrs.map((a) => a.toJson()).toList(),
+      }, SetOptions(merge: true));
+    } else {
+      if (address.isDefault) {
+        _addresses = _addresses.map((a) => a.copyWith(isDefault: false)).toList();
+      }
+      final index = _addresses.indexWhere((a) => a.id == address.id);
+      if (index != -1) {
+        _addresses[index] = address;
+        _saveToDb();
+        notifyListeners();
+      }
+    }
+  }
+
   void deleteAddress(String id) {
-    _addresses.removeWhere((a) => a.id == id);
-    _saveToDb();
-    notifyListeners();
+    if (isFirebaseEnabled) {
+      final uid = currentUserId;
+      final newAddrs = List<Address>.from(_addresses)..removeWhere((a) => a.id == id);
+      FirebaseFirestore.instance.collection('users').doc(uid).set({
+        'addresses': newAddrs.map((a) => a.toJson()).toList(),
+      }, SetOptions(merge: true));
+    } else {
+      _addresses.removeWhere((a) => a.id == id);
+      _saveToDb();
+      notifyListeners();
+    }
   }
 
   void addBooking(Booking booking) {
-    _bookings.add(booking);
-    _saveToDb();
-    notifyListeners();
+    if (isFirebaseEnabled) {
+      final uid = currentUserId;
+      final docRef = FirebaseFirestore.instance.collection('bookings').doc();
+      final finalBooking = booking.copyWith(
+        id: docRef.id,
+        userId: uid,
+      );
+      docRef.set(finalBooking.toJson());
+      
+      addNotification(
+        title: 'Pickup Scheduled!',
+        message: 'Your pickup has been scheduled successfully for ${booking.scrapType}.',
+        type: NotificationType.success,
+      );
+    } else {
+      _bookings.add(booking);
+      _saveToDb();
+      notifyListeners();
 
-    addNotification(
-      title: 'Pickup Scheduled!',
-      message: 'Your pickup has been scheduled successfully for ${booking.scrapType}.',
-      type: NotificationType.success,
+      addNotification(
+        title: 'Pickup Scheduled!',
+        message: 'Your pickup has been scheduled successfully for ${booking.scrapType}.',
+        type: NotificationType.success,
+      );
+    }
+  }
+
+  // ── Authentication Methods ──
+  Future<void> signInWithIdentifierAndPassword(String identifier, String password) async {
+    if (!isFirebaseEnabled) {
+      return;
+    }
+    final email = _formatIdentifier(identifier);
+    await FirebaseAuth.instance.signInWithEmailAndPassword(
+      email: email,
+      password: password,
     );
+  }
+
+  Future<void> signUpWithIdentifierAndPassword(String name, String identifier, String password) async {
+    if (!isFirebaseEnabled) {
+      return;
+    }
+    final email = _formatIdentifier(identifier);
+    final userCredential = await FirebaseAuth.instance.createUserWithEmailAndPassword(
+      email: email,
+      password: password,
+    );
+    
+    final user = userCredential.user;
+    if (user != null) {
+      final isEmail = identifier.contains('@');
+      await FirebaseFirestore.instance.collection('users').doc(user.uid).set({
+        'fullName': name,
+        'email': email,
+        'mobileNumber': isEmail ? '' : identifier.trim(),
+        'addresses': [],
+        'activeSubscription': null,
+        'ecoPoints': 0,
+      });
+    }
+  }
+
+  Future<void> signOut() async {
+    if (isFirebaseEnabled) {
+      await FirebaseAuth.instance.signOut();
+      _clearUserData();
+    }
+  }
+
+  String _formatIdentifier(String input) {
+    final trimmed = input.trim();
+    if (trimmed.contains('@')) {
+      return trimmed;
+    }
+    final cleanPhone = trimmed.replaceAll(RegExp(r'\D'), '');
+    return '$cleanPhone@reloop.com';
   }
 }

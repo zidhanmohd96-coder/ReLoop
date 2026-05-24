@@ -1,7 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 import 'package:lucide_icons/lucide_icons.dart';
+import 'package:provider/provider.dart';
 import '../theme.dart';
+import '../providers/app_state.dart';
 import 'location/location_permission_screen.dart';
 import 'phone_entry_screen.dart';
 
@@ -14,11 +16,16 @@ class AuthScreen extends StatefulWidget {
 
 class _AuthScreenState extends State<AuthScreen> {
   bool _isLogin = true;
-  final _phoneController = TextEditingController();
+  bool _isLoading = false;
+  final _identifierController = TextEditingController();
+  final _passwordController = TextEditingController();
+  final _nameController = TextEditingController();
 
   @override
   void dispose() {
-    _phoneController.dispose();
+    _identifierController.dispose();
+    _passwordController.dispose();
+    _nameController.dispose();
     super.dispose();
   }
 
@@ -40,15 +47,90 @@ class _AuthScreenState extends State<AuthScreen> {
     );
   }
 
-  void _navigateToOtp() {
-    Navigator.push(
-      context,
-      PageRouteBuilder(
-        pageBuilder: (context, a1, a2) =>
-            const PhoneEntryScreen(initialPhoneNumber: ''),
-        transitionsBuilder: (context, a1, a2, child) =>
-            FadeTransition(opacity: a1, child: child),
-        transitionDuration: const Duration(milliseconds: 600),
+  Future<void> _handleAuth() async {
+    final appState = Provider.of<AppState>(context, listen: false);
+    final name = _nameController.text.trim();
+    final identifier = _identifierController.text.trim();
+    final password = _passwordController.text;
+
+    // Validation
+    if (!_isLogin && name.isEmpty) {
+      _showError('Please enter your full name');
+      return;
+    }
+
+    if (identifier.isEmpty) {
+      _showError('Please enter your phone number or email');
+      return;
+    }
+
+    final isEmail = identifier.contains('@');
+    if (isEmail) {
+      final emailRegex = RegExp(r'^[\w-\.]+@([\w-]+\.)+[\w-]{2,4}$');
+      if (!emailRegex.hasMatch(identifier)) {
+        _showError('Please enter a valid email address');
+        return;
+      }
+    } else {
+      final cleanPhone = identifier.replaceAll(RegExp(r'\D'), '');
+      if (cleanPhone.length != 10) {
+        _showError('Please enter a valid 10-digit mobile number');
+        return;
+      }
+    }
+
+    if (password.isEmpty) {
+      _showError('Please enter your password');
+      return;
+    }
+
+    if (password.length < 6) {
+      _showError('Password must be at least 6 characters');
+      return;
+    }
+
+    setState(() {
+      _isLoading = true;
+    });
+
+    try {
+      if (appState.isFirebaseEnabled) {
+        if (_isLogin) {
+          await appState.signInWithIdentifierAndPassword(identifier, password);
+        } else {
+          await appState.signUpWithIdentifierAndPassword(name, identifier, password);
+        }
+      }
+      
+      if (mounted) {
+        _navigateToHome();
+      }
+    } catch (e) {
+      if (mounted) {
+        _showError(e.toString().replaceAll(RegExp(r'\[.*?\]'), '').trim());
+      }
+    } finally {
+      if (mounted) {
+        setState(() {
+          _isLoading = false;
+        });
+      }
+    }
+  }
+
+  void _showError(String message) {
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Text(
+          message,
+          style: const TextStyle(fontWeight: FontWeight.bold, color: Colors.white),
+        ),
+        backgroundColor: Colors.redAccent,
+        behavior: SnackBarBehavior.floating,
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(16),
+        ),
+        margin: const EdgeInsets.all(16),
       ),
     );
   }
@@ -143,6 +225,7 @@ class _AuthScreenState extends State<AuthScreen> {
                             hint: 'Full Name',
                             icon: LucideIcons.user,
                             isDark: isDark,
+                            controller: _nameController,
                           )
                           .animate()
                           .fadeIn(delay: 100.ms)
@@ -150,11 +233,11 @@ class _AuthScreenState extends State<AuthScreen> {
                       const SizedBox(height: 16),
                     ],
                     _buildClayTextField(
-                          hint: 'Phone Number',
-                          icon: LucideIcons.phone,
-                          keyboardType: TextInputType.phone,
+                          hint: 'Phone Number or Email',
+                          icon: LucideIcons.mail,
+                          keyboardType: TextInputType.emailAddress,
                           isDark: isDark,
-                          controller: _phoneController,
+                          controller: _identifierController,
                         )
                         .animate()
                         .fadeIn(delay: 200.ms)
@@ -165,6 +248,7 @@ class _AuthScreenState extends State<AuthScreen> {
                           icon: LucideIcons.lock,
                           isPassword: true,
                           isDark: isDark,
+                          controller: _passwordController,
                         )
                         .animate()
                         .fadeIn(delay: 300.ms)
@@ -199,7 +283,7 @@ class _AuthScreenState extends State<AuthScreen> {
                     SizedBox(
                           width: double.infinity,
                           child: ElevatedButton(
-                            onPressed: _navigateToHome,
+                            onPressed: _isLoading ? null : _handleAuth,
                             style: ElevatedButton.styleFrom(
                               backgroundColor: isDark
                                   ? AppTheme.mintGreen
@@ -209,7 +293,7 @@ class _AuthScreenState extends State<AuthScreen> {
                                   : Colors.white,
                               padding: const EdgeInsets.symmetric(vertical: 20),
                               shape: RoundedRectangleBorder(
-                                borderRadius: BorderRadius.circular(24),
+                                  borderRadius: BorderRadius.circular(24),
                               ),
                               elevation: 8,
                               shadowColor:
@@ -218,86 +302,96 @@ class _AuthScreenState extends State<AuthScreen> {
                                           : AppTheme.forestGreen)
                                       .withOpacity(0.4),
                             ),
-                            child: Text(
-                              _isLogin ? 'Login' : 'Create Account',
-                              style: const TextStyle(
-                                fontSize: 18,
-                                fontWeight: FontWeight.bold,
-                              ),
-                            ),
+                            child: _isLoading
+                                ? const SizedBox(
+                                    width: 24,
+                                    height: 24,
+                                    child: CircularProgressIndicator(
+                                      strokeWidth: 2.5,
+                                      color: Colors.white,
+                                    ),
+                                  )
+                                : Text(
+                                    _isLogin ? 'Login' : 'Create Account',
+                                    style: const TextStyle(
+                                      fontSize: 18,
+                                      fontWeight: FontWeight.bold,
+                                    ),
+                                  ),
                           ),
                         )
+
                         .animate()
                         .fadeIn(delay: 400.ms)
                         .scale(curve: Curves.easeOutBack),
 
                     const SizedBox(height: 24),
 
-                    // Divider with "OR"
-                    Row(
-                      children: [
-                        Expanded(
-                          child: Container(
-                            height: 1,
-                            color: isDark
-                                ? Colors.grey.shade800
-                                : Colors.grey.shade300,
-                          ),
-                        ),
-                        Padding(
-                          padding: const EdgeInsets.symmetric(horizontal: 16),
-                          child: Text(
-                            'OR',
-                            style: TextStyle(
-                              color: isDark
-                                  ? Colors.grey.shade600
-                                  : Colors.grey.shade500,
-                              fontWeight: FontWeight.bold,
-                              fontSize: 12,
-                              letterSpacing: 1,
-                            ),
-                          ),
-                        ),
-                        Expanded(
-                          child: Container(
-                            height: 1,
-                            color: isDark
-                                ? Colors.grey.shade800
-                                : Colors.grey.shade300,
-                          ),
-                        ),
-                      ],
-                    ).animate().fadeIn(delay: 500.ms),
+                    // // Divider with "OR"
+                    // Row(
+                    //   children: [
+                    //     Expanded(
+                    //       child: Container(
+                    //         height: 1,
+                    //         color: isDark
+                    //             ? Colors.grey.shade800
+                    //             : Colors.grey.shade300,
+                    //       ),
+                    //     ),
+                    //     Padding(
+                    //       padding: const EdgeInsets.symmetric(horizontal: 16),
+                    //       child: Text(
+                    //         'OR',
+                    //         style: TextStyle(
+                    //           color: isDark
+                    //               ? Colors.grey.shade600
+                    //               : Colors.grey.shade500,
+                    //           fontWeight: FontWeight.bold,
+                    //           fontSize: 12,
+                    //           letterSpacing: 1,
+                    //         ),
+                    //       ),
+                    //     ),
+                    //     Expanded(
+                    //       child: Container(
+                    //         height: 1,
+                    //         color: isDark
+                    //             ? Colors.grey.shade800
+                    //             : Colors.grey.shade300,
+                    //       ),
+                    //     ),
+                    //   ],
+                    // ).animate().fadeIn(delay: 500.ms),
 
-                    const SizedBox(height: 24),
+                    // const SizedBox(height: 24),
 
-                    // Social/Alt buttons
-                    SizedBox(
-                      width: double.infinity,
-                      child: OutlinedButton.icon(
-                        onPressed: _navigateToOtp,
-                        icon: const Icon(LucideIcons.smartphone, size: 18),
-                        label: const Text(
-                          'Continue with OTP',
-                          style: TextStyle(fontWeight: FontWeight.bold),
-                        ),
-                        style: OutlinedButton.styleFrom(
-                          foregroundColor: isDark
-                              ? AppTheme.mintGreen
-                              : AppTheme.forestGreen,
-                          side: BorderSide(
-                            color: isDark
-                                ? Colors.grey.shade800
-                                : Colors.grey.shade300,
-                            width: 1.5,
-                          ),
-                          padding: const EdgeInsets.symmetric(vertical: 18),
-                          shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(24),
-                          ),
-                        ),
-                      ),
-                    ).animate().fadeIn(delay: 550.ms),
+                    // // Social/Alt buttons
+                    // SizedBox(
+                    //   width: double.infinity,
+                    //   child: OutlinedButton.icon(
+                    //     onPressed: _navigateToOtp,
+                    //     icon: const Icon(LucideIcons.smartphone, size: 18),
+                    //     label: const Text(
+                    //       'Continue with OTP',
+                    //       style: TextStyle(fontWeight: FontWeight.bold),
+                    //     ),
+                    //     style: OutlinedButton.styleFrom(
+                    //       foregroundColor: isDark
+                    //           ? AppTheme.mintGreen
+                    //           : AppTheme.forestGreen,
+                    //       side: BorderSide(
+                    //         color: isDark
+                    //             ? Colors.grey.shade800
+                    //             : Colors.grey.shade300,
+                    //         width: 1.5,
+                    //       ),
+                    //       padding: const EdgeInsets.symmetric(vertical: 18),
+                    //       shape: RoundedRectangleBorder(
+                    //         borderRadius: BorderRadius.circular(24),
+                    //       ),
+                    //     ),
+                    //   ),
+                    // ).animate().fadeIn(delay: 550.ms),
 
                     const SizedBox(height: 32),
 

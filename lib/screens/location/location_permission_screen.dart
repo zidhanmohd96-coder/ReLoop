@@ -47,7 +47,7 @@ class _LocationPermissionScreenState extends State<LocationPermissionScreen> {
         throw 'Location permissions are permanently denied';
       }
       Position position = await Geolocator.getCurrentPosition();
-      
+
       final userLoc = await LocationService.getAddressFromLatLng(
         position.latitude,
         position.longitude,
@@ -60,10 +60,7 @@ class _LocationPermissionScreenState extends State<LocationPermissionScreen> {
         _long = position.longitude;
         _currentAddress = userLoc.formattedAddress;
         _currentMapTarget = LatLng(position.latitude, position.longitude);
-        userLocation = CameraPosition(
-          target: _currentMapTarget!,
-          zoom: 15,
-        );
+        userLocation = CameraPosition(target: _currentMapTarget!, zoom: 15);
       });
     } catch (e) {
       setState(() {
@@ -283,16 +280,17 @@ class _LocationPermissionScreenState extends State<LocationPermissionScreen> {
                               ),
                               IgnorePointer(
                                 child: Center(
-                                  child: Icon(
-                                    Icons.location_pin,
-                                    size: 38,
-                                    color: AppTheme.forestGreen,
-                                  )
-                                  .animate(
-                                    onPlay: (controller) => controller
-                                        .repeat(reverse: true),
-                                  )
-                                  .shimmer(duration: 2000.ms),
+                                  child:
+                                      Icon(
+                                            Icons.location_pin,
+                                            size: 38,
+                                            color: AppTheme.forestGreen,
+                                          )
+                                          .animate(
+                                            onPlay: (controller) => controller
+                                                .repeat(reverse: true),
+                                          )
+                                          .shimmer(duration: 2000.ms),
                                 ),
                               ),
                             ],
@@ -323,223 +321,227 @@ class _LocationPermissionScreenState extends State<LocationPermissionScreen> {
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                      const SizedBox(height: 16),
-                      Text(
-                        _locationFetched
-                            ? 'Location Found!'
-                            : 'Enable Location',
-                        style: TextStyle(
-                          fontSize: 32,
-                          fontWeight: FontWeight.bold,
-                          color: isDark ? Colors.white : AppTheme.forestGreen,
-                        ),
-                      ).animate(target: _locationFetched ? 1 : 0).fadeIn(),
-                      const SizedBox(height: 16),
-                      Text(
-                        _locationFetched
-                            ? 'We have successfully fetched your exact location. You are ready to schedule your first pickup!. You can also move the pin to your exact location and click on confirm location button below.'
-                            : 'To provide you with accurate scrap prices and connect you with nearby pickup staff, we need your location.',
-                        style: TextStyle(
-                          fontSize: 16,
-                          color: isDark
-                              ? Colors.grey.shade400
-                              : Colors.grey.shade600,
-                          height: 1.5,
-                        ),
-                      ),
-                      const SizedBox(height: 32),
-
-                      // Address Details (Only when fetched)
-                      if (_locationFetched)
-                        Container(
-                              padding: const EdgeInsets.all(24),
-                              decoration: AppTheme.getClayDecoration(
-                                color: isDark
-                                    ? const Color(0xFF0F172A)
-                                    : AppTheme.softBeige,
-                                borderRadius: 24,
-                              ),
-                              child: Row(
-                                children: [
-                                  Container(
-                                    padding: const EdgeInsets.all(12),
-                                    decoration: BoxDecoration(
-                                      color:
-                                          (isDark
-                                                  ? AppTheme.mintGreen
-                                                  : AppTheme.leafGreen)
-                                              .withOpacity(0.1),
-                                      shape: BoxShape.circle,
-                                    ),
-                                    child: Icon(
-                                      LucideIcons.navigation,
-                                      color: isDark
-                                          ? AppTheme.mintGreen
-                                          : AppTheme.forestGreen,
-                                    ),
-                                  ),
-                                  const SizedBox(width: 16),
-                                  Expanded(
-                                    child: Column(
-                                      crossAxisAlignment:
-                                          CrossAxisAlignment.start,
-                                      children: [
-                                        Text(
-                                          'Current Address',
-                                          style: TextStyle(
-                                            color: isDark
-                                                ? Colors.grey.shade500
-                                                : Colors.grey,
-                                            fontSize: 12,
-                                            fontWeight: FontWeight.bold,
-                                          ),
-                                        ),
-                                        const SizedBox(height: 4),
-                                        Text(
-                                          _currentAddress,
-                                          style: TextStyle(
-                                            color: isDark
-                                                ? Colors.white
-                                                : AppTheme.forestGreen,
-                                            fontSize: 14,
-                                            fontWeight: FontWeight.w600,
-                                          ),
-                                        ),
-                                        const SizedBox(height: 4),
-                                        Text(
-                                          'Coordinates: ${_lat.toStringAsFixed(6)}, ${_long.toStringAsFixed(6)}',
-                                          style: TextStyle(
-                                            color: isDark
-                                                ? Colors.grey.shade400
-                                                : Colors.grey.shade600,
-                                            fontSize: 12,
-                                            fontWeight: FontWeight.w500,
-                                          ),
-                                        ),
-                                      ],
-                                    ),
-                                  ),
-                                ],
-                              ),
-                            )
-                            .animate()
-                            .fadeIn(delay: 200.ms)
-                            .slideY(begin: 0.1, end: 0),
-
-                      const SizedBox(height: 24),
-
-                      // Action Buttons
-                      if (!_locationFetched)
-                        SizedBox(
-                          width: double.infinity,
-                          child: ElevatedButton.icon(
-                            onPressed: _isLoading
-                                ? null
-                                : () async {
-                                    await _fetchLocation();
-                                  },
-                            icon: const Icon(LucideIcons.mapPin, size: 20),
-                            label: const Text(
-                              'Use Current Location',
-                              style: TextStyle(
-                                fontSize: 16,
-                                fontWeight: FontWeight.bold,
-                              ),
-                            ),
-                            style: ElevatedButton.styleFrom(
-                              backgroundColor: isDark
-                                  ? AppTheme.mintGreen
-                                  : AppTheme.forestGreen,
-                              foregroundColor: isDark
-                                  ? const Color(0xFF0F172A)
-                                  : Colors.white,
-                              padding: const EdgeInsets.symmetric(vertical: 20),
-                              shape: RoundedRectangleBorder(
-                                borderRadius: BorderRadius.circular(32),
-                              ),
-                            ),
+                        const SizedBox(height: 4),
+                        Text(
+                          _locationFetched
+                              ? 'Location Found!'
+                              : 'Enable Location',
+                          style: TextStyle(
+                            fontSize: 32,
+                            fontWeight: FontWeight.bold,
+                            color: isDark ? Colors.white : AppTheme.forestGreen,
                           ),
-                        ).animate().fadeIn(delay: 200.ms)
-                      else
-                        Column(
-                          children: [
-                            SizedBox(
-                              width: double.infinity,
-                              child: ElevatedButton(
-                                onPressed: _isLoading ? null : _confirmLocation,
-                                style: ElevatedButton.styleFrom(
-                                  backgroundColor: isDark
-                                      ? AppTheme.mintGreen
-                                      : AppTheme.forestGreen,
-                                  foregroundColor: isDark
-                                      ? const Color(0xFF0F172A)
-                                      : Colors.white,
-                                  padding: const EdgeInsets.symmetric(
-                                    vertical: 20,
-                                  ),
-                                  shape: RoundedRectangleBorder(
-                                    borderRadius: BorderRadius.circular(32),
-                                  ),
-                                ),
-                                child: const Text(
-                                  'Confirm the location',
-                                  style: TextStyle(
-                                    fontSize: 16,
-                                    fontWeight: FontWeight.bold,
-                                  ),
-                                ),
-                              ),
-                            ).animate().fadeIn(delay: 400.ms),
-                            const SizedBox(height: 10),
-                            SizedBox(
-                              width: double.infinity,
-                              child: ElevatedButton(
-                                onPressed: _continueToHome,
-                                style: ElevatedButton.styleFrom(
-                                  backgroundColor: isDark
-                                      ? AppTheme.mintGreen
-                                      : AppTheme.forestGreen,
-                                  foregroundColor: isDark
-                                      ? const Color(0xFF0F172A)
-                                      : Colors.white,
-                                  padding: const EdgeInsets.symmetric(
-                                    vertical: 20,
-                                  ),
-                                  shape: RoundedRectangleBorder(
-                                    borderRadius: BorderRadius.circular(32),
-                                  ),
-                                ),
-                                child: const Text(
-                                  'Continue to App',
-                                  style: TextStyle(
-                                    fontSize: 16,
-                                    fontWeight: FontWeight.bold,
-                                  ),
-                                ),
-                              ),
-                            ).animate().fadeIn(delay: 400.ms),
-                          ],
+                        ).animate(target: _locationFetched ? 1 : 0).fadeIn(),
+                        const SizedBox(height: 12),
+                        Text(
+                          _locationFetched
+                              ? 'We have successfully fetched your exact location. You are ready to schedule your first pickup!. You can also move the pin to your exact location and click on confirm location button below.'
+                              : 'To provide you with accurate scrap prices and connect you with nearby pickup staff, we need your location.',
+                          style: TextStyle(
+                            fontSize: 16,
+                            color: isDark
+                                ? Colors.grey.shade400
+                                : Colors.grey.shade600,
+                            height: 1.5,
+                          ),
                         ),
+                        const SizedBox(height: 12),
 
-                      if (!_locationFetched && !_isLoading)
-                        Padding(
-                          padding: const EdgeInsets.only(top: 16.0),
-                          child: SizedBox(
-                            width: double.infinity,
-                            child: TextButton(
-                              onPressed: _continueToHome,
-                              child: Text(
-                                'Skip for now',
-                                style: TextStyle(
+                        // Address Details (Only when fetched)
+                        if (_locationFetched)
+                          Container(
+                                padding: const EdgeInsets.all(24),
+                                decoration: AppTheme.getClayDecoration(
                                   color: isDark
-                                      ? Colors.grey.shade600
-                                      : Colors.grey.shade500,
+                                      ? const Color(0xFF0F172A)
+                                      : AppTheme.softBeige,
+                                  borderRadius: 24,
+                                ),
+                                child: Row(
+                                  children: [
+                                    Container(
+                                      padding: const EdgeInsets.all(12),
+                                      decoration: BoxDecoration(
+                                        color:
+                                            (isDark
+                                                    ? AppTheme.mintGreen
+                                                    : AppTheme.leafGreen)
+                                                .withOpacity(0.1),
+                                        shape: BoxShape.circle,
+                                      ),
+                                      child: Icon(
+                                        LucideIcons.navigation,
+                                        color: isDark
+                                            ? AppTheme.mintGreen
+                                            : AppTheme.forestGreen,
+                                      ),
+                                    ),
+                                    const SizedBox(width: 16),
+                                    Expanded(
+                                      child: Column(
+                                        crossAxisAlignment:
+                                            CrossAxisAlignment.start,
+                                        children: [
+                                          Text(
+                                            'Current Address',
+                                            style: TextStyle(
+                                              color: isDark
+                                                  ? Colors.grey.shade500
+                                                  : Colors.grey,
+                                              fontSize: 12,
+                                              fontWeight: FontWeight.bold,
+                                            ),
+                                          ),
+                                          const SizedBox(height: 4),
+                                          Text(
+                                            _currentAddress,
+                                            style: TextStyle(
+                                              color: isDark
+                                                  ? Colors.white
+                                                  : AppTheme.forestGreen,
+                                              fontSize: 14,
+                                              fontWeight: FontWeight.w600,
+                                            ),
+                                          ),
+                                          const SizedBox(height: 4),
+                                          Text(
+                                            'Coordinates: ${_lat.toStringAsFixed(6)}, ${_long.toStringAsFixed(6)}',
+                                            style: TextStyle(
+                                              color: isDark
+                                                  ? Colors.grey.shade400
+                                                  : Colors.grey.shade600,
+                                              fontSize: 12,
+                                              fontWeight: FontWeight.w500,
+                                            ),
+                                          ),
+                                        ],
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                              )
+                              .animate()
+                              .fadeIn(delay: 200.ms)
+                              .slideY(begin: 0.1, end: 0),
+
+                        const SizedBox(height: 24),
+
+                        // Action Buttons
+                        if (!_locationFetched)
+                          SizedBox(
+                            width: double.infinity,
+                            child: ElevatedButton.icon(
+                              onPressed: _isLoading
+                                  ? null
+                                  : () async {
+                                      await _fetchLocation();
+                                    },
+                              icon: const Icon(LucideIcons.mapPin, size: 20),
+                              label: const Text(
+                                'Use Current Location',
+                                style: TextStyle(
+                                  fontSize: 16,
                                   fontWeight: FontWeight.bold,
                                 ),
                               ),
+                              style: ElevatedButton.styleFrom(
+                                backgroundColor: isDark
+                                    ? AppTheme.mintGreen
+                                    : AppTheme.forestGreen,
+                                foregroundColor: isDark
+                                    ? const Color(0xFF0F172A)
+                                    : Colors.white,
+                                padding: const EdgeInsets.symmetric(
+                                  vertical: 20,
+                                ),
+                                shape: RoundedRectangleBorder(
+                                  borderRadius: BorderRadius.circular(32),
+                                ),
+                              ),
                             ),
+                          ).animate().fadeIn(delay: 200.ms)
+                        else
+                          Column(
+                            children: [
+                              SizedBox(
+                                width: double.infinity,
+                                child: ElevatedButton(
+                                  onPressed: _isLoading
+                                      ? null
+                                      : _confirmLocation,
+                                  style: ElevatedButton.styleFrom(
+                                    backgroundColor: isDark
+                                        ? AppTheme.mintGreen
+                                        : AppTheme.forestGreen,
+                                    foregroundColor: isDark
+                                        ? const Color(0xFF0F172A)
+                                        : Colors.white,
+                                    padding: const EdgeInsets.symmetric(
+                                      vertical: 20,
+                                    ),
+                                    shape: RoundedRectangleBorder(
+                                      borderRadius: BorderRadius.circular(32),
+                                    ),
+                                  ),
+                                  child: const Text(
+                                    'Confirm the location',
+                                    style: TextStyle(
+                                      fontSize: 16,
+                                      fontWeight: FontWeight.bold,
+                                    ),
+                                  ),
+                                ),
+                              ).animate().fadeIn(delay: 400.ms),
+                              const SizedBox(height: 10),
+                              SizedBox(
+                                width: double.infinity,
+                                child: ElevatedButton(
+                                  onPressed: _continueToHome,
+                                  style: ElevatedButton.styleFrom(
+                                    backgroundColor: isDark
+                                        ? AppTheme.mintGreen
+                                        : AppTheme.forestGreen,
+                                    foregroundColor: isDark
+                                        ? const Color(0xFF0F172A)
+                                        : Colors.white,
+                                    padding: const EdgeInsets.symmetric(
+                                      vertical: 20,
+                                    ),
+                                    shape: RoundedRectangleBorder(
+                                      borderRadius: BorderRadius.circular(32),
+                                    ),
+                                  ),
+                                  child: const Text(
+                                    'Continue to App',
+                                    style: TextStyle(
+                                      fontSize: 16,
+                                      fontWeight: FontWeight.bold,
+                                    ),
+                                  ),
+                                ),
+                              ).animate().fadeIn(delay: 400.ms),
+                            ],
                           ),
-                        ).animate().fadeIn(delay: 300.ms),
+
+                        if (!_locationFetched && !_isLoading)
+                          Padding(
+                            padding: const EdgeInsets.only(top: 16.0),
+                            child: SizedBox(
+                              width: double.infinity,
+                              child: TextButton(
+                                onPressed: _continueToHome,
+                                child: Text(
+                                  'Skip for now',
+                                  style: TextStyle(
+                                    color: isDark
+                                        ? Colors.grey.shade600
+                                        : Colors.grey.shade500,
+                                    fontWeight: FontWeight.bold,
+                                  ),
+                                ),
+                              ),
+                            ),
+                          ).animate().fadeIn(delay: 300.ms),
                       ],
                     ),
                   ),
