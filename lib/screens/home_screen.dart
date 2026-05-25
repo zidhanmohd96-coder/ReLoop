@@ -1,11 +1,15 @@
+import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:lucide_icons/lucide_icons.dart';
 import 'package:flutter_animate/flutter_animate.dart';
+import 'package:provider/provider.dart';
 import '../theme.dart';
 import '../features/home/presentation/screens/home_tab.dart';
 import '../features/bookings/presentation/tabs/bookings_tab.dart';
 import '../features/rewards/presentation/tabs/rewards_tab.dart';
 import '../features/profile/presentation/tabs/profile_tab.dart';
+import '../providers/app_state.dart';
+import '../models/notification.dart';
 
 class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
@@ -17,11 +21,91 @@ class HomeScreen extends StatefulWidget {
 class _HomeScreenState extends State<HomeScreen> {
   int _currentIndex = 0;
   final PageController _mainPageController = PageController();
+  StreamSubscription? _notifSubscription;
+
+  @override
+  void initState() {
+    super.initState();
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      final appState = Provider.of<AppState>(context, listen: false);
+      _notifSubscription = appState.notificationStream.listen((notification) {
+        _showInAppNotificationSnackBar(notification);
+      });
+    });
+  }
 
   @override
   void dispose() {
+    _notifSubscription?.cancel();
     _mainPageController.dispose();
     super.dispose();
+  }
+
+  void _showInAppNotificationSnackBar(AppNotification notification) {
+    if (!mounted) return;
+    
+    Color accentColor;
+    IconData icon;
+    
+    switch (notification.type) {
+      case NotificationType.success:
+        accentColor = const Color(0xFF10B981); // Emerald Green
+        icon = Icons.check_circle_rounded;
+        break;
+      case NotificationType.warning:
+        accentColor = const Color(0xFFF59E0B); // Amber
+        icon = Icons.warning_rounded;
+        break;
+      case NotificationType.points:
+        accentColor = const Color(0xFF6366F1); // Indigo
+        icon = Icons.stars_rounded;
+        break;
+      default:
+        accentColor = const Color(0xFF0D9488); // Teal
+        icon = Icons.info_rounded;
+    }
+
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Row(
+          children: [
+            Icon(icon, color: Colors.white, size: 24),
+            const SizedBox(width: 12),
+            Expanded(
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    notification.title,
+                    style: const TextStyle(
+                      fontWeight: FontWeight.bold,
+                      fontSize: 14,
+                      color: Colors.white,
+                    ),
+                  ),
+                  const SizedBox(height: 2),
+                  Text(
+                    notification.message,
+                    style: TextStyle(
+                      fontSize: 12,
+                      color: Colors.white.withOpacity(0.9),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ],
+        ),
+        backgroundColor: accentColor,
+        behavior: SnackBarBehavior.floating,
+        duration: const Duration(seconds: 4),
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(16),
+        ),
+        margin: const EdgeInsets.fromLTRB(16, 0, 16, 90), // Display above the navigation bar
+      ),
+    );
   }
 
   void _navigateToTab(int index) {

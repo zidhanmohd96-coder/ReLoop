@@ -13,6 +13,7 @@ enum BookingStatus {
 
 class Booking {
   final String id;
+  final String userId;
   final String scrapType;
   final String quantityEstimate;
   final DateTime pickupDate;
@@ -40,6 +41,7 @@ class Booking {
 
   Booking({
     String? id,
+    required this.userId,
     required this.scrapType,
     required this.quantityEstimate,
     required this.pickupDate,
@@ -62,6 +64,8 @@ class Booking {
   }) : id = id ?? const Uuid().v4();
 
   Booking copyWith({
+    String? id,
+    String? userId,
     BookingStatus? status,
     Picker? assignedPicker,
     String? assignedPickerId,
@@ -74,7 +78,8 @@ class Booking {
     String? proofImageUrl,
   }) {
     return Booking(
-      id: id,
+      id: id ?? this.id,
+      userId: userId ?? this.userId,
       scrapType: scrapType,
       quantityEstimate: quantityEstimate,
       pickupDate: pickupDate,
@@ -100,6 +105,7 @@ class Booking {
   factory Booking.fromJson(Map<String, dynamic> json) {
     return Booking(
       id: json['id'] as String?,
+      userId: json['userId'] as String? ?? '',
       scrapType: json['scrapType'] as String? ?? 'Paper',
       quantityEstimate: json['quantityEstimate'] as String? ?? 'Small (<5kg)',
       pickupDate: json['pickupDate'] != null 
@@ -132,6 +138,7 @@ class Booking {
   Map<String, dynamic> toJson() {
     return {
       'id': id,
+      'userId': userId,
       'scrapType': scrapType,
       'quantityEstimate': quantityEstimate,
       'pickupDate': pickupDate.toIso8601String(),

@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:lucide_icons/lucide_icons.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 import 'package:provider/provider.dart';
+import 'package:reloop/models/booking.dart';
 import '../../../../theme.dart';
 import '../../../../providers/app_state.dart';
 import '../../../../core/constants/app_constants.dart';
@@ -11,6 +12,7 @@ import '../painters/kerala_outline_painter.dart';
 import '../../../../screens/booking_flow_screen.dart';
 import '../../../../core/services/location_service.dart';
 import '../../../../screens/profile/notification_history_screen.dart';
+import '../../../../screens/location/location_permission_screen.dart';
 
 class HomeTab extends StatefulWidget {
   const HomeTab({super.key});
@@ -25,8 +27,6 @@ class _HomeTabState extends State<HomeTab> {
   int _currentOfferIndex = 0;
   Timer? _offersTimer;
   bool _isServiceAvailable = true;
-  String _currentAddress = '123 Green Valley Road, Eco Park, City Center';
-  bool _isFetchingLocation = false;
 
   @override
   void initState() {
@@ -38,11 +38,17 @@ class _HomeTabState extends State<HomeTab> {
 
   Future<void> _loadLocationOnStartup() async {
     try {
-      final loc = await LocationService.getCurrentLocation();
-      if (mounted) {
-        setState(() {
-          _currentAddress = '${loc.city}, ${loc.region} (${loc.zip})';
-        });
+      final appState = Provider.of<AppState>(context, listen: false);
+      if (appState.currentLocationAddress ==
+          '123 Green Valley Road, Eco Park, City Center') {
+        final loc = await LocationService.getCurrentLocation();
+        if (mounted) {
+          appState.updateCurrentLocationAddress(
+            '${loc.city}, ${loc.region} (${loc.zip})',
+            loc.latitude,
+            loc.longitude,
+          );
+        }
       }
     } catch (_) {}
   }
@@ -295,7 +301,9 @@ class _HomeTabState extends State<HomeTab> {
                     Text(
                       'PREMIUM RECYCLING',
                       style: TextStyle(
-                        color: isDark ? AppTheme.mintGreen : AppTheme.lightGreen,
+                        color: isDark
+                            ? AppTheme.mintGreen
+                            : AppTheme.lightGreen,
                         fontSize: context.scaleFont(10),
                         fontWeight: FontWeight.bold,
                         letterSpacing: 1,
@@ -396,7 +404,60 @@ class _HomeTabState extends State<HomeTab> {
     );
   }
 
+  IconData _getIconData(String name) {
+    switch (name) {
+      case 'sparkles':
+        return LucideIcons.sparkles;
+      case 'users':
+        return LucideIcons.users;
+      case 'crown':
+        return LucideIcons.crown;
+      default:
+        return LucideIcons.gift;
+    }
+  }
+
   Widget _buildOffersSection(BuildContext context, bool isDark) {
+    final appState = Provider.of<AppState>(context);
+    final List<Map<String, dynamic>> offersList = appState.offers.isNotEmpty
+        ? appState.offers.map((o) {
+            Color parseColor(dynamic value, Color fallback) {
+              if (value == null) return fallback;
+              if (value is Color) return value;
+              final str = value.toString();
+              try {
+                if (str.startsWith('0x')) {
+                  return Color(int.parse(str));
+                } else if (str.startsWith('#')) {
+                  return Color(int.parse(str.replaceFirst('#', '0xFF')));
+                } else {
+                  return Color(int.parse(str));
+                }
+              } catch (_) {
+                return fallback;
+              }
+            }
+
+            return {
+              'title': o['title'] ?? '',
+              'desc': o['desc'] ?? '',
+              'color': parseColor(
+                o['colorHex'] ?? o['color'],
+                const Color(0xFF1D4ED8),
+              ),
+              'icon': o['icon'] is IconData
+                  ? o['icon']
+                  : _getIconData(o['iconName']?.toString() ?? 'gift'),
+              'modalTitle': o['modalTitle'] ?? o['title'] ?? '',
+              'modalDesc': o['modalDesc'] ?? o['desc'] ?? '',
+              'iconColor': parseColor(
+                o['iconColorHex'] ?? o['iconColor'],
+                Colors.amber,
+              ),
+            };
+          }).toList()
+        : AppConstants.offers;
+
     final offerHeight = context.isTablet ? 280.0 : 240.0;
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
@@ -416,19 +477,22 @@ class _HomeTabState extends State<HomeTab> {
           child: PageView.builder(
             controller: _offersPageController,
             onPageChanged: (index) {
-              setState(() {
-                _currentOfferIndex = index % AppConstants.offers.length;
-              });
+              if (offersList.isNotEmpty) {
+                setState(() {
+                  _currentOfferIndex = index % offersList.length;
+                });
+              }
             },
             itemBuilder: (context, i) {
-              final index = i % AppConstants.offers.length;
-              final offer = AppConstants.offers[index];
+              if (offersList.isEmpty) return const SizedBox.shrink();
+              final index = i % offersList.length;
+              final offer = offersList[index];
               return AnimatedContainer(
                 duration: const Duration(milliseconds: 500),
                 margin: const EdgeInsets.only(right: 8),
                 padding: const EdgeInsets.all(24),
                 decoration: BoxDecoration(
-                  color: offer['color'],
+                  color: offer['color'] as Color,
                   borderRadius: BorderRadius.circular(32),
                 ),
                 child: Stack(
@@ -438,7 +502,7 @@ class _HomeTabState extends State<HomeTab> {
                       children: [
                         const Spacer(),
                         Text(
-                          offer['title'],
+                          offer['title'] as String,
                           style: TextStyle(
                             color: Colors.white,
                             fontSize: context.scaleFont(24),
@@ -447,7 +511,7 @@ class _HomeTabState extends State<HomeTab> {
                         ),
                         const SizedBox(height: 8),
                         Text(
-                          offer['desc'],
+                          offer['desc'] as String,
                           style: TextStyle(
                             color: Colors.white,
                             fontSize: context.scaleFont(14),
@@ -481,13 +545,14 @@ class _HomeTabState extends State<HomeTab> {
                                         Row(
                                           children: [
                                             Icon(
-                                              offer['icon'],
-                                              color: offer['iconColor'],
+                                              offer['icon'] as IconData,
+                                              color:
+                                                  offer['iconColor'] as Color,
                                               size: 32,
                                             ),
                                             const SizedBox(width: 16),
                                             Text(
-                                              offer['modalTitle'],
+                                              offer['modalTitle'] as String,
                                               style: TextStyle(
                                                 fontSize: context.scaleFont(24),
                                                 fontWeight: FontWeight.bold,
@@ -536,7 +601,7 @@ class _HomeTabState extends State<HomeTab> {
                                     ),
                                     const SizedBox(height: 16),
                                     Text(
-                                      offer['modalDesc'],
+                                      offer['modalDesc'] as String,
                                       style: TextStyle(
                                         fontSize: context.scaleFont(16),
                                         color: isDark
@@ -587,13 +652,13 @@ class _HomeTabState extends State<HomeTab> {
                                         ),
                                         child:
                                             offer['modalTitle'] == "Eco Warrior"
-                                            ? Text(
+                                            ? const Text(
                                                 'Coming Soon!!!',
                                                 style: TextStyle(
                                                   fontWeight: FontWeight.bold,
                                                 ),
                                               )
-                                            : Text(
+                                            : const Text(
                                                 'BOOK PICKUP',
                                                 style: TextStyle(
                                                   fontWeight: FontWeight.bold,
@@ -608,7 +673,7 @@ class _HomeTabState extends State<HomeTab> {
                           },
                           style: ElevatedButton.styleFrom(
                             backgroundColor: Colors.white,
-                            foregroundColor: offer['color'],
+                            foregroundColor: offer['color'] as Color,
                             padding: const EdgeInsets.symmetric(
                               horizontal: 20,
                               vertical: 12,
@@ -618,11 +683,11 @@ class _HomeTabState extends State<HomeTab> {
                             ),
                           ),
                           child: offer['title'] == "Eco Warrior"
-                              ? Text(
+                              ? const Text(
                                   'Coming Soon!!!',
                                   style: TextStyle(fontWeight: FontWeight.bold),
                                 )
-                              : Text(
+                              : const Text(
                                   'CLAIM NOW',
                                   style: TextStyle(
                                     fontSize: 12,
@@ -636,7 +701,7 @@ class _HomeTabState extends State<HomeTab> {
                       top: 0,
                       right: 0,
                       child: Icon(
-                        offer['icon'],
+                        offer['icon'] as IconData,
                         color: Colors.white.withOpacity(0.15),
                         size: 160,
                       ),
@@ -652,6 +717,15 @@ class _HomeTabState extends State<HomeTab> {
   }
 
   Widget _buildScheduledPickupCard(BuildContext context, bool isDark) {
+    final appState = Provider.of<AppState>(context);
+    final activeBookings = appState.bookings
+        .where(
+          (b) =>
+              b.status != BookingStatus.completed &&
+              b.status != BookingStatus.cancelled,
+        )
+        .toList();
+
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -665,119 +739,212 @@ class _HomeTabState extends State<HomeTab> {
           ),
         ),
         const SizedBox(height: 16),
-        GestureDetector(
-          onTap: () => _showPickupDetails(context),
-          child: Container(
+        if (activeBookings.isEmpty)
+          Container(
             padding: const EdgeInsets.all(24),
             decoration: AppTheme.getClayDecoration(
               color: isDark ? const Color(0xFF1E293B) : Colors.white,
             ),
-            child: Column(
+            child: Row(
               children: [
-                Row(
-                  children: [
-                    Container(
-                      padding: const EdgeInsets.all(12),
-                      decoration: BoxDecoration(
-                        color: isDark
-                            ? AppTheme.mintGreen.withOpacity(0.15)
-                            : AppTheme.leafGreen.withOpacity(0.1),
-                        borderRadius: BorderRadius.circular(16),
-                      ),
-                      child: Icon(
-                        LucideIcons.truck,
-                        color: isDark
-                            ? AppTheme.mintGreen
-                            : AppTheme.forestGreen,
-                        size: 24,
-                      ),
-                    ),
-                    const SizedBox(width: 16),
-                    Expanded(
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Text(
-                            'Paper & Cardboard',
-                            style: TextStyle(
-                              fontSize: context.scaleFont(16),
-                              fontWeight: FontWeight.bold,
-                              color: isDark
-                                  ? Colors.white
-                                  : AppTheme.forestGreen,
-                            ),
-                          ),
-                          const SizedBox(height: 4),
-                          Text(
-                            'Estimated Value: ₹350',
-                            style: TextStyle(
-                              color: isDark
-                                  ? AppTheme.mintGreen
-                                  : AppTheme.lightGreen,
-                              fontWeight: FontWeight.w600,
-                              fontSize: context.scaleFont(12),
-                            ),
-                          ),
-                        ],
-                      ),
-                    ),
-                    Container(
-                      padding: const EdgeInsets.symmetric(
-                        horizontal: 12,
-                        vertical: 6,
-                      ),
-                      decoration: BoxDecoration(
-                        color: Colors.orange.shade400.withOpacity(0.15),
-                        borderRadius: BorderRadius.circular(12),
-                      ),
-                      child: Text(
-                        'PENDING',
+                Container(
+                  padding: const EdgeInsets.all(12),
+                  decoration: BoxDecoration(
+                    color: (isDark ? AppTheme.mintGreen : AppTheme.leafGreen)
+                        .withOpacity(0.1),
+                    shape: BoxShape.circle,
+                  ),
+                  child: Icon(
+                    LucideIcons.sparkles,
+                    color: isDark ? AppTheme.mintGreen : AppTheme.forestGreen,
+                    size: 24,
+                  ),
+                ),
+                const SizedBox(width: 16),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        'Start Recycling Today!',
                         style: TextStyle(
-                          color: Colors.orange.shade400,
-                          fontSize: 10,
+                          fontSize: context.scaleFont(16),
                           fontWeight: FontWeight.bold,
+                          color: isDark ? Colors.white : AppTheme.forestGreen,
                         ),
                       ),
-                    ),
-                  ],
-                ),
-                const SizedBox(height: 20),
-                const Divider(height: 1),
-                const SizedBox(height: 20),
-                Row(
-                  children: [
-                    Icon(
-                      LucideIcons.calendar,
-                      size: 16,
-                      color: isDark ? AppTheme.mintGreen : AppTheme.lightGreen,
-                    ),
-                    const SizedBox(width: 8),
-                    Expanded(
-                      child: Text(
-                        'Wed, 14 May • 10:00 AM - 1:00 PM',
+                      const SizedBox(height: 4),
+                      Text(
+                        'No active pickups scheduled.',
                         style: TextStyle(
                           color: isDark
-                              ? Colors.grey.shade300
+                              ? Colors.grey.shade400
                               : Colors.grey.shade600,
-                          fontSize: 13,
+                          fontSize: context.scaleFont(12),
                         ),
-                        overflow: TextOverflow.ellipsis,
                       ),
+                    ],
+                  ),
+                ),
+                ElevatedButton(
+                  onPressed: () {
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        builder: (context) => const BookingFlowScreen(),
+                      ),
+                    );
+                  },
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: isDark
+                        ? AppTheme.mintGreen
+                        : AppTheme.forestGreen,
+                    foregroundColor: isDark
+                        ? const Color(0xFF0F172A)
+                        : Colors.white,
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 16,
+                      vertical: 10,
                     ),
-                    Icon(
-                      LucideIcons.chevronRight,
-                      size: 16,
-                      color: isDark
-                          ? Colors.grey.shade500
-                          : Colors.grey.shade400,
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(12),
                     ),
-                  ],
+                  ),
+                  child: const Text(
+                    'BOOK',
+                    style: TextStyle(fontSize: 12, fontWeight: FontWeight.bold),
+                  ),
                 ),
               ],
             ),
-          ),
-        ),
+          )
+        else
+          _buildActiveBookingCard(context, activeBookings.first, isDark),
       ],
+    );
+  }
+
+  Widget _buildActiveBookingCard(
+    BuildContext context,
+    Booking booking,
+    bool isDark,
+  ) {
+    Color statusColor;
+    switch (booking.status) {
+      case BookingStatus.assigned:
+      case BookingStatus.onTheWay:
+      case BookingStatus.pickupStarted:
+        statusColor = Colors.blue.shade400;
+        break;
+      default:
+        statusColor = Colors.orange.shade400;
+    }
+
+    return GestureDetector(
+      onTap: () => _showPickupDetails(context, booking),
+      child: Container(
+        padding: const EdgeInsets.all(24),
+        decoration: AppTheme.getClayDecoration(
+          color: isDark ? const Color(0xFF1E293B) : Colors.white,
+        ),
+        child: Column(
+          children: [
+            Row(
+              children: [
+                Container(
+                  padding: const EdgeInsets.all(12),
+                  decoration: BoxDecoration(
+                    color: isDark
+                        ? AppTheme.mintGreen.withOpacity(0.15)
+                        : AppTheme.leafGreen.withOpacity(0.1),
+                    borderRadius: BorderRadius.circular(16),
+                  ),
+                  child: Icon(
+                    LucideIcons.truck,
+                    color: isDark ? AppTheme.mintGreen : AppTheme.forestGreen,
+                    size: 24,
+                  ),
+                ),
+                const SizedBox(width: 16),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        booking.scrapType,
+                        style: TextStyle(
+                          fontSize: context.scaleFont(16),
+                          fontWeight: FontWeight.bold,
+                          color: isDark ? Colors.white : AppTheme.forestGreen,
+                        ),
+                      ),
+                      const SizedBox(height: 4),
+                      Text(
+                        'Estimated Value: ₹${booking.estimatedPayout.toStringAsFixed(0)}',
+                        style: TextStyle(
+                          color: isDark
+                              ? AppTheme.mintGreen
+                              : AppTheme.lightGreen,
+                          fontWeight: FontWeight.w600,
+                          fontSize: context.scaleFont(12),
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+                Container(
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 12,
+                    vertical: 6,
+                  ),
+                  decoration: BoxDecoration(
+                    color: statusColor.withOpacity(0.15),
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                  child: Text(
+                    booking.status.name.toUpperCase(),
+                    style: TextStyle(
+                      color: statusColor,
+                      fontSize: 10,
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
+                ),
+              ],
+            ),
+            const SizedBox(height: 20),
+            const Divider(height: 1),
+            const SizedBox(height: 20),
+            Row(
+              children: [
+                Icon(
+                  LucideIcons.calendar,
+                  size: 16,
+                  color: isDark ? AppTheme.mintGreen : AppTheme.lightGreen,
+                ),
+                const SizedBox(width: 8),
+                Expanded(
+                  child: Text(
+                    '${booking.scheduledDate} • ${booking.scheduledSlot}',
+                    style: TextStyle(
+                      color: isDark
+                          ? Colors.grey.shade300
+                          : Colors.grey.shade600,
+                      fontSize: 13,
+                    ),
+                    overflow: TextOverflow.ellipsis,
+                  ),
+                ),
+                Icon(
+                  LucideIcons.chevronRight,
+                  size: 16,
+                  color: isDark ? Colors.grey.shade500 : Colors.grey.shade400,
+                ),
+              ],
+            ),
+          ],
+        ),
+      ),
     );
   }
 
@@ -971,56 +1138,8 @@ class _HomeTabState extends State<HomeTab> {
     );
   }
 
-  Future<void> _fetchCurrentLocation(BuildContext context) async {
-    setState(() {
-      _isFetchingLocation = true;
-    });
-    try {
-      final loc = await LocationService.getCurrentLocation();
-      setState(() {
-        _currentAddress = '${loc.city}, ${loc.region} (${loc.zip})';
-      });
-      if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Row(
-              children: [
-                const Icon(Icons.check_circle_rounded, color: Colors.white),
-                const SizedBox(width: 12),
-                Expanded(child: Text('Updated location: $_currentAddress')),
-              ],
-            ),
-            backgroundColor: const Color(0xFF0D9488),
-            behavior: SnackBarBehavior.floating,
-            shape: RoundedRectangleBorder(
-              borderRadius: BorderRadius.circular(12),
-            ),
-          ),
-        );
-      }
-    } catch (e) {
-      if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text('Failed to get location: $e'),
-            backgroundColor: Colors.redAccent,
-            behavior: SnackBarBehavior.floating,
-            shape: RoundedRectangleBorder(
-              borderRadius: BorderRadius.circular(12),
-            ),
-          ),
-        );
-      }
-    } finally {
-      if (mounted) {
-        setState(() {
-          _isFetchingLocation = false;
-        });
-      }
-    }
-  }
-
   Widget _buildLocationBar(BuildContext context, bool isDark) {
+    final appState = Provider.of<AppState>(context);
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
       decoration: AppTheme.getClayDecoration(
@@ -1057,46 +1176,34 @@ class _HomeTabState extends State<HomeTab> {
                   ),
                 ),
                 const SizedBox(height: 2),
-                if (_isFetchingLocation)
-                  Padding(
-                    padding: const EdgeInsets.only(top: 4.0),
-                    child: SizedBox(
-                      width: 12,
-                      height: 12,
-                      child: CircularProgressIndicator(
-                        strokeWidth: 2,
-                        valueColor: AlwaysStoppedAnimation<Color>(
-                          isDark ? AppTheme.mintGreen : AppTheme.forestGreen,
-                        ),
-                      ),
-                    ),
-                  )
-                else
-                  Text(
-                    _currentAddress,
-                    style: TextStyle(
-                      fontSize: 12,
-                      fontWeight: FontWeight.bold,
-                      color: isDark ? Colors.white : AppTheme.forestGreen,
-                    ),
-                    overflow: TextOverflow.ellipsis,
+                Text(
+                  appState.currentLocationAddress,
+                  style: TextStyle(
+                    fontSize: 12,
+                    fontWeight: FontWeight.bold,
+                    color: isDark ? Colors.white : AppTheme.forestGreen,
                   ),
+                  overflow: TextOverflow.ellipsis,
+                ),
               ],
             ),
           ),
           const SizedBox(width: 8),
           GestureDetector(
-            onTap: _isFetchingLocation
-                ? null
-                : () => _fetchCurrentLocation(context),
+            onTap: () {
+              Navigator.push(
+                context,
+                MaterialPageRoute(
+                  builder: (context) => const LocationPermissionScreen(),
+                ),
+              );
+            },
             child: Text(
-              _isFetchingLocation ? 'FETCHING' : 'CHANGE',
+              'CHANGE',
               style: TextStyle(
                 fontSize: 12,
                 fontWeight: FontWeight.bold,
-                color: _isFetchingLocation
-                    ? Colors.grey
-                    : (isDark ? AppTheme.mintGreen : AppTheme.lightGreen),
+                color: isDark ? AppTheme.mintGreen : AppTheme.lightGreen,
               ),
             ),
           ),
@@ -1106,6 +1213,7 @@ class _HomeTabState extends State<HomeTab> {
   }
 
   Widget _buildPointsAndInfoSection(BuildContext context, bool isDark) {
+    final appState = Provider.of<AppState>(context);
     return Row(
       children: [
         Expanded(
@@ -1132,9 +1240,9 @@ class _HomeTabState extends State<HomeTab> {
                     ),
                   ),
                   const SizedBox(height: 32),
-                  const Text(
-                    '450',
-                    style: TextStyle(
+                  Text(
+                    '${appState.ecoPoints}',
+                    style: const TextStyle(
                       color: Colors.white,
                       fontSize: 24,
                       fontWeight: FontWeight.bold,
@@ -1197,6 +1305,39 @@ class _HomeTabState extends State<HomeTab> {
   }
 
   Widget _buildPricingSection(BuildContext context, bool isDark) {
+    final appState = Provider.of<AppState>(context);
+    final prices = appState.scrapPrices;
+
+    final dynamicPricingItems = [
+      {
+        'name': 'Paper',
+        'price': '₹${(prices['Newspaper'] ?? 17.0).toStringAsFixed(0)}',
+        'icon': LucideIcons.bookOpen,
+        'details':
+            'Includes old newspapers, magazines, and notebooks. Please ensure they are dry and not contaminated with food waste.',
+      },
+      {
+        'name': 'Cardboard',
+        'price': '₹${(prices['Cardboard'] ?? 10.0).toStringAsFixed(0)}',
+        'icon': LucideIcons.package,
+        'details':
+            'Shipping boxes, packaging, and brown paper. Please flatten the boxes to save space.',
+      },
+      {
+        'name': 'Books',
+        'price': '₹${(prices['Books'] ?? 16.0).toStringAsFixed(0)}',
+        'icon': LucideIcons.library,
+        'details':
+            'Old textbooks, novels, and hardbounds. Heavily damaged or missing covers are also accepted.',
+      },
+      {
+        'name': 'Office Paper',
+        'price': '₹${(prices['Office Paper'] ?? 14.0).toStringAsFixed(0)}',
+        'icon': LucideIcons.fileText,
+        'details': 'Office documents, printing paper, and white paper files.',
+      },
+    ];
+
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -1229,17 +1370,17 @@ class _HomeTabState extends State<HomeTab> {
           child: ListView.builder(
             scrollDirection: Axis.horizontal,
             clipBehavior: Clip.none,
-            itemCount: AppConstants.pricingItems.length,
+            itemCount: dynamicPricingItems.length,
             itemBuilder: (context, index) {
-              final item = AppConstants.pricingItems[index];
+              final item = dynamicPricingItems[index];
               return Padding(
                 padding: const EdgeInsets.only(right: 16.0),
                 child: _buildPricingCard(
                   context,
-                  item['name'],
-                  item['price'],
-                  item['icon'],
-                  item['details'],
+                  item['name'] as String,
+                  item['price'] as String,
+                  item['icon'] as IconData,
+                  item['details'] as String,
                 ),
               );
             },
@@ -1793,8 +1934,9 @@ class _HomeTabState extends State<HomeTab> {
     );
   }
 
-  void _showPickupDetails(BuildContext context) {
+  void _showPickupDetails(BuildContext context, Booking booking) {
     final isDark = Theme.of(context).brightness == Brightness.dark;
+    final hasPicker = booking.assignedPicker != null;
     showModalBottomSheet(
       context: context,
       backgroundColor: Colors.transparent,
@@ -1864,7 +2006,7 @@ class _HomeTabState extends State<HomeTab> {
                       const SizedBox(width: 16),
                       Expanded(
                         child: Text(
-                          'Wed, 14 May • 10:00 AM - 1:00 PM',
+                          '${booking.scheduledDate} • ${booking.scheduledSlot}',
                           style: TextStyle(
                             fontWeight: FontWeight.w600,
                             color: isDark ? Colors.white : AppTheme.forestGreen,
@@ -1888,7 +2030,7 @@ class _HomeTabState extends State<HomeTab> {
                       const SizedBox(width: 16),
                       Expanded(
                         child: Text(
-                          '123 Green Valley Road, Eco Park, City Center',
+                          booking.address.addressLine,
                           style: TextStyle(
                             fontWeight: FontWeight.w600,
                             color: isDark ? Colors.white : AppTheme.forestGreen,
@@ -1931,7 +2073,9 @@ class _HomeTabState extends State<HomeTab> {
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
                         Text(
-                          'Rajesh Kumar',
+                          hasPicker
+                              ? booking.assignedPicker!.name
+                              : 'Assigning Driver...',
                           style: TextStyle(
                             fontSize: 18,
                             fontWeight: FontWeight.bold,
@@ -1940,12 +2084,14 @@ class _HomeTabState extends State<HomeTab> {
                         ),
                         const SizedBox(height: 4),
                         Text(
-                          'Assigned Picker',
+                          hasPicker
+                              ? 'Vehicle: ${booking.assignedPicker!.vehicleNumber}'
+                              : 'We are matching a driver nearby',
                           style: TextStyle(
                             fontSize: 14,
                             color: isDark
                                 ? Colors.grey.shade400
-                                : Colors.grey.shade50,
+                                : Colors.grey.shade600,
                           ),
                         ),
                       ],
@@ -1955,70 +2101,88 @@ class _HomeTabState extends State<HomeTab> {
               ),
             ).animate().fadeIn(delay: 200.ms).slideY(begin: 0.1, end: 0),
             const SizedBox(height: 24),
-            Row(
-              children: [
-                Expanded(
-                  child: ElevatedButton.icon(
-                    onPressed: () {},
-                    icon: const Icon(LucideIcons.phone, size: 18),
-                    label: const Text('Call'),
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: isDark
-                          ? AppTheme.mintGreen
-                          : AppTheme.forestGreen,
-                      foregroundColor: isDark
-                          ? const Color(0xFF0F172A)
-                          : Colors.white,
-                      padding: const EdgeInsets.symmetric(vertical: 16),
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(16),
+            if (hasPicker)
+              Row(
+                children: [
+                  Expanded(
+                    child: ElevatedButton.icon(
+                      onPressed: () {
+                        // Open dialer or print action
+                        ScaffoldMessenger.of(context).showSnackBar(
+                          SnackBar(
+                            content: Text(
+                              'Calling राजेश (${booking.assignedPicker!.mobileNumber})...',
+                            ),
+                          ),
+                        );
+                      },
+                      icon: const Icon(LucideIcons.phone, size: 18),
+                      label: const Text('Call'),
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: isDark
+                            ? AppTheme.mintGreen
+                            : AppTheme.forestGreen,
+                        foregroundColor: isDark
+                            ? const Color(0xFF0F172A)
+                            : Colors.white,
+                        padding: const EdgeInsets.symmetric(vertical: 16),
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(16),
+                        ),
                       ),
                     ),
                   ),
-                ),
-                const SizedBox(width: 16),
-                Expanded(
-                  child: ElevatedButton.icon(
-                    onPressed: () {},
-                    icon: Icon(
-                      LucideIcons.messageCircle,
-                      size: 18,
-                      color: isDark
-                          ? const Color(0xFF0F172A)
-                          : AppTheme.forestGreen,
-                    ),
-                    label: Text(
-                      'WhatsApp',
-                      style: TextStyle(
+                  const SizedBox(width: 16),
+                  Expanded(
+                    child: ElevatedButton.icon(
+                      onPressed: () {
+                        ScaffoldMessenger.of(context).showSnackBar(
+                          SnackBar(
+                            content: Text(
+                              'Opening WhatsApp message to ${booking.assignedPicker!.mobileNumber}...',
+                            ),
+                          ),
+                        );
+                      },
+                      icon: Icon(
+                        LucideIcons.messageCircle,
+                        size: 18,
                         color: isDark
                             ? const Color(0xFF0F172A)
                             : AppTheme.forestGreen,
                       ),
-                    ),
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: isDark
-                          ? AppTheme.mintGreen.withOpacity(0.15)
-                          : AppTheme.lightGreen.withOpacity(0.1),
-                      foregroundColor: isDark
-                          ? AppTheme.mintGreen
-                          : AppTheme.forestGreen,
-                      elevation: 0,
-                      padding: const EdgeInsets.symmetric(vertical: 16),
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(16),
+                      label: Text(
+                        'WhatsApp',
+                        style: TextStyle(
+                          color: isDark
+                              ? const Color(0xFF0F172A)
+                              : AppTheme.forestGreen,
+                        ),
+                      ),
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: isDark
+                            ? AppTheme.mintGreen.withOpacity(0.15)
+                            : AppTheme.lightGreen.withOpacity(0.1),
+                        foregroundColor: isDark
+                            ? AppTheme.mintGreen
+                            : AppTheme.forestGreen,
+                        elevation: 0,
+                        padding: const EdgeInsets.symmetric(vertical: 16),
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(16),
+                        ),
                       ),
                     ),
                   ),
-                ),
-              ],
-            ).animate().fadeIn(delay: 300.ms).slideY(begin: 0.1, end: 0),
+                ],
+              ).animate().fadeIn(delay: 300.ms).slideY(begin: 0.1, end: 0),
             const SizedBox(height: 32),
             SizedBox(
               width: double.infinity,
               child: TextButton(
                 onPressed: () {
                   Navigator.pop(context);
-                  _showCancelPickup(context);
+                  _showCancelPickup(context, booking);
                 },
                 style: TextButton.styleFrom(
                   foregroundColor: Colors.red,
@@ -2037,7 +2201,7 @@ class _HomeTabState extends State<HomeTab> {
     );
   }
 
-  void _showCancelPickup(BuildContext context) {
+  void _showCancelPickup(BuildContext context, Booking booking) {
     final isDark = Theme.of(context).brightness == Brightness.dark;
     showModalBottomSheet(
       context: context,
@@ -2116,6 +2280,11 @@ class _HomeTabState extends State<HomeTab> {
                 Expanded(
                   child: ElevatedButton(
                     onPressed: () {
+                      final appState = Provider.of<AppState>(
+                        context,
+                        listen: false,
+                      );
+                      appState.cancelBooking(booking.id);
                       Navigator.pop(context);
                       ScaffoldMessenger.of(context).showSnackBar(
                         const SnackBar(

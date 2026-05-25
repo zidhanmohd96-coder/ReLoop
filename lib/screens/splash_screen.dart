@@ -1,8 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 import 'package:lucide_icons/lucide_icons.dart';
+import 'package:firebase_core/firebase_core.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 import '../theme.dart';
 import 'onboarding_screen.dart';
+import 'home_screen.dart';
 
 class SplashScreen extends StatefulWidget {
   const SplashScreen({super.key});
@@ -21,11 +24,23 @@ class _SplashScreenState extends State<SplashScreen> {
   void _navigateToOnboarding() async {
     await Future.delayed(const Duration(seconds: 3));
     if (!mounted) return;
+
+    // Check if user is already authenticated
+    bool isLoggedIn = false;
+    try {
+      if (Firebase.apps.isNotEmpty) {
+        isLoggedIn = FirebaseAuth.instance.currentUser != null;
+      }
+    } catch (_) {}
+
+    final Widget destination = isLoggedIn
+        ? const HomeScreen()
+        : const OnboardingScreen();
     
     Navigator.pushReplacement(
       context,
       PageRouteBuilder(
-        pageBuilder: (context, animation, secondaryAnimation) => const OnboardingScreen(),
+        pageBuilder: (context, animation, secondaryAnimation) => destination,
         transitionsBuilder: (context, animation, secondaryAnimation, child) {
           return FadeTransition(opacity: animation, child: child);
         },

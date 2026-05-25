@@ -11,6 +11,9 @@ import '../models/picker.dart';
 import '../models/notification.dart';
 
 class AppState extends ChangeNotifier {
+  final _notificationStreamController = StreamController<AppNotification>.broadcast();
+  Stream<AppNotification> get notificationStream => _notificationStreamController.stream;
+
   // Check if Firebase was initialized successfully
   bool get isFirebaseEnabled {
     try {
@@ -48,6 +51,10 @@ class AppState extends ChangeNotifier {
   List<Map<String, dynamic>> _offers = [];
   List<Map<String, dynamic>> _activeSubscriptions = [];
   String _userName = 'User';
+  int _ecoPoints = 0;
+  String _currentLocationAddress = '123 Green Valley Road, Eco Park, City Center';
+  double _currentLatitude = 10.0159;
+  double _currentLongitude = 76.3419;
 
   // ── Notifications State ──
   final List<AppNotification> _notifications = [
@@ -234,6 +241,11 @@ class AppState extends ChangeNotifier {
         } else {
           _activeSubscriptions = [];
         }
+
+        _ecoPoints = data['ecoPoints'] as int? ?? 0;
+        _currentLocationAddress = data['currentLocationAddress'] as String? ?? '123 Green Valley Road, Eco Park, City Center';
+        _currentLatitude = (data['currentLatitude'] as num?)?.toDouble() ?? 10.0159;
+        _currentLongitude = (data['currentLongitude'] as num?)?.toDouble() ?? 76.3419;
         
         notifyListeners();
       }
@@ -247,10 +259,22 @@ class AppState extends ChangeNotifier {
         .orderBy('timestamp', descending: true)
         .snapshots()
         .listen((snapshot) {
-      _notifications.clear();
+      final List<AppNotification> newNotifs = [];
       for (var doc in snapshot.docs) {
-        _notifications.add(AppNotification.fromJson(doc.data()));
+        newNotifs.add(AppNotification.fromJson(doc.data()));
       }
+
+      // Detect new notifications
+      if (_notifications.isNotEmpty && newNotifs.isNotEmpty) {
+        for (var n in newNotifs) {
+          if (!_notifications.any((oldN) => oldN.id == n.id)) {
+            _notificationStreamController.add(n);
+          }
+        }
+      }
+
+      _notifications.clear();
+      _notifications.addAll(newNotifs);
       notifyListeners();
     });
 
@@ -269,13 +293,12 @@ class AppState extends ChangeNotifier {
         for (var doc in snapshot.docs) {
           var booking = Booking.fromJson(doc.data());
           if (booking.assignedPickerId != null) {
-            final matching = pickersList.firstWhere(
+            final matchingIndex = pickersList.indexWhere(
               (p) => p['id'] == booking.assignedPickerId,
-              orElse: () => null,
             );
-            if (matching != null) {
+            if (matchingIndex != -1) {
               booking = booking.copyWith(
-                assignedPicker: Picker.fromJson(matching),
+                assignedPicker: Picker.fromJson(pickersList[matchingIndex]),
               );
             }
           }
@@ -330,6 +353,19 @@ class AppState extends ChangeNotifier {
         if (json['userAddresses_zimu'] != null) {
           final rawAddrs = json['userAddresses_zimu'] as List;
           _addresses = rawAddrs.map((a) => Address.fromJson(a as Map<String, dynamic>)).toList();
+        }
+
+        if (json['ecoPoints_zimu'] != null) {
+          _ecoPoints = json['ecoPoints_zimu'] as int;
+        }
+        if (json['currentLocationAddress_zimu'] != null) {
+          _currentLocationAddress = json['currentLocationAddress_zimu'] as String;
+        }
+        if (json['currentLatitude_zimu'] != null) {
+          _currentLatitude = (json['currentLatitude_zimu'] as num).toDouble();
+        }
+        if (json['currentLongitude_zimu'] != null) {
+          _currentLongitude = (json['currentLongitude_zimu'] as num).toDouble();
         }
 
         // Load bookings
@@ -427,6 +463,12 @@ class AppState extends ChangeNotifier {
         // Write user addresses
         json['userAddresses_zimu'] = _addresses.map((a) => a.toJson()).toList();
 
+        // Write user metrics and current location settings
+        json['ecoPoints_zimu'] = _ecoPoints;
+        json['currentLocationAddress_zimu'] = _currentLocationAddress;
+        json['currentLatitude_zimu'] = _currentLatitude;
+        json['currentLongitude_zimu'] = _currentLongitude;
+
         // Save back
         file.writeAsStringSync(jsonEncode(json));
       }
@@ -450,6 +492,28 @@ class AppState extends ChangeNotifier {
   ];
   List<Map<String, dynamic>> get offers => _offers;
   List<Map<String, dynamic>> get activeSubscriptions => _activeSubscriptions;
+
+  int get ecoPoints => _ecoPoints;
+  String get currentLocationAddress => _currentLocationAddress;
+  double get currentLatitude => _currentLatitude;
+  double get currentLongitude => _currentLongitude;
+
+  void updateCurrentLocationAddress(String address, double lat, double lng) {
+    _currentLocationAddress = address;
+    _currentLatitude = lat;
+    _currentLongitude = lng;
+    if (isFirebaseEnabled && FirebaseAuth.instance.currentUser != null) {
+      final uid = FirebaseAuth.instance.currentUser!.uid;
+      FirebaseFirestore.instance.collection('users').doc(uid).set({
+        'currentLocationAddress': address,
+        'currentLatitude': lat,
+        'currentLongitude': lng,
+      }, SetOptions(merge: true));
+    } else {
+      _saveToDb();
+    }
+    notifyListeners();
+  }
 
   String get currentUserId {
     if (isFirebaseEnabled) {
@@ -600,6 +664,7 @@ class AppState extends ChangeNotifier {
           .set(notification.toJson());
     } else {
       _notifications.insert(0, notification);
+      _notificationStreamController.add(notification);
       notifyListeners();
     }
   }
@@ -711,9 +776,36 @@ class AppState extends ChangeNotifier {
     }
   }
 
+  void cancelBooking(String bookingId) {
+    if (isFirebaseEnabled) {
+      FirebaseFirestore.instance.collection('bookings').doc(bookingId).update({
+        'status': BookingStatus.cancelled.name,
+      });
+      addNotification(
+        title: 'Pickup Cancelled',
+        message: 'Your scheduled pickup has been cancelled.',
+        type: NotificationType.warning,
+      );
+    } else {
+      final index = _bookings.indexWhere((b) => b.id == bookingId);
+      if (index != -1) {
+        _bookings[index] = _bookings[index].copyWith(status: BookingStatus.cancelled);
+        _saveToDb();
+        notifyListeners();
+        addNotification(
+          title: 'Pickup Cancelled',
+          message: 'Your scheduled pickup has been cancelled.',
+          type: NotificationType.warning,
+        );
+      }
+    }
+  }
+
   // ── Authentication Methods ──
   Future<void> signInWithIdentifierAndPassword(String identifier, String password) async {
     if (!isFirebaseEnabled) {
+      _userName = identifier.contains('@') ? identifier.split('@')[0] : 'zimu';
+      notifyListeners();
       return;
     }
     final email = _formatIdentifier(identifier);
@@ -725,6 +817,8 @@ class AppState extends ChangeNotifier {
 
   Future<void> signUpWithIdentifierAndPassword(String name, String identifier, String password) async {
     if (!isFirebaseEnabled) {
+      _userName = name;
+      notifyListeners();
       return;
     }
     final email = _formatIdentifier(identifier);
@@ -751,6 +845,9 @@ class AppState extends ChangeNotifier {
     if (isFirebaseEnabled) {
       await FirebaseAuth.instance.signOut();
       _clearUserData();
+    } else {
+      _userName = 'User';
+      notifyListeners();
     }
   }
 

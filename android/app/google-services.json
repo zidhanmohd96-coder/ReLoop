@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "781589107048",
+    "project_id": "reloop-a35e9",
+    "storage_bucket": "reloop-a35e9.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:781589107048:android:6a1a7c63fe260cc153c6dd",
+        "android_client_info": {
+          "package_name": "com.reloop.reloop"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyDGVn1XQ8_WvjQVTtBG7jarrWXHTa6jCec"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

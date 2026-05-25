@@ -4,9 +4,11 @@ import 'package:google_maps_flutter/google_maps_flutter.dart';
 import 'package:lucide_icons/lucide_icons.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 import 'package:url_launcher/url_launcher.dart';
+import 'package:provider/provider.dart';
 import '../../theme.dart';
 import '../home_screen.dart';
 import '../../core/services/location_service.dart';
+import '../../providers/app_state.dart';
 
 class LocationPermissionScreen extends StatefulWidget {
   const LocationPermissionScreen({super.key});
@@ -95,6 +97,9 @@ class _LocationPermissionScreenState extends State<LocationPermissionScreen> {
       });
 
       if (mounted) {
+        final appState = Provider.of<AppState>(context, listen: false);
+        appState.updateCurrentLocationAddress(_currentAddress, _lat, _long);
+        
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(content: Text('Location confirmed successfully!')),
         );
@@ -130,17 +135,21 @@ class _LocationPermissionScreenState extends State<LocationPermissionScreen> {
   }
 
   void _continueToHome() {
-    Navigator.pushReplacement(
-      context,
-      PageRouteBuilder(
-        pageBuilder: (context, animation, secondaryAnimation) =>
-            const HomeScreen(),
-        transitionsBuilder: (context, animation, secondaryAnimation, child) {
-          return FadeTransition(opacity: animation, child: child);
-        },
-        transitionDuration: const Duration(milliseconds: 1000),
-      ),
-    );
+    if (Navigator.canPop(context)) {
+      Navigator.pop(context);
+    } else {
+      Navigator.pushReplacement(
+        context,
+        PageRouteBuilder(
+          pageBuilder: (context, animation, secondaryAnimation) =>
+              const HomeScreen(),
+          transitionsBuilder: (context, animation, secondaryAnimation, child) {
+            return FadeTransition(opacity: animation, child: child);
+          },
+          transitionDuration: const Duration(milliseconds: 1000),
+        ),
+      );
+    }
   }
 
   void _openInMaps() async {

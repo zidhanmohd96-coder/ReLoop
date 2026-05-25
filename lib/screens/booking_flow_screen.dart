@@ -80,6 +80,7 @@ class _BookingFlowScreenState extends State<BookingFlowScreen> {
     );
 
     final booking = Booking(
+      userId: appState.currentUserId,
       scrapType: _selectedScrapTypes.isEmpty
           ? 'Mixed'
           : _selectedScrapTypes.join(', '),

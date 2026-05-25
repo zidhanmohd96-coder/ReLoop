@@ -4,6 +4,7 @@ import 'package:provider/provider.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'providers/app_state.dart';
 import 'theme.dart';
+import 'firebase_options.dart';
 
 import 'screens/splash_screen.dart';
 
@@ -16,7 +17,9 @@ void main() async {
     ),
   );
   try {
-    await Firebase.initializeApp();
+    await Firebase.initializeApp(
+      options: DefaultFirebaseOptions.currentPlatform,
+    );
   } catch (e) {
     debugPrint('Firebase not initialized: $e');
   }
