@@ -278,12 +278,23 @@ class _LocationPermissionScreenState extends State<LocationPermissionScreen> {
                                 onCameraMove: (position) {
                                   _currentMapTarget = position.target;
                                 },
-                                onCameraIdle: () {
+                                onCameraIdle: () async {
                                   if (_currentMapTarget != null) {
+                                    final newLat = _currentMapTarget!.latitude;
+                                    final newLong = _currentMapTarget!.longitude;
                                     setState(() {
-                                      _lat = _currentMapTarget!.latitude;
-                                      _long = _currentMapTarget!.longitude;
+                                      _lat = newLat;
+                                      _long = newLong;
                                     });
+                                    // Reverse-geocode in the background to update address text
+                                    try {
+                                      final userLoc = await LocationService.getAddressFromLatLng(newLat, newLong);
+                                      if (mounted) {
+                                        setState(() {
+                                          _currentAddress = userLoc.formattedAddress;
+                                        });
+                                      }
+                                    } catch (_) {}
                                   }
                                 },
                               ),

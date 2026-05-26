@@ -377,26 +377,32 @@ class _HomeTabState extends State<HomeTab> {
               ],
             ),
             const SizedBox(width: 12),
-            ClipRRect(
-              borderRadius: BorderRadius.circular(20),
-              child: Image.network(
-                'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=100',
-                width: 40,
-                height: 40,
-                fit: BoxFit.cover,
-                errorBuilder: (context, error, stackTrace) => Container(
+            Consumer<AppState>(
+              builder: (context, appState, _) {
+                final initials = appState.userName.isNotEmpty
+                    ? appState.userName.split(' ').map((e) => e.isNotEmpty ? e[0] : '').take(2).join().toUpperCase()
+                    : 'U';
+                return Container(
                   width: 40,
                   height: 40,
-                  color: isDark
-                      ? AppTheme.mintGreen.withValues(alpha: 0.2)
-                      : AppTheme.forestGreen.withValues(alpha: 0.1),
-                  child: Icon(
-                    LucideIcons.user,
-                    size: 20,
-                    color: isDark ? AppTheme.mintGreen : AppTheme.forestGreen,
+                  decoration: BoxDecoration(
+                    color: isDark
+                        ? AppTheme.mintGreen.withValues(alpha: 0.15)
+                        : AppTheme.forestGreen.withValues(alpha: 0.1),
+                    borderRadius: BorderRadius.circular(20),
                   ),
-                ),
-              ),
+                  child: Center(
+                    child: Text(
+                      initials,
+                      style: TextStyle(
+                        fontSize: 14,
+                        fontWeight: FontWeight.bold,
+                        color: isDark ? AppTheme.mintGreen : AppTheme.forestGreen,
+                      ),
+                    ),
+                  ),
+                );
+              },
             ),
           ],
         ),
@@ -1736,6 +1742,10 @@ class _HomeTabState extends State<HomeTab> {
 
   void _showPointsHistory(BuildContext context) {
     final isDark = Theme.of(context).brightness == Brightness.dark;
+    final appState = Provider.of<AppState>(context, listen: false);
+    final completedBookings = appState.bookings
+        .where((b) => b.status == BookingStatus.completed)
+        .toList();
     showModalBottomSheet(
       context: context,
       backgroundColor: Colors.transparent,
@@ -1786,28 +1796,47 @@ class _HomeTabState extends State<HomeTab> {
             ),
             const SizedBox(height: 32),
             Expanded(
-              child: ListView(
-                children: [
-                  _buildHistoryRow(
-                    context,
-                    'Paper Recycling',
-                    '+150 pts',
-                    '12 May 2026',
-                  ).animate().fadeIn(delay: 100.ms).slideY(begin: 0.1, end: 0),
-                  _buildHistoryRow(
-                    context,
-                    'Cardboard Bulk',
-                    '+200 pts',
-                    '05 May 2026',
-                  ).animate().fadeIn(delay: 200.ms).slideY(begin: 0.1, end: 0),
-                  _buildHistoryRow(
-                    context,
-                    'Referral Bonus',
-                    '+100 pts',
-                    '01 May 2026',
-                  ).animate().fadeIn(delay: 300.ms).slideY(begin: 0.1, end: 0),
-                ],
-              ),
+              child: completedBookings.isEmpty
+                  ? Center(
+                      child: Column(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          Icon(
+                            LucideIcons.inbox,
+                            size: 48,
+                            color: isDark ? Colors.grey.shade700 : Colors.grey.shade300,
+                          ),
+                          const SizedBox(height: 16),
+                          Text(
+                            'No points earned yet',
+                            style: TextStyle(
+                              color: isDark ? Colors.grey.shade500 : Colors.grey.shade400,
+                              fontWeight: FontWeight.w600,
+                            ),
+                          ),
+                          const SizedBox(height: 4),
+                          Text(
+                            'Complete your first pickup to earn points!',
+                            style: TextStyle(
+                              color: isDark ? Colors.grey.shade600 : Colors.grey.shade400,
+                              fontSize: 12,
+                            ),
+                          ),
+                        ],
+                      ),
+                    )
+                  : ListView.builder(
+                      itemCount: completedBookings.length,
+                      itemBuilder: (context, index) {
+                        final b = completedBookings[index];
+                        return _buildHistoryRow(
+                          context,
+                          '${b.scrapType} Recycling',
+                          '+${b.pointsEarned} pts',
+                          b.scheduledDate,
+                        ).animate().fadeIn(delay: (100 * (index + 1)).ms).slideY(begin: 0.1, end: 0);
+                      },
+                    ),
             ),
           ],
         ),

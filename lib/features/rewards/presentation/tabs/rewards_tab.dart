@@ -85,12 +85,18 @@ class RewardsTab extends StatelessWidget {
             ),
             const SizedBox(height: 4),
             Center(
-              child: Text(
-                'ReLooping since Jan 2026',
-                style: const TextStyle(
-                  color: AppTheme.mintGreen,
-                  fontWeight: FontWeight.w600,
-                ),
+              child: Builder(
+                builder: (context) {
+                  final months = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+                  final now = DateTime.now();
+                  return Text(
+                    'ReLooping since ${months[now.month - 1]} ${now.year}',
+                    style: const TextStyle(
+                      color: AppTheme.mintGreen,
+                      fontWeight: FontWeight.w600,
+                    ),
+                  );
+                },
               ),
             ),
             const SizedBox(height: 32),

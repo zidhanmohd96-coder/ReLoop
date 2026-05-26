@@ -19,7 +19,6 @@ import '../../../../screens/profile/subscription_screen.dart';
 import '../../../../screens/profile/notification_history_screen.dart';
 import '../../../../screens/auth_screen.dart';
 
-
 class ProfileTab extends StatefulWidget {
   final VoidCallback? onViewHistory;
 
@@ -55,11 +54,23 @@ class _ProfileTabState extends State<ProfileTab> {
                             : (isDark ? const Color(0xFF1E293B) : Colors.white),
                         width: 4,
                       ),
-                      image: const DecorationImage(
-                        image: NetworkImage(
-                          'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=400',
+                      // image: const DecorationImage(
+                      //   image: NetworkImage(
+                      //     'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=400',
+                      //   ),
+                      //   fit: BoxFit.cover,
+                      // ),
+                    ),
+                    child: Center(
+                      child: Text(
+                        appState.userName.isNotEmpty
+                            ? appState.userName.split(' ').map((e) => e.isNotEmpty ? e[0] : '').take(2).join().toUpperCase()
+                            : 'U',
+                        style: TextStyle(
+                          fontSize: 40,
+                          fontWeight: FontWeight.bold,
+                          color: isDark ? AppTheme.mintGreen : AppTheme.forestGreen,
                         ),
-                        fit: BoxFit.cover,
                       ),
                     ),
                   ),
@@ -226,7 +237,7 @@ class _ProfileTabState extends State<ProfileTab> {
                     isDark,
                     onTap: () => _launchWhatsApp(
                       'Hi ReLoop, I have bulk scrap for recycling.',
-                      '+917736950910',
+                      '+918547806553',
                     ),
                   ),
                   _buildMenuRow(
@@ -280,7 +291,7 @@ class _ProfileTabState extends State<ProfileTab> {
                         builder: (_) => const SupportScreen(
                           title: 'Contact Us',
                           description:
-                              'Reach out to us anytime!\n\nEmail: blabpa301@gmail.com\nWhatsApp: +91 7736950910\n\nOffice Hours: Mon-Sat, 9AM-6PM\nAddress: Kochi, Kerala, India',
+                              'Reach out to us anytime!\n\nEmail: reloop.admin@gmail.com\nWhatsApp: +91 8547806553\n\nWorking Hours: Mon-Sat, 9AM-6PM\nAddress: Kochi, Kerala, India',
                           initialMessage: 'Hi ReLoop, I want to contact you.',
                         ),
                       ),
@@ -385,15 +396,26 @@ class _ProfileTabState extends State<ProfileTab> {
                             borderRadius: BorderRadius.circular(24),
                           ),
                           title: const Text('Log Out'),
-                          content: const Text('Are you sure you want to log out of your account?'),
+                          content: const Text(
+                            'Are you sure you want to log out of your account?',
+                          ),
                           actions: [
                             TextButton(
                               onPressed: () => Navigator.pop(ctx, false),
-                              child: const Text('Cancel', style: TextStyle(color: Colors.grey)),
+                              child: const Text(
+                                'Cancel',
+                                style: TextStyle(color: Colors.grey),
+                              ),
                             ),
                             TextButton(
                               onPressed: () => Navigator.pop(ctx, true),
-                              child: const Text('Log Out', style: TextStyle(color: Colors.red, fontWeight: FontWeight.bold)),
+                              child: const Text(
+                                'Log Out',
+                                style: TextStyle(
+                                  color: Colors.red,
+                                  fontWeight: FontWeight.bold,
+                                ),
+                              ),
                             ),
                           ],
                         ),
@@ -403,7 +425,9 @@ class _ProfileTabState extends State<ProfileTab> {
                         if (context.mounted) {
                           Navigator.pushAndRemoveUntil(
                             context,
-                            MaterialPageRoute(builder: (_) => const AuthScreen()),
+                            MaterialPageRoute(
+                              builder: (_) => const AuthScreen(),
+                            ),
                             (route) => false,
                           );
                         }
